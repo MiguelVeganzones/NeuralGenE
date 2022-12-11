@@ -1,0 +1,19 @@
+---
+Language: Cpp
+BasedOnStyle: Microsoft
+AccessModifierOffset: -4
+AlignOperands: false
+AlignTrailingComments: false
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackParameters: false
+BinPackArguments: false 
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: AfterColon
+IndentCaseBlocks: true
+MaxEmptyLinesToKeep: 2
+PointerAlignment: Left
+
+Cpp11BracedListStyle: false
+...

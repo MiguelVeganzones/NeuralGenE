@@ -13,10 +13,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Static Neural Net", "Static
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neural Model", "Neural Model\Neural Model.vcxproj", "{2A23D32E-0BFE-4C58-A818-A1831609D930}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{42320133-DC6B-461B-B464-4C4066FEA59B}"
+	ProjectSection(SolutionItems) = preProject
+		.clang-format = .clang-format
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release_Intel|x64 = Release_Intel|x64
+		Release_Intel|x86 = Release_Intel|x86
+		Release_LLVM-Clang|x64 = Release_LLVM-Clang|x64
+		Release_LLVM-Clang|x86 = Release_LLVM-Clang|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
@@ -25,6 +37,14 @@ Global
 		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Debug|x64.Build.0 = Debug|x64
 		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Debug|x86.ActiveCfg = Debug|Win32
 		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Debug|x86.Build.0 = Debug|Win32
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_Intel|x64.ActiveCfg = Release_Intel|x64
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_Intel|x64.Build.0 = Release_Intel|x64
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_Intel|x86.ActiveCfg = Release_Intel|Win32
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_Intel|x86.Build.0 = Release_Intel|Win32
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_LLVM-Clang|x64.ActiveCfg = Release_LLVM-Clang|x64
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_LLVM-Clang|x64.Build.0 = Release_LLVM-Clang|x64
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_LLVM-Clang|x86.ActiveCfg = Release_LLVM-Clang|Win32
+		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release_LLVM-Clang|x86.Build.0 = Release_LLVM-Clang|Win32
 		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release|x64.ActiveCfg = Release|x64
 		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release|x64.Build.0 = Release|x64
 		{970F2167-5CCD-4D4F-A94A-47108D56BF6B}.Release|x86.ActiveCfg = Release|Win32
@@ -33,6 +53,14 @@ Global
 		{863E6636-6834-46CD-982A-B18F27191A8C}.Debug|x64.Build.0 = Release|x64
 		{863E6636-6834-46CD-982A-B18F27191A8C}.Debug|x86.ActiveCfg = Debug|Win32
 		{863E6636-6834-46CD-982A-B18F27191A8C}.Debug|x86.Build.0 = Debug|Win32
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_Intel|x64.ActiveCfg = Release_Intel|x64
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_Intel|x64.Build.0 = Release_Intel|x64
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_Intel|x86.ActiveCfg = Release_Intel|Win32
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_Intel|x86.Build.0 = Release_Intel|Win32
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_LLVM-Clang|x64.ActiveCfg = Release_LLVM-Clang|x64
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_LLVM-Clang|x64.Build.0 = Release_LLVM-Clang|x64
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_LLVM-Clang|x86.ActiveCfg = Release_LLVM-Clang|Win32
+		{863E6636-6834-46CD-982A-B18F27191A8C}.Release_LLVM-Clang|x86.Build.0 = Release_LLVM-Clang|Win32
 		{863E6636-6834-46CD-982A-B18F27191A8C}.Release|x64.ActiveCfg = Release|x64
 		{863E6636-6834-46CD-982A-B18F27191A8C}.Release|x64.Build.0 = Release|x64
 		{863E6636-6834-46CD-982A-B18F27191A8C}.Release|x86.ActiveCfg = Release|Win32
@@ -41,6 +69,14 @@ Global
 		{E415B850-868D-4FBD-9289-842658E5711C}.Debug|x64.Build.0 = Debug|x64
 		{E415B850-868D-4FBD-9289-842658E5711C}.Debug|x86.ActiveCfg = Debug|Win32
 		{E415B850-868D-4FBD-9289-842658E5711C}.Debug|x86.Build.0 = Debug|Win32
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_Intel|x64.ActiveCfg = Release_Intel|x64
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_Intel|x64.Build.0 = Release_Intel|x64
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_Intel|x86.ActiveCfg = Release_Intel|Win32
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_Intel|x86.Build.0 = Release_Intel|Win32
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_LLVM-Clang|x64.ActiveCfg = Release_LLVM-Clang|x64
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_LLVM-Clang|x64.Build.0 = Release_LLVM-Clang|x64
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_LLVM-Clang|x86.ActiveCfg = Release_LLVM-Clang|Win32
+		{E415B850-868D-4FBD-9289-842658E5711C}.Release_LLVM-Clang|x86.Build.0 = Release_LLVM-Clang|Win32
 		{E415B850-868D-4FBD-9289-842658E5711C}.Release|x64.ActiveCfg = Release|x64
 		{E415B850-868D-4FBD-9289-842658E5711C}.Release|x64.Build.0 = Release|x64
 		{E415B850-868D-4FBD-9289-842658E5711C}.Release|x86.ActiveCfg = Release|Win32
@@ -49,6 +85,14 @@ Global
 		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Debug|x64.Build.0 = Debug|x64
 		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Debug|x86.ActiveCfg = Debug|Win32
 		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Debug|x86.Build.0 = Debug|Win32
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_Intel|x64.ActiveCfg = Release_Intel|x64
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_Intel|x64.Build.0 = Release_Intel|x64
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_Intel|x86.ActiveCfg = Release_Intel|Win32
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_Intel|x86.Build.0 = Release_Intel|Win32
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_LLVM-Clang|x64.ActiveCfg = Release_LLVM-Clang|x64
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_LLVM-Clang|x64.Build.0 = Release_LLVM-Clang|x64
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_LLVM-Clang|x86.ActiveCfg = Release_LLVM-Clang|Win32
+		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release_LLVM-Clang|x86.Build.0 = Release_LLVM-Clang|Win32
 		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release|x64.ActiveCfg = Release|x64
 		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release|x64.Build.0 = Release|x64
 		{B173CBC4-F8D5-4542-ACCC-48BCDDCA8D9F}.Release|x86.ActiveCfg = Release|Win32
@@ -57,6 +101,14 @@ Global
 		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Debug|x64.Build.0 = Debug|x64
 		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Debug|x86.ActiveCfg = Debug|Win32
 		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Debug|x86.Build.0 = Debug|Win32
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_Intel|x64.ActiveCfg = Release_Intel|x64
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_Intel|x64.Build.0 = Release_Intel|x64
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_Intel|x86.ActiveCfg = Release_Intel|Win32
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_Intel|x86.Build.0 = Release_Intel|Win32
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_LLVM-Clang|x64.ActiveCfg = Release_LLVM-Clang|x64
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_LLVM-Clang|x64.Build.0 = Release_LLVM-Clang|x64
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_LLVM-Clang|x86.ActiveCfg = Release_LLVM-Clang|Win32
+		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release_LLVM-Clang|x86.Build.0 = Release_LLVM-Clang|Win32
 		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release|x64.ActiveCfg = Release|x64
 		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release|x64.Build.0 = Release|x64
 		{2A23D32E-0BFE-4C58-A818-A1831609D930}.Release|x86.ActiveCfg = Release|Win32

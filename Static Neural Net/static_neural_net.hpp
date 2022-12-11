@@ -390,7 +390,7 @@ namespace ga_snn
     [[nodiscard]] auto const& const_layer() const
     {
       return m_Layers.template const_get<Idx>();
-    } // you arent a real template programmer if you dont use .template  /s
+    }
 
     template <typename Fn, typename... Args>
       requires std::is_invocable_r_v<T, Fn, Args...>
@@ -542,11 +542,11 @@ namespace ga_snn
   // neural net x_crossover
 
   template <static_neural_net_type NNet>
-  std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> net_x_crossover(const NNet* const ptr_net1,
-    const NNet* const ptr_net2)
+  std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> net_x_crossover(NNet const& net1,
+    NNet const& net2)
   {
-    auto ptr_ret_net1 = std::make_unique<NNet>(*ptr_net1);
-    auto ptr_ret_net2 = std::make_unique<NNet>(*ptr_net2);
+    auto ptr_ret_net1 = std::make_unique<NNet>(net1);
+    auto ptr_ret_net2 = std::make_unique<NNet>(net2);
 
     /*
     Si *ptr_net hace una copia local dará problemas de memoria. Por las pruebas
@@ -560,7 +560,7 @@ namespace ga_snn
     // ptr_ret_net2->init_from_ptr( ptr_net2 );
 
     // Recursively crossover layers, starting with layer 0
-    in_place_net_x_crossover(ptr_ret_net1.get(), ptr_ret_net2.get());
+    in_place_net_x_crossover(*ptr_ret_net1.get(), *ptr_ret_net2.get());
     return std::make_pair(std::move(ptr_ret_net1), std::move(ptr_ret_net2));
   }
 
@@ -574,16 +574,16 @@ namespace ga_snn
 
   template <static_neural_net_type NNet, size_t I = 0>
     requires(I < NNet::s_Layers)
-  inline void in_place_net_x_crossover(NNet* const ptr_net1, NNet* const ptr_net2)
+  inline void in_place_net_x_crossover(NNet& net1, NNet& net2)
   {
     if constexpr (I == NNet::s_Layers - 1)
     {
-      in_place_layer_x_crossover(ptr_net1->template layer<I>(), ptr_net2->template layer<I>());
+      in_place_layer_x_crossover(net1.template layer<I>(), net2.template layer<I>());
     }
     else
     {
-      in_place_layer_x_crossover(ptr_net1->template layer<I>(), ptr_net2->template layer<I>());
-      in_place_net_x_crossover<NNet, I + 1>(ptr_net1, ptr_net2);
+      in_place_layer_x_crossover(net1.template layer<I>(), net2.template layer<I>());
+      in_place_net_x_crossover<NNet, I + 1>(net1, net2);
     }
   }
   //......................................................................................//

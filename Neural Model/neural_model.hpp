@@ -8,19 +8,19 @@
 #include <memory>
 #include <type_traits>
 
-#include "../Static Neural Net/static_neural_net.hpp"
+#include "static_neural_net.hpp"
 
-namespace ga_c4_brain_v2
+namespace ga_neural_model
 {
 
 template <typename NNet>
 concept neural_net_type = requires {
-                              ga_snn::static_neural_net_type<NNet>; // Si hubiese más tipos de
-                                                                    // redes se podrían añadir aqui
+                              // Si hubiese más tipos de redes se podrían añadir aqui
+                              ga_snn::static_neural_net_type<NNet>;
                           };
 
 template <neural_net_type NNet>
-class c4_brain
+class brain
 {
 public:
     using value_type  = typename NNet::value_type;
@@ -42,21 +42,29 @@ private:
     std::unique_ptr<NNet> m_Ptr_net{ std::make_unique<NNet>() };
 
 public:
-    c4_brain() = default;
+    brain() = default;
 
-    explicit c4_brain(const NNet& net) : m_Ptr_net{ std::make_unique<NNet>(net) }
+    template <typename Fn, typename... Args>
+        requires std::is_invocable_r_v<value_type, Fn, Args...>
+    explicit brain(Fn fn, Args... args)
+    {
+        m_Ptr_net->init(fn, args...);
+    }
+
+    explicit brain(const NNet& net) : m_Ptr_net{ std::make_unique<NNet>(net) }
     {
     }
 
-    c4_brain(const c4_brain& other) :
-        m_Parent_a{ other.ID() }, m_Generation{ other.generation() + 1 }, m_Ptr_net{ std::make_unique<NNet>(
-                                                                              *other.get()) }
+    brain(const brain& other) :
+        m_Parent_a{ other.ID() },
+        m_Generation{ other.generation() + 1 },
+        m_Ptr_net{ std::make_unique<NNet>(*other.get()) }
     {
     }
 
-    c4_brain(c4_brain&&) = default;
+    brain(brain&&) = default;
 
-    c4_brain& operator=(const c4_brain& other)
+    brain& operator=(const brain& other)
     {
         if (this != &other)
         {
@@ -72,34 +80,49 @@ public:
         return *this;
     }
 
-    c4_brain& operator=(c4_brain&&) = default;
-    ~c4_brain()                     = default;
+    brain& operator=(brain&&) = default;
+    ~brain()                  = default;
 
     /* Getters and setters */
 
-    auto ID() const
+    [[nodiscard]] auto ID() const
     {
         return m_ID;
     }
-    auto generation() const
+
+    [[nodiscard]] auto generation() const
     {
         return m_Generation;
     }
-    const NNet* get() const
+
+    [[nodiscard]] const NNet* get() const
     {
         return m_Ptr_net.get();
     }
-    auto parent_a() const
+
+    [[nodiscard]] NNet* get_raw()
+    {
+        return m_Ptr_net.get();
+    }
+
+    [[nodiscard]] auto parent_a() const
     {
         return m_Parent_a;
     }
-    auto parent_b() const
+
+    [[nodiscard]] auto parent_b() const
     {
         return m_Parent_b;
     }
-    auto& get_unique()
+
+    [[nodiscard]] auto& get_unique()
     {
         return m_Ptr_net;
+    }
+
+    void print_net() const
+    {
+        m_Ptr_net->print_net();
     }
 
     /* Member functions */
@@ -120,11 +143,24 @@ public:
 /* Utility */
 
 template <neural_net_type NNet>
-[[nodiscard]] auto L11_brain_net_distance(const c4_brain<NNet>& c4_brain_a, const c4_brain<NNet>& c4_brain_b)
+[[nodiscard]] auto L11_brain_net_distance(const brain<NNet>& c4_brain_a, const brain<NNet>& c4_brain_b)
 {
     return L11_net_distance(c4_brain_a.get(), c4_brain_b.get());
 }
 
-} // namespace ga_c4_brain_v2
+template <neural_net_type NNet>
+void in_place_brain_x_crossover(brain<NNet>& brain_a, brain<NNet>& brain_b)
+{
+    ga_snn::in_place_net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
+}
+
+template <neural_net_type NNet>
+[[nodiscard]] std::pair<brain<NNet>, brain<NNet>> brain_x_crossover(brain<NNet>& brain_a, brain<NNet>& brain_b)
+{
+    auto [ptr_net1, ptr_net2] = ga_snn::net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
+    return { brain(ptr_net1), brain(ptr_net2) };
+}
+
+} // namespace ga_neural_model
 
 #endif // !NEURAL_MODEL

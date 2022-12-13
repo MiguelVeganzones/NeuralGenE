@@ -12,9 +12,13 @@ namespace NativeUnitTesting
 TEST_CLASS(unittesting_static_matrix)
 {
     static constexpr double epsilon = 1e-5;
-    using Mf5                       = ga_sm::static_matrix<float, 5, 5>;
-    using Md5                       = ga_sm::static_matrix<double, 5, 5>;
-    using Mi5                       = ga_sm::static_matrix<int, 5, 5>;
+
+    using Mf5  = ga_sm::static_matrix<float, 5, 5>;
+    using Md5  = ga_sm::static_matrix<double, 5, 5>;
+    using Mi5  = ga_sm::static_matrix<int, 5, 5>;
+    using Mf20 = ga_sm::static_matrix<float, 20, 20>;
+    using Md20 = ga_sm::static_matrix<double, 20, 20>;
+    using Mi20 = ga_sm::static_matrix<int, 20, 20>;
 
 public:
     TEST_METHOD(assert_static_mat_mat_mul)
@@ -121,6 +125,251 @@ public:
 
             Assert::IsTrue(normalized_L1_distance(res_a, res_b) < epsilon);
         }
+    }
+
+    TEST_METHOD(assert_x_crossover)
+    {
+        constexpr int N = 10;
+        constexpr int n = N - 1;
+
+        constexpr int K = 20;
+        constexpr int k = 10;
+
+        using Mat = ga_sm::static_matrix<int, N, N>;
+
+        //random::init();
+        int count = 0;
+        for (int i = 0; i < K; ++i)
+        {
+            Mat mat1{};
+            Mat mat2{};
+
+            mat1.fill(random::randint, -10, 10);
+            mat2.fill(random::randint, -10, 10);
+
+            const auto [mat12, mat21] = ga_sm::x_crossover(mat1, mat2);
+
+            Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
+
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(n, n) == mat12(n, n) && mat1(0, n) == mat21(0, n) &&
+                 mat1(n, 0) == mat21(n, 0) && mat2(0, 0) == mat21(0, 0) && mat2(n, n) == mat21(n, n) &&
+                 mat2(0, n) == mat12(0, n) && mat2(n, 0) == mat12(n, 0)) ||
+                (mat2(0, 0) == mat12(0, 0) && mat2(n, n) == mat12(n, n) && mat2(0, n) == mat21(0, n) &&
+                 mat2(n, 0) == mat21(n, 0) && mat1(0, 0) == mat21(0, 0) && mat1(n, n) == mat21(n, n) &&
+                 mat1(0, n) == mat12(0, n) && mat1(n, 0) == mat12(n, 0)))
+            {
+                ++count;
+            }
+        }
+        Assert::IsTrue(count > k);
+    }
+
+    TEST_METHOD(assert_in_place_x_crossover)
+    {
+        constexpr int N = 10;
+        constexpr int n = N - 1;
+
+        constexpr int K = 20;
+        constexpr int k = 10;
+
+        using Mat = ga_sm::static_matrix<int, N, N>;
+
+        // random::init();
+        int count = 0;
+        for (int i = 0; i < K; ++i)
+        {
+            Mat mat12{};
+            Mat mat21{};
+
+            mat12.fill(random::randint, -10, 10);
+            mat21.fill(random::randint, -10, 10);
+
+            const Mat mat1{ mat12 };
+            const Mat mat2{ mat21 };
+
+            ga_sm::in_place_x_crossover(mat12, mat21);
+
+            Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
+
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(n, n) == mat12(n, n) && mat1(0, n) == mat21(0, n) &&
+                 mat1(n, 0) == mat21(n, 0) && mat2(0, 0) == mat21(0, 0) && mat2(n, n) == mat21(n, n) &&
+                 mat2(0, n) == mat12(0, n) && mat2(n, 0) == mat12(n, 0)) ||
+                (mat2(0, 0) == mat12(0, 0) && mat2(n, n) == mat12(n, n) && mat2(0, n) == mat21(0, n) &&
+                 mat2(n, 0) == mat21(n, 0) && mat1(0, 0) == mat21(0, 0) && mat1(n, n) == mat21(n, n) &&
+                 mat1(0, n) == mat12(0, n) && mat1(n, 0) == mat12(n, 0)))
+            {
+                ++count;
+            }
+        }
+        Assert::IsTrue(count > k);
+    }
+
+    TEST_METHOD(assert_to_target_x_crossover)
+    {
+        constexpr int N = 10;
+        constexpr int n = N - 1;
+
+        constexpr int K = 20;
+        constexpr int k = 10;
+
+        using Mat = ga_sm::static_matrix<int, N, N>;
+
+        // random::init();
+        int count = 0;
+        for (int i = 0; i < K; ++i)
+        {
+            Mat mat1{};
+            Mat mat2{};
+            Mat mat12{};
+            Mat mat21{};
+
+            mat1.fill(random::randint, -10, 10);
+            mat2.fill(random::randint, -10, 10);
+            mat12.fill(random::randint, -10, 10);
+            mat21.fill(random::randint, -10, 10);
+
+            ga_sm::to_target_x_crossover(mat1, mat2, mat12, mat21);
+
+            Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
+
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(n, n) == mat12(n, n) && mat1(0, n) == mat21(0, n) &&
+                 mat1(n, 0) == mat21(n, 0) && mat2(0, 0) == mat21(0, 0) && mat2(n, n) == mat21(n, n) &&
+                 mat2(0, n) == mat12(0, n) && mat2(n, 0) == mat12(n, 0)) ||
+                (mat2(0, 0) == mat12(0, 0) && mat2(n, n) == mat12(n, n) && mat2(0, n) == mat21(0, n) &&
+                 mat2(n, 0) == mat21(n, 0) && mat1(0, 0) == mat21(0, 0) && mat1(n, n) == mat21(n, n) &&
+                 mat1(0, n) == mat12(0, n) && mat1(n, 0) == mat12(n, 0)))
+            {
+                ++count;
+            }
+        }
+        Assert::IsTrue(count > k);
+    }
+
+    TEST_METHOD(assert_x_crossover_rectangular)
+    {
+        constexpr int N = 10;
+        constexpr int n = N - 1;
+
+        constexpr int M = 15;
+        constexpr int m = M - 1;
+
+        constexpr int K = 20;
+        constexpr int k = 12;
+
+        using Mat = ga_sm::static_matrix<int, M, N>;
+
+        // random::init();
+        int count = 0;
+        for (int i = 0; i < K; ++i)
+        {
+            Mat mat1{};
+            Mat mat2{};
+
+            mat1.fill(random::randint, -10, 10);
+            mat2.fill(random::randint, -10, 10);
+
+            const auto [mat12, mat21] = ga_sm::x_crossover(mat1, mat2);
+
+            Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
+
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(m, n) == mat12(m, n) && mat1(0, n) == mat21(0, n) &&
+                 mat1(m, 0) == mat21(m, 0) && mat2(0, 0) == mat21(0, 0) && mat2(m, n) == mat21(m, n) &&
+                 mat2(0, n) == mat12(0, n) && mat2(m, 0) == mat12(m, 0)) ||
+                (mat2(0, 0) == mat12(0, 0) && mat2(m, n) == mat12(m, n) && mat2(0, n) == mat21(0, n) &&
+                 mat2(m, 0) == mat21(m, 0) && mat1(0, 0) == mat21(0, 0) && mat1(m, n) == mat21(m, n) &&
+                 mat1(0, n) == mat12(0, n) && mat1(m, 0) == mat12(m, 0)))
+            {
+                ++count;
+            }
+        }
+        Assert::IsTrue(count > k);
+    }
+
+    TEST_METHOD(assert_in_place_x_crossover_rectangular)
+    {
+        constexpr int N = 10;
+        constexpr int n = N - 1;
+
+        constexpr int M = 15;
+        constexpr int m = M - 1;
+
+        constexpr int K = 20;
+        constexpr int k = 12;
+
+        using Mat = ga_sm::static_matrix<int, M, N>;
+
+        // random::init();
+        int count = 0;
+        for (int i = 0; i < K; ++i)
+        {
+            Mat mat12{};
+            Mat mat21{};
+
+            mat12.fill(random::randint, -10, 10);
+            mat21.fill(random::randint, -10, 10);
+
+            const Mat mat1{ mat12 };
+            const Mat mat2{ mat21 };
+
+            ga_sm::in_place_x_crossover(mat12, mat21);
+
+            Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
+
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(m, n) == mat12(m, n) && mat1(0, n) == mat21(0, n) &&
+                 mat1(m, 0) == mat21(m, 0) && mat2(0, 0) == mat21(0, 0) && mat2(m, n) == mat21(m, n) &&
+                 mat2(0, n) == mat12(0, n) && mat2(m, 0) == mat12(m, 0)) ||
+                (mat2(0, 0) == mat12(0, 0) && mat2(m, n) == mat12(m, n) && mat2(0, n) == mat21(0, n) &&
+                 mat2(m, 0) == mat21(m, 0) && mat1(0, 0) == mat21(0, 0) && mat1(m, n) == mat21(m, n) &&
+                 mat1(0, n) == mat12(0, n) && mat1(m, 0) == mat12(m, 0)))
+            {
+                ++count;
+            }
+        }
+        Assert::IsTrue(count > k);
+    }
+
+    TEST_METHOD(assert_to_target_x_crossover_rectangular)
+    {
+        constexpr int N = 10;
+        constexpr int n = N - 1;
+
+        constexpr int M = 15;
+        constexpr int m = M - 1;
+
+        constexpr int K = 20;
+        constexpr int k = 12;
+
+        using Mat = ga_sm::static_matrix<int, M, N>;
+
+        //random::init();
+        int count = 0;
+        for (int i = 0; i < K; ++i)
+        {
+            Mat mat1{};
+            Mat mat2{};
+            Mat mat12{};
+            Mat mat21{};
+
+            mat1.fill(random::randint, -10, 10);
+            mat2.fill(random::randint, -10, 10);
+            mat12.fill(random::randint, -10, 10);
+            mat21.fill(random::randint, -10, 10);
+
+            ga_sm::to_target_x_crossover(mat1, mat2, mat12, mat21);
+
+            Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
+
+            //if ((mat1(0, 0) == mat12(0, 0) && mat1(m, n) == mat12(m, n) && mat1(0, n) == mat21(0, n) &&
+            //     mat1(m, 0) == mat21(m, 0) && mat2(0, 0) == mat21(0, 0) && mat2(m, n) == mat21(m, n) &&
+            //     mat2(0, n) == mat12(0, n) && mat2(m, 0) == mat12(m, 0)) ||
+            //    (mat2(0, 0) == mat12(0, 0) && mat2(m, n) == mat12(m, n) && mat2(0, n) == mat21(0, n) &&
+            //     mat2(m, 0) == mat21(m, 0) && mat1(0, 0) == mat21(0, 0) && mat1(m, n) == mat21(m, n) &&
+            //     mat1(0, n) == mat12(0, n) && mat1(m, 0) == mat12(m, 0)))
+            //{
+            //    ++count;
+            //}
+        }
+        //Assert::IsTrue(count > k);
     }
 
     TEST_METHOD(assert_is_trivially_copiable_float)

@@ -2,6 +2,7 @@
 #define ACTIVATION_FUNCTIONS
 
 #include <functional>
+#include <stdexcept>
 
 //--------------------------------------------------------------------------------------//
 
@@ -111,7 +112,7 @@ template <typename Mat, matrix_activation_functions::Identifiers Function_Identi
         return matrix_activation_functions::Tanh_impl<Mat>;
     else if constexpr (Function_Identifier == matrix_activation_functions::Identity)
         return matrix_activation_functions::Identity_impl<Mat>;
-    exit(EXIT_FAILURE);
+    throw std::invalid_argument("Unexpected activation function identifier");
 }
 } // namespace matrix_activation_functions
 

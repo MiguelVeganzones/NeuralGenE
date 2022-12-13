@@ -266,6 +266,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="neural_model.hpp" />
+    <ClInclude Include="score_functions.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="neural_model_main.cpp" />

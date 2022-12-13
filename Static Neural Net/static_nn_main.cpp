@@ -111,28 +111,30 @@ void abench(int n)
 
 int main()
 {
-    constexpr size_t N = 1;
-    {
-        stopwatch s;
-        abench(10);
-    }
-    {
-        stopwatch s;
-        abench(100);
-    }
-    {
-        stopwatch s;
-        abench(1000);
-    }
-    {
-        stopwatch s;
-        abench(10000);
-    }
+    // constexpr size_t N = 1;
+    //{
+    //     stopwatch s;
+    //     abench(10);
+    // }
+    //{
+    //     stopwatch s;
+    //     abench(100);
+    // }
+    //{
+    //     stopwatch s;
+    //     abench(1000);
+    // }
+    //{
+    //     stopwatch s;
+    //     abench(10000);
+    // }
 
-    for (int i = 10; i < 100'000'000; i *= 10)
-    {
-        bench::multiple_run_bench(N, abench, i);
-    }
+    // for (int i = 10; i < 100'000'000; i *= 10)
+    //{
+    //     bench::multiple_run_bench(N, abench, i);
+    // }
+
+
 
     return EXIT_SUCCESS;
 }

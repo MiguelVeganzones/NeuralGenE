@@ -762,6 +762,36 @@ void in_place_x_crossover(static_matrix<T, M, N>& mat1, static_matrix<T, M, N>& 
     }
 }
 
+template <typename T, size_t M, size_t N>
+void to_target_x_crossover(static_matrix<T, M, N> const& in_mat1,
+                           static_matrix<T, M, N> const& in_mat2,
+                           static_matrix<T, M, N>&       out_mat1,
+                           static_matrix<T, M, N>&       out_mat2)
+{
+    // indices to slice. a: horizontal, b: vertical
+    const size_t a = static_cast<size_t>(random::randint(0, M));
+    const size_t b = static_cast<size_t>(random::randint(0, N));
+
+    for (size_t j = 0; j < M; ++j)
+    {
+        for (size_t i = 0; i < N; ++i)
+        {
+            if (j < a == i < b)
+            {
+                out_mat1(j, i) = in_mat1(j, i);
+                out_mat2(j, i) = in_mat2(j, i);
+            }
+            else
+            {
+                out_mat1(j, i) = in_mat2(j, i);
+                out_mat2(j, i) = in_mat1(j, i);
+            }
+        }
+    }
+
+
+}
+
 template <typename Matrix>
 [[nodiscard]] std::pair<Matrix, Matrix> x_crossover(Matrix const& mat1, Matrix const& mat2)
 {
@@ -1026,7 +1056,7 @@ template <typename T, size_t N>
  *       Mutates input
  */
 template <typename T, size_t M, size_t N>
-    requires(std::is_floating_point_v<T> and (M <= N))
+    requires (std::is_floating_point_v<T> && (M <= N))
 [[nodiscard]] constexpr bool RREF(static_matrix<T, M, N>& scr)
 {
     using cx_helper_func::cx_abs; // constexpr abs

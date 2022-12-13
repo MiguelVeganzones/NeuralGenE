@@ -18,6 +18,9 @@
     <ClInclude Include="neural_model.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="score_functions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="neural_model_main.cpp">

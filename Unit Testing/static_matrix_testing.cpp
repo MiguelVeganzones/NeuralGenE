@@ -51,7 +51,7 @@ public:
 
         const auto res = matrix_mul(m, I);
 
-        Assert::IsTrue(normalized_L1_distance(m, res) < epsilon);
+        Assert::IsTrue(normalized_L1_distance<double>(m, res) < epsilon);
     }
 
     TEST_METHOD(assert_static_mat_vec_mul_float)
@@ -65,7 +65,7 @@ public:
 
         const auto res = ga_sm::matrix_mul(m, v);
 
-        Assert::IsTrue(normalized_L1_distance(res, ground_truth) < epsilon);
+        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
     }
 
     TEST_METHOD(assert_static_mat_vec_mul_int)
@@ -77,7 +77,7 @@ public:
 
         const auto res = matrix_mul(m, v);
 
-        Assert::IsTrue(normalized_L1_distance(res, ground_truth) < epsilon);
+        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
     }
 
     TEST_METHOD(assert_static_mat_vec_mul_double)
@@ -91,7 +91,7 @@ public:
 
         const auto res = matrix_mul(m, v);
 
-        Assert::IsTrue(normalized_L1_distance(res, ground_truth) < epsilon);
+        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
     }
 
     TEST_METHOD(assert_static_mat_vec_mul_avx)
@@ -105,7 +105,7 @@ public:
 
         const auto res = matrix_vector_mul_float_avx(m, v);
 
-        Assert::IsTrue(normalized_L1_distance(res, ground_truth) < epsilon);
+        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
     }
 
     TEST_METHOD(assert_static_mat_vec_and_mat_vec_mul_avx)
@@ -115,7 +115,7 @@ public:
         ga_sm::static_matrix<float, N, N> m{};
         ga_sm::static_matrix<float, N, 1> v{};
 
-        for (int i = 0; i < 10; ++i)
+        for (int i = 0; i != 10; ++i)
         {
             m.fill(random::randfloat);
             v.fill(random::randfloat);
@@ -123,7 +123,7 @@ public:
             const auto res_a = matrix_mul(m, v);
             const auto res_b = matrix_vector_mul_float_avx(m, v);
 
-            Assert::IsTrue(normalized_L1_distance(res_a, res_b) < epsilon);
+            Assert::IsTrue(normalized_L1_distance<double>(res_a, res_b) < epsilon);
         }
     }
 
@@ -137,9 +137,9 @@ public:
 
         using Mat = ga_sm::static_matrix<int, N, N>;
 
-        //random::init();
+        // random::init();
         int count = 0;
-        for (int i = 0; i < K; ++i)
+        for (int i = 0; i != K; ++i)
         {
             Mat mat1{};
             Mat mat2{};
@@ -176,7 +176,7 @@ public:
 
         // random::init();
         int count = 0;
-        for (int i = 0; i < K; ++i)
+        for (int i = 0; i != K; ++i)
         {
             Mat mat12{};
             Mat mat21{};
@@ -216,7 +216,7 @@ public:
 
         // random::init();
         int count = 0;
-        for (int i = 0; i < K; ++i)
+        for (int i = 0; i != K; ++i)
         {
             Mat mat1{};
             Mat mat2{};
@@ -260,7 +260,7 @@ public:
 
         // random::init();
         int count = 0;
-        for (int i = 0; i < K; ++i)
+        for (int i = 0; i != K; ++i)
         {
             Mat mat1{};
             Mat mat2{};
@@ -300,7 +300,7 @@ public:
 
         // random::init();
         int count = 0;
-        for (int i = 0; i < K; ++i)
+        for (int i = 0; i != K; ++i)
         {
             Mat mat12{};
             Mat mat21{};
@@ -341,9 +341,9 @@ public:
 
         using Mat = ga_sm::static_matrix<int, M, N>;
 
-        //random::init();
+        // random::init();
         int count = 0;
-        for (int i = 0; i < K; ++i)
+        for (int i = 0; i != K; ++i)
         {
             Mat mat1{};
             Mat mat2{};
@@ -359,17 +359,17 @@ public:
 
             Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
 
-            //if ((mat1(0, 0) == mat12(0, 0) && mat1(m, n) == mat12(m, n) && mat1(0, n) == mat21(0, n) &&
-            //     mat1(m, 0) == mat21(m, 0) && mat2(0, 0) == mat21(0, 0) && mat2(m, n) == mat21(m, n) &&
-            //     mat2(0, n) == mat12(0, n) && mat2(m, 0) == mat12(m, 0)) ||
-            //    (mat2(0, 0) == mat12(0, 0) && mat2(m, n) == mat12(m, n) && mat2(0, n) == mat21(0, n) &&
-            //     mat2(m, 0) == mat21(m, 0) && mat1(0, 0) == mat21(0, 0) && mat1(m, n) == mat21(m, n) &&
-            //     mat1(0, n) == mat12(0, n) && mat1(m, 0) == mat12(m, 0)))
-            //{
-            //    ++count;
-            //}
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(m, n) == mat12(m, n) && mat1(0, n) == mat21(0, n) &&
+                 mat1(m, 0) == mat21(m, 0) && mat2(0, 0) == mat21(0, 0) && mat2(m, n) == mat21(m, n) &&
+                 mat2(0, n) == mat12(0, n) && mat2(m, 0) == mat12(m, 0)) ||
+                (mat2(0, 0) == mat12(0, 0) && mat2(m, n) == mat12(m, n) && mat2(0, n) == mat21(0, n) &&
+                 mat2(m, 0) == mat21(m, 0) && mat1(0, 0) == mat21(0, 0) && mat1(m, n) == mat21(m, n) &&
+                 mat1(0, n) == mat12(0, n) && mat1(m, 0) == mat12(m, 0)))
+            {
+                ++count;
+            }
         }
-        //Assert::IsTrue(count > k);
+        Assert::IsTrue(count > k);
     }
 
     TEST_METHOD(assert_is_trivially_copiable_float)

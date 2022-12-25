@@ -2,6 +2,7 @@
 
 #include "Precision_totalizer.h"
 #include "Random.h"
+#include "Log.h"
 
 auto rng()
 {
@@ -14,11 +15,11 @@ int main()
     auto   pt  = precision_totalizer{};
     double sum = 0;
 
-    const size_t n = 1'000'000'000;
+    constexpr size_t n = 10'000'000;
 
     random::init();
 
-    for (size_t i = 0; i < n; ++i)
+    for (size_t i = 0; i != n; ++i)
     {
         // auto rn = i;
         auto rn = rng();
@@ -34,6 +35,11 @@ int main()
 
     pt.summary();
 
+    log::add("Testing_0");
+    log::add("Sum:\t\t" + std::to_string(sum));
+    log::add("Totalizer:\t" + std::to_string(pt.get_value()));
+    log::flush_log();
 
-    return 0;
+    return EXIT_SUCCESS;
+
 }

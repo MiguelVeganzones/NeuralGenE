@@ -13,7 +13,8 @@ int flat_test()
     using namespace ga_snn;
     using namespace ga_sm;
 
-    constexpr size_t                   N1 = 50;
+    constexpr size_t N1 = 50;
+
     ga_sm::static_matrix<float, N1, 1> in{}, pred{};
     ga_sm::static_matrix<float, N1, 2> pred2{};
 
@@ -34,6 +35,7 @@ int flat_test()
     auto ptr_net  = std::make_unique<NET>();
     auto ptr_net2 = std::make_unique<NET2>();
     auto ptr_net3 = std::make_unique<NET2>();
+
     ptr_net->init(random::randnormal, 0, 1);
 
     for (size_t i = 0; const auto& e : in)
@@ -53,7 +55,7 @@ int flat_test()
 
     ptr_net2->print_net();
 
-    std::cout << "L11:" << L11_net_distance(ptr_net3.get(), ptr_net2.get()) << std::endl;
+    std::cout << "L11:" << L11_net_distance<double>(*ptr_net3.get(), *ptr_net2.get()) << std::endl;
 
     for (size_t i = 0; const auto& e : in)
     {
@@ -102,38 +104,48 @@ void abench(int n)
 
     while (n--)
     {
-        // std::cout << in << std::endl;
+        std::cout << in << std::endl;
         in = ptr_net->batch_forward_pass(in);
         in.standarize();
     }
     std::cout << in << std::endl;
 }
 
+void get_layer()
+{
+    using namespace ga_sm;
+    using namespace ga_snn;
+    using T = float;
+
+    constexpr size_t N = 8;
+
+    constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
+
+    constexpr auto ls5  = Layer_Signature{ 5, AF };
+    constexpr auto ls10 = Layer_Signature{ 10, AF };
+    constexpr auto ls25 = Layer_Signature{ 25, AF };
+    constexpr auto ls50 = Layer_Signature{ 50, AF };
+
+    using NNet = static_neural_net<T, N, ls5, ls5, ls5>;
+
+    const auto ptr_net = static_neural_net_factory<NNet>(random::randnormal, 0, 1);
+
+    constexpr mutate_params params{ 0.2, 0.2, 0, 1 };
+
+    ptr_net->print_net();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int idx = random::randint(0, NNet::s_Layers-1);
+        std::cout << idx << std::endl;
+        ptr_net->mutate_layer(idx, params, random::randfloat);
+        ptr_net->print_net();
+    }
+}
+
 int main()
 {
-    // constexpr size_t N = 1;
-    //{
-    //     stopwatch s;
-    //     abench(10);
-    // }
-    //{
-    //     stopwatch s;
-    //     abench(100);
-    // }
-    //{
-    //     stopwatch s;
-    //     abench(1000);
-    // }
-    //{
-    //     stopwatch s;
-    //     abench(10000);
-    // }
-
-    // for (int i = 10; i < 100'000'000; i *= 10)
-    //{
-    //     bench::multiple_run_bench(N, abench, i);
-    // }
-
+    get_layer();
 
 
     return EXIT_SUCCESS;

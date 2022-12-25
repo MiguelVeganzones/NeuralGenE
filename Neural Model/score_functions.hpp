@@ -19,7 +19,9 @@ public:
 
 private:
     template <int Wins_Weight = 3, int Ties_Weight = 1, int Loses_Weight = 0>
-    inline static constexpr Return_Type weighted_normalized_score(Input_Type wins, Input_Type ties, Input_Type loses)
+    inline static constexpr Return_Type weighted_normalized_score(Input_Type wins,
+                                                                  Input_Type ties,
+                                                                  Input_Type loses) noexcept
     {
         const auto count = wins + ties + loses;
 

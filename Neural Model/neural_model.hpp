@@ -42,6 +42,8 @@ public:
     using score_functions   = score_functions::score_functions<score_value_type, points_value_type>;
     using f_ptr             = score_functions::f_ptr;
 
+    inline static constexpr size_t s_Brain_layers = NNet::s_Layers;
+
     inline static std::atomic<size_t> s_ID = 1;
 
     inline static constexpr f_ptr s_score_metric =
@@ -60,20 +62,25 @@ private:
     points_value_type m_Loses{};
     points_value_type m_Ties{};
 
-    std::unique_ptr<NNet> m_Ptr_net{ std::make_unique<NNet>() };
+    std::unique_ptr<NNet> m_Ptr_net;
 
 public:
     brain() = default;
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<value_type, Fn, Args...>
-    explicit brain(Fn fn, Args... args)
+    explicit brain(Fn&& fn, Args... args) : m_Ptr_net{ std::make_unique<NNet>() }
     {
         m_Ptr_net->init(fn, args...);
     }
 
     explicit brain(const NNet& net) : m_Ptr_net{ std::make_unique<NNet>(net) }
     {
+    }
+
+    explicit brain(std::unique_ptr<NNet>&& other_ptr_net) : m_Ptr_net{ nullptr }
+    {
+        std::swap(m_Ptr_net, other_ptr_net);
     }
 
     brain(const brain& other) :
@@ -140,7 +147,7 @@ public:
         return m_Ptr_net;
     }
 
-    [[nodiscard]] auto get_Score() const
+    [[nodiscard]] auto get_score() const
     {
         return s_score_metric(m_Wins, m_Ties, m_Loses);
     }
@@ -149,7 +156,7 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<value_type, Fn, Args...>
-    void init(Fn fn, Args... args)
+    void init(Fn&& fn, Args... args)
     {
         m_Ptr_net->init(fn, args...);
     }
@@ -159,9 +166,32 @@ public:
         return m_Ptr_net->forward_pass(in);
     }
 
+    /* Utility */
+
     void print_net() const
     {
         m_Ptr_net->print_net();
+    }
+
+    void print_net_address() const
+    {
+        m_Ptr_net->print_address();
+    }
+
+    /* GA Utility */
+
+    template <typename Mutate_params, typename Fn, typename... Args>
+        requires std::is_invocable_r_v<value_type, Fn, Args...>
+    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
+    {
+        m_Ptr_net->mutate(params, fn, args...);
+    }
+
+    template <typename Mutate_params, typename Fn, typename... Args>
+        requires std::is_invocable_r_v<value_type, Fn, Args...>
+    void mutate_set_layers(const std::vector<size_t>& layers_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    {
+        m_Ptr_net->mutate_set_layers(layers_idx, params, fn, args...);
     }
 
 private:
@@ -208,8 +238,8 @@ void in_place_brain_x_crossover(Brain& brain_a, Brain& brain_b)
 template <brain_type Brain>
 [[nodiscard]] std::pair<Brain, Brain> brain_x_crossover(const Brain& brain_a, const Brain& brain_b)
 {
-    auto [ptr_net1, ptr_net2] = ga_snn::net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
-    return { brain(ptr_net1), brain(ptr_net2) };
+    auto [ptr_net1, ptr_net2] = ga_snn::net_x_crossover(*brain_a.get(), *brain_b.get());
+    return { Brain{ std::move(ptr_net1) }, Brain{ std::move(ptr_net2) } };
 }
 
 template <brain_type Brain>

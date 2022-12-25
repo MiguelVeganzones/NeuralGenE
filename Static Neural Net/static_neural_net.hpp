@@ -1,10 +1,9 @@
-#pragma once
-
 #ifndef STATIC_NEURAL_NET
 #define STATIC_NEURAL_NET
 
 #include <array>
 #include <concepts>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -17,7 +16,6 @@
 
 namespace ga_snn
 {
-
 /*
   Each element of the matrix might be:
   Replaced by a value given by fn(args...) with a probability p1 : e =
@@ -55,15 +53,14 @@ struct Layer_Structure
 
 //--------------------------------------------------------------------------------------//
 
-template <typename T, size_t Batch_Size, Layer_Structure Structure>
-    requires(std::is_floating_point_v<T> && Batch_Size > 0)
+template <std::floating_point T, size_t Batch_Size, Layer_Structure Structure>
+    requires(Batch_Size > 0)
 class layer
 {
-private:
+public:
     static constexpr size_t s_Inputs  = Structure.Inputs;
     static constexpr size_t s_Outputs = Structure.Outputs;
 
-public:
     using weights_shape       = ga_sm::static_matrix<T, s_Inputs, s_Outputs>;
     using output_vector_shape = ga_sm::static_matrix<T, Batch_Size, s_Outputs>;
     using input_vector_shape  = ga_sm::static_matrix<T, Batch_Size, s_Inputs>;
@@ -93,14 +90,14 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    constexpr void init(Fn fn, Args... args)
+    constexpr void init(Fn&& fn, Args... args)
     {
         m_weights_mat.fill(fn, args...);
         m_bias_vector.fill(fn, args...);
     }
 
     template <typename Mutate_params, typename Fn, typename... Args>
-    constexpr void mutate(const Mutate_params& params, Fn fn, Args... args)
+    constexpr void mutate(const Mutate_params& params, Fn&& fn, Args... args)
     {
         m_weights_mat.mutate_replace_add(params.p1, params.p2, params.Avg, params.Stddev, fn, args...);
         m_bias_vector.mutate_replace_add(params.p1, params.p2, params.Avg, params.Stddev, fn, args...);
@@ -167,7 +164,7 @@ concept static_layer_type = requires { layer_dummy(std::declval<T>()); };
 template <static_layer_type Layer>
 std::ostream& operator<<(std::ostream& os, const Layer& layer)
 {
-    os << layer.get_weights_mat() << layer.get_bias_vector() << "\n";
+    os << layer.get_weights_mat() << layer.get_bias_vector() << '\n';
     return os;
 }
 
@@ -214,26 +211,34 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
         }
         else
         {
-            static_assert(false && Idx, "requested layer index exceeds number of layers");
+            static_assert(false && Idx, "requested layer index exceeds number of layers.");
         }
     }
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void init(Fn fn, Args... args)
+    void init(Fn&& fn, Args... args)
     {
         m_Data.init(fn, args...);
     }
 
     template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate(const Mutate_params& params, Fn fn, Args... args)
+    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
     {
         m_Data.mutate(params, fn, args...);
     }
 
+    template <typename Mutate_params, typename Fn, typename... Args>
+    void mutate_layer(size_t layer_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    {
+        layer_idx == 0
+            ? m_Data.mutate(params, fn, args...)
+            : throw std::invalid_argument("Invalid layer index: " + std::to_string(layer_idx) + " in last layer.");
+    }
+
     void print() const
     {
-        std::cout << m_Data << "\n";
+        std::cout << m_Data << '\n';
     }
 
     void store(std::ofstream& out) const
@@ -258,6 +263,7 @@ template <typename T,
           size_t          Batch_Size,
           Layer_Signature Current_Signature,
           Layer_Signature... Signatures>
+    requires(Batch_Size > 0)
 struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 {
     static constexpr size_t s_Inputs{ Inputs };
@@ -300,22 +306,28 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void init(Fn fn, Args... args)
+    void init(Fn&& fn, Args... args)
     {
         m_Data.init(fn, args...);
         m_Next.init(fn, args...);
     }
 
     template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate(const Mutate_params& params, Fn fn, Args... args)
+    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
     {
         m_Data.mutate(params, fn, args...);
         m_Next.mutate(params, fn, args...);
     }
 
+    template <typename Mutate_params, typename Fn, typename... Args>
+    void mutate_layer(size_t layer_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    {
+        layer_idx == 0 ? m_Data.mutate(params, fn, args...) : m_Next.mutate_layer(--layer_idx, params, fn, args...);
+    }
+
     void print() const
     {
-        std::cout << m_Data << "\n";
+        std::cout << m_Data << '\n';
         m_Next.print();
     }
 
@@ -339,8 +351,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 
 //--------------------------------------------------------------------------------------//
 
-template <typename T, size_t Batch_Size, Layer_Signature... Signatures>
-    requires((sizeof...(Signatures) >= 3) && std::is_floating_point_v<T> and Batch_Size > 0)
+template <std::floating_point T, size_t Batch_Size, Layer_Signature... Signatures>
+    requires((sizeof...(Signatures) >= 3) && Batch_Size > 0)
 class static_neural_net
 {
 public:
@@ -358,10 +370,10 @@ public:
     using output_type = ga_sm::static_matrix<T, Batch_Size, s_Output_Size>;
 
 public:
-    constexpr static size_t parameter_count()
+    [[nodiscard]] constexpr static size_t parameter_count()
     {
         size_t p = (s_Input_Size + 1) * s_Input_Size;
-        for (size_t i = 1; i < s_Layers; ++i)
+        for (size_t i = 1; i != s_Layers; ++i)
         {
             p += (s_Signatures[i - 1].Size + 1) * s_Signatures[i].Size;
         }
@@ -381,7 +393,7 @@ public:
     }
 
     template <std::size_t Idx>
-    auto& layer()
+    [[nodiscard]] auto& layer()
     {
         return m_Layers.template get<Idx>();
     } // you arent a real template programmer if you dont use .template  /s
@@ -394,15 +406,43 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void init(Fn fn, Args... args)
+    void init(Fn&& fn, Args... args)
     {
         m_Layers.init(fn, args...);
     }
 
     template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate(const Mutate_params& params, Fn fn, Args... args)
+    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
     {
         m_Layers.mutate(params, fn, args...);
+    }
+
+    template <typename Mutate_params, typename Fn, typename... Args>
+    void mutate_layer(size_t layer_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    {
+        m_Layers.mutate_layer(layer_idx, params, fn, args...);
+    }
+
+    template <typename Mutate_params, typename Fn, typename... Args>
+    void mutate_set_layers(const std::vector<size_t>& layers_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    {
+        mutate_set_layers_impl(layers_idx, params, fn, args...);
+    }
+
+    template <size_t I = 0, typename Mutate_params, typename Fn, typename... Args>
+    void mutate_set_layers_impl(const std::vector<size_t>& layers_idx,
+                                const Mutate_params&       params,
+                                Fn&&                       fn,
+                                Args... args)
+    {
+        if (std::ranges::find(layers_idx, I) != layers_idx.end())
+        {
+            this->template layer<I>().mutate(params, fn, args...);
+        }
+        if constexpr (I < (s_Layers - 1))
+        {
+            mutate_set_layers_impl<I + 1>(layers_idx, params, fn, args...);
+        }
     }
 
     void print_layers() const
@@ -414,53 +454,58 @@ public:
 
     void print_net() const
     {
-        std::cout << "#############################################################"
-                     "#############\n";
+        std::cout << "##########################################################"
+                     "################\n";
         print_layers();
         std::cout << "Net has " << parameter_count() << " parameters\n";
-        std::cout << "Net address " << this << "\n";
-        std::cout << "-------------------------------------------------------------"
-                     "-------------\n";
+        print_address();
+        std::cout << "----------------------------------------------------------"
+                     "----------------\n";
     }
 
-    void store(const std::string& filename) const
+    void print_address() const
+    {
+        std::cout << "Net address " << this << '\n';
+    }
+
+    void store(const std::filesystem::path& filename) const
     {
         std::ofstream out(filename);
         if (!out.is_open())
         {
-            const auto message = "Could not create file: " + filename + "\n";
+            const auto message = "Could not create file: " + filename.string() + '\n';
             std::cout << message;
             log::add(message);
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
         // store net shapes
         for (const auto& layer_signature : s_Signatures)
         {
-            out << layer_signature.Size << " ";
+            out << layer_signature.Size << ' ';
         }
         out << "\n\n";
         m_Layers.store(out); // Store layers recursively
         out.close();
         if (!out)
         {
-            const auto message = "Could not close file: " + filename + "\n";
+            const auto message = "Could not close file: " + filename.string() + '\n';
             std::cout << message;
             log::add(message);
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
     }
 
     // Overrides current net with one read from "filename"
     // Shapes of both nets must be the same
-    void load(const std::string& filename)
+    void load(const std::filesystem::path& filename)
     {
         std::ifstream in(filename);
         if (!in.is_open())
         {
-            const auto message = "Could not open file: " + filename + "\n";
+            const std::string message = "Could not open file: " + filename.string() + '\n';
             std::cout << message;
             log::add(message);
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
         size_t layer_size{}; // shape
         for (const auto& layer_signature : s_Signatures)
@@ -471,14 +516,14 @@ public:
                 const auto message = "Cannot load this net here. Shapes must match.\n";
                 std::cout << message;
                 log::add(message);
-                exit(EXIT_FAILURE);
+                std::exit(EXIT_FAILURE);
             }
         }
         m_Layers.load(in); // load layers recursively
         in.close();
         if (!in)
         {
-            const auto message = "Could not close file after reading: " + filename + "\n";
+            const auto message = "Could not close file after reading: " + filename.string() + '\n';
             std::cout << message;
             log::add(message);
         }
@@ -520,7 +565,7 @@ concept static_neural_net_type = requires { nnet_dummy(std::declval<T>()); };
 
 template <static_neural_net_type NNet, typename Fn, typename... Args>
     requires std::is_invocable_v<Fn, Args...>
-[[nodiscard]] std::unique_ptr<NNet> static_neural_net_factory(Fn fn, Args... args)
+[[nodiscard]] std::unique_ptr<NNet> static_neural_net_factory(Fn&& fn, Args... args)
 {
     using T = typename NNet::value_type;
     static_assert(std::is_invocable_r_v<T, Fn, Args...>);
@@ -560,7 +605,7 @@ std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> net_x_crossover(NNet con
 
     // Recursively crossover layers, starting with layer 0
     in_place_net_x_crossover(*ptr_ret_net1.get(), *ptr_ret_net2.get());
-    return std::make_pair(std::move(ptr_ret_net1), std::move(ptr_ret_net2));
+    return { std::move(ptr_ret_net1), std::move(ptr_ret_net2) };
 }
 
 template <static_layer_type Layer>
@@ -615,18 +660,22 @@ inline void to_target_net_x_crossover(const NNet& in_net1, const NNet& in_net2, 
 //--------------------------------------------------------------------------------------//
 // population variability
 
-// Returns matrix of distances between elements
-// Diagonal is set to 0
-template <size_t N, static_neural_net_type NNet>
+/**
+ * \brief Returns matrix of distances between elements. Diagonal is set to 0s.
+ * \param net_ptr_arr Array of pointers to neural nets
+ * \return Square matrix containing distances between nets
+ */
+template <std::floating_point R, size_t N, static_neural_net_type NNet>
     requires(N > 1)
-[[nodiscard]] ga_sm::static_matrix<double, N, N> population_variability(std::array<NNet*, N> const& net_ptr_arr)
+[[nodiscard]] ga_sm::static_matrix<R, N, N> population_variability(
+    std::array<std::reference_wrapper<const NNet>, N> const& net_ptr_arr)
 {
     ga_sm::static_matrix<double, N, N> L11_distance_matrix{};
-    for (size_t j = 0; j < N; ++j)
+    for (size_t j = 0; j != N - 1; ++j)
     {
-        for (size_t i = j + 1; i < N; ++i)
+        for (size_t i = j + 1; i != N; ++i)
         {
-            double distance           = L11_net_distance(net_ptr_arr[j], net_ptr_arr[i]);
+            const auto distance       = L11_net_distance<R>(net_ptr_arr[j].get(), net_ptr_arr[i].get());
             L11_distance_matrix(j, i) = distance;
             L11_distance_matrix(i, j) = distance;
         }
@@ -634,32 +683,45 @@ template <size_t N, static_neural_net_type NNet>
     return L11_distance_matrix;
 }
 
-template <static_layer_type Layer>
-[[nodiscard]] double L11_layer_distance(Layer const& layer1, Layer const& layer2)
+/**
+ * \brief Returns the sum of the normalized distance between homologous pairs of matrices between two layers
+ * \tparam R
+ * \tparam Layer
+ * \param layer1
+ * \param layer2
+ * \return
+ */
+template <std::floating_point R, static_layer_type Layer1, static_layer_type Layer2>
+    requires(Layer1::s_Inputs == Layer2::s_Inputs) && (Layer1::s_Outputs == Layer2::s_Outputs)
+[[nodiscard]] R L11_layer_distance(Layer1 const& layer1, Layer2 const& layer2)
 {
-    return normalized_L1_distance(layer1.get_weights_mat(), layer2.get_weights_mat()) +
-        normalized_L1_distance(layer1.get_bias_vector(), layer2.get_bias_vector());
+    return normalized_L1_distance<R>(layer1.get_weights_mat(), layer2.get_weights_mat()) +
+        normalized_L1_distance<R>(layer1.get_bias_vector(), layer2.get_bias_vector());
 }
 
-/// <summary>
-/// Returns the L11 distance between two nets.
-/// </summary>
-/// <template param name="I"> Index of the first layer to compare. Should be set
-/// to zero to compare the whole net. </template param> <typeparam
-/// name="T"></typeparam> <param name="ptr_net1"></param> <param
-/// name="ptr_net2"></param> <returns></returns>
-template <static_neural_net_type NNet, size_t I = 0>
-[[nodiscard]] double L11_net_distance(const NNet* const ptr_net1, const NNet* const ptr_net2)
+/**
+ * \brief Calculates the sum of the normalized distance between homologous pairs of matrices between both nets.
+ * Distance between each matrix is normalized by the amount of elements in the matrices.
+ * \tparam R Float return trype
+ * \tparam NNet1 Net type 1. Must share all layer shapes with Net type 2 as well as the amount of layers.
+ * \tparam NNet2 Net type 2. Must share all layer shapes with Net type 1 as well as the amount of layers.
+ * \tparam I Implementation detail, should not be used. Used to index layers recursively.
+ * \param net1 First net to compare
+ * \param net2 Second net to compare
+ * \return Sum of the normalized distance between pairs of matrices between both nets.
+ */
+template <std::floating_point R, static_neural_net_type NNet1, static_neural_net_type NNet2, size_t I = 0>
+    requires(NNet1::s_Layers == NNet2::s_Layers)
+[[nodiscard]] R L11_net_distance(const NNet1& net1, const NNet2& net2)
 {
-    const auto current_distance =
-        L11_layer_distance(ptr_net1->template const_layer<I>(), ptr_net2->template const_layer<I>());
-    if constexpr (I == NNet::s_Layers - 1)
+    const auto current_distance = L11_layer_distance<R>(net1.template const_layer<I>(), net2.template const_layer<I>());
+    if constexpr (I == NNet1::s_Layers - 1)
     {
         return current_distance;
     }
     else
     {
-        return current_distance + L11_net_distance<NNet, I + 1>(ptr_net1, ptr_net2);
+        return current_distance + L11_net_distance<R, NNet1, NNet2, I + 1>(net1, net2);
     }
 }
 

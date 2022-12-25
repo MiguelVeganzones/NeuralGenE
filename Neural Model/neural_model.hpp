@@ -15,54 +15,32 @@
 namespace ga_neural_model
 {
 
-struct score_function_params
-{
-    score_functions::Identifiers score_function;
-
-    int wins_weight;
-    int ties_weight;
-    int loses_weight;
-};
-
 template <typename NNet>
 concept neural_net_type = requires {
                               // Si hubiese más tipos de redes se podrían añadir aqui
                               ga_snn::static_neural_net_type<NNet>;
                           };
 
-template <neural_net_type NNet, score_function_params Score_Function_Params>
+template <neural_net_type NNet, score_function_objects::score_function_object_type Score_Function>
 class brain
 {
 public:
-    using value_type        = typename NNet::value_type;
-    using input_type        = typename NNet::input_type;
-    using output_type       = typename NNet::output_type;
-    using points_value_type = std::uint16_t;
-    using score_value_type  = double;
-    using score_functions   = score_functions::score_functions<score_value_type, points_value_type>;
-    using f_ptr             = score_functions::f_ptr;
+    using value_type  = typename NNet::value_type;
+    using input_type  = typename NNet::input_type;
+    using output_type = typename NNet::output_type;
 
     inline static constexpr size_t s_Brain_layers = NNet::s_Layers;
 
     inline static std::atomic<size_t> s_ID = 1;
 
-    inline static constexpr f_ptr s_score_metric =
-        score_functions::choose_function<Score_Function_Params.score_function,
-                                         Score_Function_Params.wins_weight,
-                                         Score_Function_Params.ties_weight,
-                                         Score_Function_Params.loses_weight>();
-
-
 private:
-    size_t            m_ID = s_ID++;
-    size_t            m_Parent_a{};
-    size_t            m_Parent_b{};
-    size_t            m_Generation{};
-    points_value_type m_Wins{};
-    points_value_type m_Loses{};
-    points_value_type m_Ties{};
+    size_t m_ID = s_ID++;
+    size_t m_Parent_a{};
+    size_t m_Parent_b{};
+    size_t m_Generation{};
 
-    std::unique_ptr<NNet> m_Ptr_net;
+    std::unique_ptr<NNet>           m_Ptr_net;
+    std::unique_ptr<Score_Function> m_Ptr_score_function;
 
 public:
     brain() = default;
@@ -70,6 +48,14 @@ public:
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<value_type, Fn, Args...>
     explicit brain(Fn&& fn, Args... args) : m_Ptr_net{ std::make_unique<NNet>() }
+    {
+        m_Ptr_net->init(fn, args...);
+    }
+
+    template <typename Fn, typename... Args>
+        requires std::is_invocable_r_v<value_type, Fn, Args...>
+    explicit brain(Score_Function score_function, Fn&& fn, Args... args) :
+        m_Ptr_net{ std::make_unique<NNet>() }, m_Ptr_score_function{ std::make_unique<Score_Function>(score_function) }
     {
         m_Ptr_net->init(fn, args...);
     }
@@ -99,9 +85,6 @@ public:
             m_Parent_a   = other.m_Parent_a;
             m_Parent_b   = other.m_Parent_b;
             m_Generation = other.m_Generation;
-            m_Wins       = other.m_Wins;
-            m_Loses      = other.m_Loses;
-            m_Ties       = other.m_Ties;
             m_Ptr_net.reset(new NNet(*other.get()));
         }
         return *this;
@@ -111,6 +94,21 @@ public:
     ~brain()                  = default;
 
     /* Getters and setters */
+
+    void set_score_function_obj(Score_Function score_function)
+    {
+        m_Ptr_score_function = score_function;  
+    }
+
+    [[nodiscard]] Score_Function* get_score_function_obj()
+    {
+        return m_Ptr_score_function.get();  
+    }
+
+    [[nodiscard]] auto get_score()
+    {
+        return m_Ptr_score_function->operator()();  
+    }
 
     [[nodiscard]] auto ID() const
     {
@@ -149,7 +147,10 @@ public:
 
     [[nodiscard]] auto get_score() const
     {
-        return s_score_metric(m_Wins, m_Ties, m_Loses);
+        if (m_Ptr_score_function)
+            return m_Ptr_score_function->operator()();
+
+        throw std::exception("m_Function_ptr is not set.");
     }
 
     /* Member functions */
@@ -201,9 +202,6 @@ private:
         // m_Parent_a{};
         // m_Parent_b{};
         // m_Generation++;
-        m_Wins  = 0;
-        m_Loses = 0;
-        m_Ties  = 0;
     }
 };
 
@@ -211,8 +209,8 @@ private:
 //  Neural net concept
 //--------------------------------------------------------------------------------------//
 
-template <neural_net_type NNet, score_function_params Score_Function_Params>
-void nnet_dummy(brain<NNet, Score_Function_Params>)
+template <neural_net_type NNet, score_function_objects::score_function_object_type Score_Function>
+void nnet_dummy(brain<NNet, Score_Function>)
 {
 }
 

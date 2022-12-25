@@ -80,13 +80,12 @@ void training_test0()
     using namespace ga_snn;
     using namespace ga_sm;
 
+    constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
+        choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
+
     constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
-    constexpr auto SM = ga_neural_model::score_function_object(
-        score_functions::score_functions<double, int>::
-            choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>(),
-        0,
-        0,
-        0);
+    auto SM = score_function_objects::score_function_object<decltype(fn), std::uint16_t, std::uint16_t, std::uint16_t>(fn);
+
 
     using SM_t = decltype(SM);
 
@@ -102,23 +101,31 @@ void training_test0()
 
     for (size_t i = 0; i != N; ++i)
     {
-        gen_a[i] = ga_neural_model::brain<NET, SM_t>(random::randnormal, 0, 1);
-        gen_b[i] = ga_neural_model::brain<NET, SM_t>(random::randnormal, 0, 1);
+        gen_a[i] = ga_neural_model::brain<NET, SM_t>(SM, random::randnormal, 0, 1);
+        gen_b[i] = ga_neural_model::brain<NET, SM_t>(SM, random::randnormal, 0, 1);
     }
+
+    std::cout << gen_a[0].get_score_function_obj()->operator()() << std::endl;
+    gen_a[0].get_score_function_obj()->lost();
+    gen_a[0].get_score_function_obj()->tied();
+    gen_a[0].get_score_function_obj()->won();
+    std::cout << gen_a[0].get_score_function_obj()->operator()() << std::endl;
+    std::cout << gen_a[0].get_score() << std::endl;
 }
-
-
-void score_function_object_test()
-{
-    auto f = [](std::tuple<int, int> const& t) { return std::get<0>(t) + std::get<1>(t); };
-    ga_neural_model::score_function_object f_obj(f, 0, 1);
-
-    std::cout << f_obj() << std::endl;
-}
+//
+//
+// void score_function_object_test()
+//{
+//    auto f = [](std::tuple<int, int> const& t) { return std::get<0>(t) + std::get<1>(t); };
+//    ga_neural_model::score_function_object f_obj(f, 0, 1);
+//
+//    std::cout << f_obj() << std::endl;
+//}
 
 int main()
 {
-    score_function_object_test();
-    // in_place_x_crossover_test();
+    training_test0();
+    // score_function_object_test();
+    //  in_place_x_crossover_test();
     return EXIT_SUCCESS;
 }

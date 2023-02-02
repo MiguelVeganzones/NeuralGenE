@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\parallel_hashmap">
+      <UniqueIdentifier>{6e2bfc45-3633-49fa-8287-95031f3cbf75}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cx_helper_functions.h">
@@ -30,10 +33,42 @@
     <ClInclude Include="Stopwatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="parallel_hashmap\btree.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\meminfo.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\phmap.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\phmap_base.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\phmap_bits.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\phmap_config.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\phmap_dump.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\phmap_fwd_decl.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_hashmap\phmap_utils.h">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utility_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="parallel_hashmap\conanfile.py">
+      <Filter>Resource Files\parallel_hashmap</Filter>
+    </None>
   </ItemGroup>
 </Project>

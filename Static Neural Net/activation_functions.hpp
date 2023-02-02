@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <stdexcept>
+#include <cmath>
 
 //--------------------------------------------------------------------------------------//
 
@@ -69,7 +70,7 @@ template <typename Mat>
 [[nodiscard]] inline static Mat ReLU_impl(const Mat& mat)
 {
     using T = typename Mat::value_type;
-    return mat.apply([](T x) { return std::max(x, T(0)); });
+    return mat.apply_fn([](T x) { return x > T{} ? x : T{}; }); //{ return std::max(x, T{}); });
 }
 
 template <typename Mat>
@@ -82,14 +83,14 @@ template <typename Mat>
 [[nodiscard]] inline static Mat Sigmoid_impl(const Mat& mat)
 {
     using T = typename Mat::value_type;
-    return mat.apply([](T x) { return static_cast<T>(T(1) / (T(1) + std::exp(-x))); });
+    return mat.apply_fn([](T x) { return static_cast<T>(T(1) / (T(1) + std::exp(-x))); });
 }
 
 template <typename Mat>
 [[nodiscard]] inline static Mat Tanh_impl(const Mat& mat)
 {
     using T = typename Mat::value_type;
-    return mat.apply([](T x) { return static_cast<T>(std::tanh(x)); });
+    return mat.apply_fn([](T x) { return static_cast<T>(std::tanh(x)); });
 }
 
 enum Identifiers

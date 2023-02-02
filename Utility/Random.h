@@ -9,6 +9,7 @@
 
 #include <random>
 // #include <mutex>
+#include <cassert>
 #include <chrono>
 #include <limits>
 
@@ -30,6 +31,13 @@ public:
     inline static int randint(const int min, const int max)
     {
         std::uniform_int_distribution<int> u(min, max);
+        return u(random::s_Random_engine);
+    }
+
+    inline static size_t randsize_t(const size_t min, const size_t max)
+    {
+        assert(min <= max);  
+        std::uniform_int_distribution<size_t> u(min, max);
         return u(random::s_Random_engine);
     }
 

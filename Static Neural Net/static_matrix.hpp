@@ -363,71 +363,20 @@ public:
         std::iota(begin(), end(), T(0));
     }
 
-    /// <summary>
-    /// Each element of the matrix might be :
-    /// <para> (1) Replaced by a value given by fn(args...) with a probability p1 : e = fn(args...)
-    /// </para>
-    /// <para>    - or -    </para>
-    /// <para> (2) Modified by a normal distribution given by[avg, stddev] and fn(args...)
-    /// with a probability p2 : e += N(abg, stddev) * fn(args...)
-    /// </para>
-    /// </summary>
-    /// <typeparam name="Fn">Function type</typeparam>
-    /// <typeparam name="...Args">Function parameters type</typeparam>
-    /// <param name="p1">Probability of mutation (1)</param>
-    /// <param name="p2">Probability of mutation (2)</param>
-    /// <param name="avg">Mean value of the normal distribution used in mutation (2)</param>
-    /// <param name="stddev">Standard deviation of the normal distribution used in mutation (2) </param>
-    /// <param name="fn">Function used in mutation (1)</param>
-    /// <param name="args">Parameters of the function fn</param>
-
-    template <typename Fn, typename... Args>
-        requires(std::is_floating_point_v<T> && std::is_invocable_r_v<T, Fn, Args...>)
-    void mutate_replace_add(const float p1, const float p2, const float avg, const float stddev, Fn&& fn, Args... args)
+    template <typename Fn>
+        requires std::is_invocable_r_v<T, Fn, T>
+    constexpr void transform(Fn&& fn)
     {
-        assert((p1 >= 0.f) && (p2 >= 0.f) && (p1 + p2 <= 1.f));
-
-        for (iterator it = begin(); it != end(); ++it)
-        {
-            const float rand = random::randfloat();
-            if (rand < p1)
-            {
-                *it = static_cast<T>(std::invoke(fn, args...));
-            }
-            else if (rand < (p1 + p2))
-            {
-                *it += static_cast<T>(std::invoke(fn, args...)) * random::randnormal(avg, stddev);
-            }
-        }
-    }
-
-    /*
-      Each element of the matrix might be replaced by a value given by fn(args...) with a
-      probability p : e = fn(args...)
-    */
-    template <typename Fn, typename... Args>
-        requires(std::is_floating_point_v<T> && std::is_invocable_r_v<T, Fn, Args...>)
-    void mutate_replace(float p, Fn&& fn, Args... args)
-    {
-        assert((p >= 0.f) && (p <= 1.f));
-
-        for (iterator it = begin(); it != end(); ++it)
-        {
-            if (random::randfloat() < p)
-                *it = static_cast<T>(std::invoke(fn, args...));
-        }
+        for (auto& e: *this)
+            e = fn(e);
     }
 
     template <typename Fn>
         requires std::is_invocable_r_v<T, Fn, T>
-    [[nodiscard]] constexpr static_matrix apply(Fn&& func) const
+    [[nodiscard]] static_matrix apply_fn(Fn&& fn) const noexcept(noexcept(fn))
     {
-        static_matrix ret{ *this };
-        for (iterator it = ret.begin(); it != ret.end(); ++it)
-        {
-            T e = *it;
-            *it = func(e);
-        }
+        static_matrix ret{ };
+        std::transform(begin(), end(), ret.begin(), fn);
         return ret;
     }
 
@@ -461,18 +410,6 @@ public:
     {
         assert(j < M and i < N);
         return m_Elems[j * N + i];
-    }
-
-    [[nodiscard]] constexpr row_matrix operator[](const size_t j) const
-    {
-        assert(j < M);
-        row_matrix     ret{};
-        const_iterator it(m_Elems, j * N);
-        for (size_t i = 0; i != N; ++i, ++it)
-        {
-            ret(0, i) = *it;
-        }
-        return ret;
     }
 
     [[nodiscard]] constexpr static_matrix operator+(static_matrix const& other) const

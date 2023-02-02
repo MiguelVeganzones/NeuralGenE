@@ -121,32 +121,75 @@ void get_layer()
 
     constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
 
-    constexpr auto ls5  = Layer_Signature{ 5, AF };
-    constexpr auto ls10 = Layer_Signature{ 10, AF };
-    constexpr auto ls25 = Layer_Signature{ 25, AF };
-    constexpr auto ls50 = Layer_Signature{ 50, AF };
+    constexpr auto ls5 = Layer_Signature{ 5, AF };
+    // constexpr auto ls10 = Layer_Signature{ 10, AF };
+    // constexpr auto ls25 = Layer_Signature{ 25, AF };
+    // constexpr auto ls50 = Layer_Signature{ 50, AF };
 
     using NNet = static_neural_net<T, N, ls5, ls5, ls5>;
 
     const auto ptr_net = static_neural_net_factory<NNet>(random::randnormal, 0, 1);
 
-    constexpr mutate_params params{ 0.2, 0.2, 0, 1 };
 
     ptr_net->print_net();
 
     for (int i = 0; i < 10; ++i)
     {
-        int idx = random::randint(0, NNet::s_Layers-1);
+        int idx = random::randint(0, NNet::s_Layers - 1);
         std::cout << idx << std::endl;
-        ptr_net->mutate_layer(idx, params, random::randfloat);
+        ptr_net->mutate_layer(idx, [](auto) { return random::randfloat(); });
         ptr_net->print_net();
     }
 }
 
+void layer_swap_test()
+{
+    random::init();
+
+    using namespace ga_sm;
+    using namespace ga_snn;
+    using T = float;
+
+    constexpr size_t N = 8;
+
+    constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
+
+    constexpr auto ls1 = Layer_Signature{ 1, AF };
+    constexpr auto ls5 = Layer_Signature{ 5, AF };
+    // constexpr auto ls10 = Layer_Signature{ 10, AF };
+    // constexpr auto ls25 = Layer_Signature{ 25, AF };
+    // constexpr auto ls50 = Layer_Signature{ 50, AF };
+
+    using NNet = static_neural_net<T, N, ls1, ls5, ls5, ls5, ls1>;
+
+    NNet net1{};
+    NNet net2{};
+    NNet net3{};
+    NNet net4{};
+
+    net1.init(random::randfloat);
+    net2.init(random::randfloat);
+    //net3.init(random::randfloat);
+    //net4.init(random::randfloat);
+
+    net1.print_net();
+    net2.print_net();
+    //net3.print_net();
+    //net4.print_net();
+
+    //to_target_layer_swap(net1, net2, net3, net4);
+    auto[p1, p2] = layer_swap(net1, net2);
+
+    p1->print_net();
+    p2->print_net();
+    //net3.print_net();
+    //net4.print_net();
+}
+
 int main()
 {
-    get_layer();
-
+    //get_layer();
+    layer_swap_test();
 
     return EXIT_SUCCESS;
 }

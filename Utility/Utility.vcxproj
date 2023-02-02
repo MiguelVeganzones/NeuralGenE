@@ -279,12 +279,24 @@
   <ItemGroup>
     <ClInclude Include="cx_helper_functions.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="parallel_hashmap\btree.h" />
+    <ClInclude Include="parallel_hashmap\meminfo.h" />
+    <ClInclude Include="parallel_hashmap\phmap.h" />
+    <ClInclude Include="parallel_hashmap\phmap_base.h" />
+    <ClInclude Include="parallel_hashmap\phmap_bits.h" />
+    <ClInclude Include="parallel_hashmap\phmap_config.h" />
+    <ClInclude Include="parallel_hashmap\phmap_dump.h" />
+    <ClInclude Include="parallel_hashmap\phmap_fwd_decl.h" />
+    <ClInclude Include="parallel_hashmap\phmap_utils.h" />
     <ClInclude Include="Precision_totalizer.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="Stopwatch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utility_main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="parallel_hashmap\conanfile.py" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

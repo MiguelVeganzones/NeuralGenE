@@ -16,23 +16,23 @@
 
 namespace ga_snn
 {
-/*
-  Each element of the matrix might be:
-  Replaced by a value given by fn(args...) with a probability p1 : e =
-fn(args...)
-  - or -
-  Modified by a normal distribuion given by [avg, Stddev] and fn(args...) with
-a probability p2 : e
-+= N(abg, Stddev)*fn(args...)
->>> void mutate(float Avg, float Stddev, float p1, float p2)
-*/
-struct mutate_params
-{
-    float p1;
-    float p2;
-    float Avg;
-    float Stddev;
-};
+///*
+//  Each element of the matrix might be:
+//  Replaced by a value given by fn(args...) with a probability p1 : e =
+// fn(args...)
+//  - or -
+//  Modified by a normal distribuion given by [avg, Stddev] and fn(args...) with
+// a probability p2 : e
+//+= N(abg, Stddev)*fn(args...)
+//>>> void mutate(float Avg, float Stddev, float p1, float p2)
+//*/
+// struct mutate_params
+//{
+//    float p1;
+//    float p2;
+//    float Avg;
+//    float Stddev;
+//};
 
 struct Layer_Signature
 {
@@ -96,11 +96,11 @@ public:
         m_bias_vector.fill(fn, args...);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    constexpr void mutate(const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    constexpr void mutate(Fn&& fn)
     {
-        m_weights_mat.mutate_replace_add(params.p1, params.p2, params.Avg, params.Stddev, fn, args...);
-        m_bias_vector.mutate_replace_add(params.p1, params.p2, params.Avg, params.Stddev, fn, args...);
+        m_weights_mat.transform(fn);
+        m_bias_vector.transform(fn);
     }
 
     void store(std::ofstream& out) const
@@ -222,17 +222,17 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
         m_Data.init(fn, args...);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    void mutate(Fn&& fn)
     {
-        m_Data.mutate(params, fn, args...);
+        m_Data.mutate(fn);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate_layer(size_t layer_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    void mutate_layer(size_t layer_idx, Fn&& fn)
     {
         layer_idx == 0
-            ? m_Data.mutate(params, fn, args...)
+            ? m_Data.mutate(fn)
             : throw std::invalid_argument("Invalid layer index: " + std::to_string(layer_idx) + " in last layer.");
     }
 
@@ -312,17 +312,17 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
         m_Next.init(fn, args...);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    void mutate(Fn&& fn)
     {
-        m_Data.mutate(params, fn, args...);
-        m_Next.mutate(params, fn, args...);
+        m_Data.mutate(fn);
+        m_Next.mutate(fn);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate_layer(size_t layer_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    void mutate_layer(size_t layer_idx, Fn&& fn)
     {
-        layer_idx == 0 ? m_Data.mutate(params, fn, args...) : m_Next.mutate_layer(--layer_idx, params, fn, args...);
+        layer_idx == 0 ? m_Data.mutate(fn) : m_Next.mutate_layer(--layer_idx, fn);
     }
 
     void print() const
@@ -370,14 +370,36 @@ public:
     using output_type = ga_sm::static_matrix<T, Batch_Size, s_Output_Size>;
 
 public:
-    [[nodiscard]] constexpr static size_t parameter_count()
+    [[nodiscard]] constexpr static size_t parameter_count(const int first_layer = 0,
+                                                          const int last_layer  = s_Layers - 1)
     {
-        size_t p = (s_Input_Size + 1) * s_Input_Size;
-        for (size_t i = 1; i != s_Layers; ++i)
+        assert(first_layer >= 0);
+        assert(last_layer < s_Layers);
+        assert(first_layer <= s_Layers);
+
+        size_t p{};
+        for (int i = first_layer; i != last_layer + 1; ++i)
         {
-            p += (s_Signatures[i - 1].Size + 1) * s_Signatures[i].Size;
+            p += layer_parameter_count(i);
         }
         return p;
+
+        // size_t p = (s_Input_Size + 1) * s_Input_Size;
+        // for (size_t i = 1; i != s_Layers; ++i)
+        //{
+        //     p += (s_Signatures[i - 1].Size + 1) * s_Signatures[i].Size;
+        // }
+        // return p;
+    }
+
+    [[nodiscard]] constexpr static size_t layer_parameter_count(const int layer_idx = 0)
+    {
+        assert(layer_idx >= 0);
+        assert(layer_idx < s_Layers);
+
+        using namespace cx_helper_func;
+
+        return (s_Signatures[cx_max(layer_idx - 1, 0)].Size + 1) * s_Signatures[layer_idx].Size;
     }
 
     template <size_t Batch_Size_Other>
@@ -411,37 +433,34 @@ public:
         m_Layers.init(fn, args...);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    void mutate(Fn&& fn)
     {
-        m_Layers.mutate(params, fn, args...);
+        m_Layers.mutate(fn);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate_layer(size_t layer_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    void mutate_layer(size_t layer_idx, Fn&& fn)
     {
-        m_Layers.mutate_layer(layer_idx, params, fn, args...);
+        m_Layers.mutate_layer(layer_idx, fn);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-    void mutate_set_layers(const std::vector<size_t>& layers_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+    void mutate_set_layers(const std::vector<size_t>& layers_idx, Fn&& fn)
     {
-        mutate_set_layers_impl(layers_idx, params, fn, args...);
+        mutate_set_layers_impl(layers_idx, fn);
     }
 
-    template <size_t I = 0, typename Mutate_params, typename Fn, typename... Args>
-    void mutate_set_layers_impl(const std::vector<size_t>& layers_idx,
-                                const Mutate_params&       params,
-                                Fn&&                       fn,
-                                Args... args)
+    template <size_t I = 0, typename Fn>
+    void mutate_set_layers_impl(const std::vector<size_t>& layers_idx, Fn&& fn)
     {
         if (std::ranges::find(layers_idx, I) != layers_idx.end())
         {
-            this->template layer<I>().mutate(params, fn, args...);
+            this->template layer<I>().mutate(fn);
         }
         if constexpr (I < (s_Layers - 1))
         {
-            mutate_set_layers_impl<I + 1>(layers_idx, params, fn, args...);
+            mutate_set_layers_impl<I + 1>(layers_idx, fn);
         }
     }
 
@@ -541,6 +560,12 @@ public:
     {
         const auto temp = cast_to_shape<1, s_Input_Size>(input_data);
         return cast_to_shape<M_Out, N_Out>(m_Layers.forward_pass(temp));
+    }
+
+    [[nodiscard]] value_type forward_pass(value_type input_value) const
+        requires((1 == s_Output_Size) && (1 == s_Input_Size) && Batch_Size == 1)
+    {
+        return m_Layers.forward_pass(ga_sm::static_matrix<value_type, 1, 1>{ input_value })(0, 0);
     }
 };
 
@@ -655,6 +680,83 @@ inline void to_target_net_x_crossover(const NNet& in_net1, const NNet& in_net2, 
     if constexpr (I != NNet::s_Layers - 1)
         to_target_net_x_crossover<NNet, I + 1>(in_net1, in_net2, out_net1, out_net2);
 }
+
+/**
+ * \brief Divides NNet layers in two groups (can be thought as encoder and decoder) and crossovers those layer groups in
+ * out_net1 and out_net2
+ * \note Beware of bad code
+ */
+template <static_neural_net_type NNet>
+    requires(std::is_standard_layout_v<std::remove_reference<NNet>> && std::is_trivial_v<std::remove_reference<NNet>>)
+inline void to_target_layer_swap(const NNet& in_net1, const NNet& in_net2, NNet& out_net1, NNet& out_net2)
+{
+    using value_type = typename NNet::value_type;
+
+    const auto layers         = NNet::s_Layers;
+    const auto net_parameters = NNet::parameter_count();
+
+    const auto a = random::randint(0, layers - 1);
+
+    const auto first_half_count  = NNet::parameter_count(0, a);
+    const auto second_half_count = NNet::parameter_count(a + 1, layers - 1);
+    const auto first_half_size   = first_half_count * sizeof(value_type);
+    const auto second_half_size  = second_half_count * sizeof(value_type);
+
+    assert(net_parameters * sizeof(value_type) == first_half_size + second_half_size);
+    assert(net_parameters * sizeof(value_type) == sizeof(NNet));
+
+    std::memcpy(&out_net1, &in_net1, first_half_size);
+    std::memcpy((value_type*)&out_net1 + first_half_count, (value_type*)&in_net2 + first_half_count, second_half_size);
+
+    std::memcpy(&out_net2, &in_net2, first_half_size);
+    std::memcpy((value_type*)&out_net2 + first_half_count, (value_type*)&in_net1 + first_half_count, second_half_size);
+}
+
+/**
+ * \brief Divides NNet layers in two groups (can be thought as encoder and decoder) and crossovers those layer in place
+ * \note Beware of bad code
+ */
+template <static_neural_net_type NNet>
+    requires(std::is_standard_layout_v<std::remove_reference<NNet>> && std::is_trivial_v<std::remove_reference<NNet>>)
+inline void in_place_layer_swap(NNet& net1, NNet& net2)
+{
+    using value_type = typename NNet::value_type;
+
+    const auto layers = NNet::s_Layers;
+
+    const auto a = random::randint(0, layers - 1);
+
+    if (a == 0 || a == layers - 1)
+        return;
+
+    const auto first_half_count  = NNet::parameter_count(0, a);
+    const auto second_half_count = NNet::parameter_count(a + 1, layers - 1);
+
+    assert(NNet::parameter_count() == first_half_count + second_half_count);
+    assert(NNet::parameter_count() * sizeof(value_type) == sizeof(NNet));
+
+    const auto first = first_half_count < second_half_count;
+    const auto start = first ? 0 : first_half_count;
+    const auto end   = first ? first_half_count : first_half_count + second_half_count;
+    auto       p1    = (value_type*)&net1;
+    auto       p2    = (value_type*)&net2;
+
+    for (size_t i = start; i != end; ++i)
+    {
+        helper_functions::pointer_swap(p1 + i, p2 + i);
+    }
+}
+
+template <static_neural_net_type NNet>
+std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> layer_swap(NNet const& net1, NNet const& net2)
+{
+    auto ptr_ret_net1 = std::make_unique<NNet>(net1);
+    auto ptr_ret_net2 = std::make_unique<NNet>(net2);
+
+    in_place_layer_swap(*ptr_ret_net1.get(), *ptr_ret_net2.get());
+    return { std::move(ptr_ret_net1), std::move(ptr_ret_net2) };
+}
+
 //......................................................................................//
 
 //--------------------------------------------------------------------------------------//

@@ -128,16 +128,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\Python311\include;C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\include;D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility</IncludePath>
+    <LibraryPath>C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib\Matplot++;C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\include;D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility</IncludePath>
+    <LibraryPath>C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib\Matplot++;C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_LLVM-Clang|x64'">
-    <IncludePath>D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\include;D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility</IncludePath>
+    <LibraryPath>C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib\Matplot++;C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Intel|x64'">
-    <IncludePath>D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\include;D:\proyects\c++\visual studio\Genetic Evolution Environment\Static Neural Net;D:\proyects\c++\visual studio\Genetic Evolution Environment\Utility</IncludePath>
+    <LibraryPath>C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib\Matplot++;C:\Program Files\C++ Libraries\matplotplusplus 1.1.0\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -206,6 +210,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -222,6 +227,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -239,6 +245,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -258,6 +265,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

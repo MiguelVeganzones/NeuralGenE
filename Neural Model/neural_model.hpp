@@ -162,7 +162,12 @@ public:
         m_Ptr_net->init(fn, args...);
     }
 
-    output_type weigh(const input_type& in)
+    output_type weigh(const input_type& in) const
+    {
+        return m_Ptr_net->forward_pass(in);
+    }
+
+    value_type weigh(value_type in) const
     {
         return m_Ptr_net->forward_pass(in);
     }
@@ -181,18 +186,18 @@ public:
 
     /* GA Utility */
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-        requires std::is_invocable_r_v<value_type, Fn, Args...>
-    void mutate(const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+        requires std::is_invocable_r_v<value_type, Fn, value_type>
+    void mutate(Fn&& fn)
     {
-        m_Ptr_net->mutate(params, fn, args...);
+        m_Ptr_net->mutate(fn);
     }
 
-    template <typename Mutate_params, typename Fn, typename... Args>
-        requires std::is_invocable_r_v<value_type, Fn, Args...>
-    void mutate_set_layers(const std::vector<size_t>& layers_idx, const Mutate_params& params, Fn&& fn, Args... args)
+    template <typename Fn>
+        requires std::is_invocable_r_v<value_type, Fn, value_type>
+    void mutate_set_layers(const std::vector<size_t>& layers_idx, Fn&& fn)
     {
-        m_Ptr_net->mutate_set_layers(layers_idx, params, fn, args...);
+        m_Ptr_net->mutate_set_layers(layers_idx, fn);
     }
 
 private:

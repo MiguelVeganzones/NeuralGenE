@@ -263,6 +263,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="activation_functions.hpp" />
+    <ClInclude Include="mutation_policy.hpp" />
     <ClInclude Include="static_matrix.hpp" />
     <ClInclude Include="static_neural_net.hpp" />
   </ItemGroup>

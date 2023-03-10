@@ -94,7 +94,7 @@ public:
 
     TEST_METHOD(assert_staticneural_net_size)
     {
-        Assert::IsTrue(sizeof(N) == N::parameter_count() * sizeof(T));
+        Assert::IsTrue(sizeof(N) == N::subnet_size());
     }
 
     TEST_METHOD(assert_is_trivially_copiable_nnet)

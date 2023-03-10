@@ -27,6 +27,9 @@
     <ClCompile Include="static_matrix_testing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="activation_functions_testing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

@@ -54,7 +54,7 @@ template <typename T1, typename T2>
 namespace helper_functions
 {
 template <typename T>
-void pointer_swap(T* r, T* s)
+void pointer_value_swap(T* r, T* s)
 {
     auto temp = *r;
     *r        = *s;

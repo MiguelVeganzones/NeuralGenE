@@ -62,7 +62,7 @@ void training_test()
         choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
 
     constexpr auto AF_relu = matrix_activation_functions::Identifiers::ReLU;
-    constexpr auto AF_tanh = matrix_activation_functions::Identifiers::Tanh;
+    constexpr auto AF_tanh = matrix_activation_functions::Identifiers::Sigmoid;
     auto           SM =
         score_function_objects::score_function_object<decltype(fn), std::uint16_t, std::uint16_t, std::uint16_t>(fn);
 

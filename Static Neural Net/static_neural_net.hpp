@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include "Log.h"
 #include "activation_functions.hpp"
@@ -16,37 +17,20 @@
 
 namespace ga_snn
 {
-///*
-//  Each element of the matrix might be:
-//  Replaced by a value given by fn(args...) with a probability p1 : e =
-// fn(args...)
-//  - or -
-//  Modified by a normal distribuion given by [avg, Stddev] and fn(args...) with
-// a probability p2 : e
-//+= N(abg, Stddev)*fn(args...)
-//>>> void mutate(float Avg, float Stddev, float p1, float p2)
-//*/
-// struct mutate_params
-//{
-//    float p1;
-//    float p2;
-//    float Avg;
-//    float Stddev;
-//};
 
 struct Layer_Signature
 {
-    size_t                                   Size;
-    matrix_activation_functions::Identifiers Activation;
+    size_t                                                 Size;
+    matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
     constexpr bool operator==(const Layer_Signature&) const = default;
 };
 
 struct Layer_Structure
 {
-    size_t                                   Inputs;
-    size_t                                   Outputs;
-    matrix_activation_functions::Identifiers Activation;
+    size_t                                                 Inputs;
+    size_t                                                 Outputs;
+    matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
     constexpr bool operator==(const Layer_Structure&) const = default;
 };
@@ -65,32 +49,21 @@ public:
     using output_vector_shape = ga_sm::static_matrix<T, Batch_Size, s_Outputs>;
     using input_vector_shape  = ga_sm::static_matrix<T, Batch_Size, s_Inputs>;
     using bias_vector_shape   = ga_sm::static_matrix<T, 1, s_Outputs>;
+    using activation_function = matrix_activation_functions::activation_function<output_vector_shape, Structure.Activation>;
 
 private:
-    inline static constexpr auto s_Activation_Function =
-        matrix_activation_functions::choose_func<output_vector_shape, Structure.Activation>();
-    // inline static std::function<T(T)>
-    //     s_Activation_Function = activation_functions::choose_func<T,
-    //     Structure.Activation>();
-
-private:
-    weights_shape     m_weights_mat;
-    bias_vector_shape m_bias_vector;
+    weights_shape       m_weights_mat;
+    bias_vector_shape   m_bias_vector;
+    activation_function m_activation_function;
 
 public:
     // each neuron produces a column vector that splits into the input of the
     // neurons in the next layer
     [[nodiscard]] constexpr output_vector_shape forward_pass(input_vector_shape const& Input) const
     {
-        // return multiply_add_activate(m_weights_mat, Input, m_offset_vector,
-        // s_Activation_Function);
-
-        // Comproibar si esto es mas eficiente que crear una copia, que yo entinedo que si
         auto out = matrix_vec_add(matrix_mul(Input, m_weights_mat), m_bias_vector);
-        s_Activation_Function(out);
+        m_activation_function(out);
         return out;
-
-        //return s_Activation_Function(matrix_vec_add(matrix_mul(Input, m_weights_mat), m_bias_vector));
     }
 
     template <typename Fn, typename... Args>
@@ -99,6 +72,7 @@ public:
     {
         m_weights_mat.fill(fn, args...);
         m_bias_vector.fill(fn, args...);
+        m_activation_function.fill(fn, args...);
     }
 
     template <typename Fn>
@@ -106,14 +80,17 @@ public:
     {
         m_weights_mat.transform(fn);
         m_bias_vector.transform(fn);
+        m_activation_function.mutate_params(fn);
     }
 
+    // todo store activation function parameters
     void store(std::ofstream& out) const
     {
         m_weights_mat.store(out);
         m_bias_vector.store(out);
     }
 
+    // todo load activation function parameters
     void load(std::ifstream& in)
     {
         m_weights_mat.load(in);
@@ -140,6 +117,16 @@ public:
         return m_bias_vector;
     }
 
+    [[nodiscard]] inline constexpr const activation_function& get_activation_function() const
+    {
+        return m_activation_function;
+    }
+
+    [[nodiscard]] inline constexpr activation_function& get_activation_function()
+    {
+        return m_activation_function;
+    }
+
     [[nodiscard]] static inline constexpr size_t get_inputs()
     {
         return s_Inputs;
@@ -148,6 +135,16 @@ public:
     [[nodiscard]] static inline constexpr size_t get_outputs()
     {
         return s_Outputs;
+    }
+
+    [[nodiscard]] static inline constexpr size_t parameter_count()
+    {
+        return s_Outputs * (s_Inputs + 1) + activation_function::parameter_count();
+    }
+
+    [[nodiscard]] static inline constexpr size_t layer_size()
+    {
+        return sizeof(layer);
     }
 };
 
@@ -169,7 +166,7 @@ concept static_layer_type = requires { layer_dummy(std::declval<T>()); };
 template <static_layer_type Layer>
 std::ostream& operator<<(std::ostream& os, const Layer& layer)
 {
-    os << layer.get_weights_mat() << layer.get_bias_vector() << '\n';
+    os << layer.get_weights_mat() << layer.get_bias_vector() << layer.get_activation_function() << '\n';
     return os;
 }
 
@@ -190,10 +187,11 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
     static constexpr size_t s_Inputs{ Inputs };
     static constexpr size_t s_Outputs{ Current_Signature.Size };
 
-    layer<T, Batch_Size, Layer_Structure{ Inputs, Current_Signature.Size, Current_Signature.Activation }>
-        m_Data; // one data member for this layer
+    using current_layer_type =
+        layer<T, Batch_Size, Layer_Structure{ s_Inputs, s_Outputs, Current_Signature.Activation }>;
 
-    //------ MEMBER FUNCTIONS -----//
+    current_layer_type m_Data; // one data member for this layer
+
     template <size_t Idx>
     [[nodiscard]] constexpr auto& get()
     {
@@ -260,6 +258,24 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
     {
         return m_Data.forward_pass(input_data);
     }
+
+    [[nodiscard]] static size_t layer_size(const int idx_to_target_layer)
+    {
+        if (idx_to_target_layer == 0)
+        {
+            return current_layer_type::layer_size();
+        }
+        std::unreachable();
+    }
+
+    [[nodiscard]] static size_t parameter_count(const int idx_to_target_layer)
+    {
+        if (idx_to_target_layer == 0)
+        {
+            return current_layer_type::parameter_count();
+        }
+        std::unreachable();
+    }
 };
 
 // general specialization
@@ -274,15 +290,16 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
     static constexpr size_t s_Inputs{ Inputs };
     static constexpr size_t s_Outputs{ Current_Signature.Size };
 
-    layer<T, Batch_Size, Layer_Structure{ s_Inputs, s_Outputs, Current_Signature.Activation }>
-        m_Data; // one data member for this layer
-    layer_unroll<T, Current_Signature.Size, Batch_Size, Signatures...>
-        m_Next; // another layer_unroll member for the rest
+    using current_layer_type = 
+      layer<T, Batch_Size, Layer_Structure{ s_Inputs, s_Outputs, Current_Signature.Activation }>;
+    using next_data_type = layer_unroll<T, Current_Signature.Size, Batch_Size, Signatures...>;
 
-    //------ MEMBER FUNCTIONS -----//
+    current_layer_type m_Data; // one data member for this layer
+    next_data_type m_Next; // another layer_unroll member for the rest
+
     // getter so that we can actually get a specific layer by index
     template <size_t Idx>
-    constexpr auto& get()
+    [[nodiscard]] constexpr auto& get()
     {
         if constexpr (Idx == 0)
         { // if its 0, return this layer
@@ -352,6 +369,24 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
     {
         return m_Next.forward_pass(m_Data.forward_pass(input_data));
     }
+
+    [[nodiscard]] static size_t layer_size(const int idx_to_target_layer)
+    {
+        if (idx_to_target_layer == 0)
+        {
+            return current_layer_type::layer_size();
+        }
+        return next_data_type::layer_size(idx_to_target_layer - 1);
+    }
+
+    [[nodiscard]] static size_t parameter_count(const int idx_to_target_layer)
+    {
+        if (idx_to_target_layer == 0)
+        {
+            return current_layer_type::parameter_count();
+        }
+        return next_data_type::parameter_count(idx_to_target_layer - 1);
+    }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -367,7 +402,9 @@ public:
     static constexpr size_t                                s_Input_Size  = s_Signatures[0].Size;
 
 private:
-    layer_unroll<T, s_Input_Size, Batch_Size, Signatures...> m_Layers;
+    using layers_type = layer_unroll<T, s_Input_Size, Batch_Size, Signatures...>;
+
+    layers_type m_Layers;
 
 public:
     using value_type  = T;
@@ -375,7 +412,7 @@ public:
     using output_type = ga_sm::static_matrix<T, Batch_Size, s_Output_Size>;
 
 public:
-    [[nodiscard]] constexpr static size_t parameter_count(const int first_layer = 0,
+    [[nodiscard]] static constexpr size_t parameter_count(const int first_layer = 0,
                                                           const int last_layer  = s_Layers - 1)
     {
         assert(first_layer >= 0);
@@ -388,23 +425,30 @@ public:
             p += layer_parameter_count(i);
         }
         return p;
-
-        // size_t p = (s_Input_Size + 1) * s_Input_Size;
-        // for (size_t i = 1; i != s_Layers; ++i)
-        //{
-        //     p += (s_Signatures[i - 1].Size + 1) * s_Signatures[i].Size;
-        // }
-        // return p;
     }
 
-    [[nodiscard]] constexpr static size_t layer_parameter_count(const int layer_idx = 0)
+    [[nodiscard]] static constexpr size_t layer_parameter_count(const int layer_idx)
     {
         assert(layer_idx >= 0);
         assert(layer_idx < s_Layers);
 
-        using namespace cx_helper_func;
+        return layers_type::parameter_count(layer_idx);
+    }
 
-        return (s_Signatures[cx_max(layer_idx - 1, 0)].Size + 1) * s_Signatures[layer_idx].Size;
+    [[nodiscard]] static constexpr size_t subnet_size(const int first_layer = 0,
+                                                      const int last_layer  = s_Layers - 1)
+    {
+        size_t p{};
+        for (int i = first_layer; i != last_layer + 1; ++i)
+        {
+            p += layer_size(i);
+        }
+        return p;
+    }
+
+    [[nodiscard]] static constexpr size_t layer_size(const int layer_idx)
+    {
+        return layers_type::layer_size(layer_idx);
     }
 
     template <size_t Batch_Size_Other>
@@ -734,21 +778,20 @@ inline void in_place_layer_swap(NNet& net1, NNet& net2)
     if (a == 0 || a == layers - 1)
         return;
 
-    const auto first_half_count  = NNet::parameter_count(0, a);
-    const auto second_half_count = NNet::parameter_count(a + 1, layers - 1);
+    const auto first_half_size  = NNet::subnet_size(0, a);
+    const auto second_half_size = NNet::subnet_size(a + 1, layers - 1);
 
-    assert(NNet::parameter_count() == first_half_count + second_half_count);
-    assert(NNet::parameter_count() * sizeof(value_type) == sizeof(NNet));
+    assert(NNet::subnet_size() == first_half_size + second_half_size);
 
-    const auto first = first_half_count < second_half_count;
-    const auto start = first ? 0 : first_half_count;
-    const auto end   = first ? first_half_count : first_half_count + second_half_count;
-    auto       p1    = (value_type*)&net1;
-    auto       p2    = (value_type*)&net2;
+    const auto first = first_half_size < second_half_size;
+    const auto start = first ? 0 : first_half_size;
+    const auto end   = first ? first_half_size : first_half_size + second_half_size;
+    auto       p1    = (char*)&net1;
+    auto       p2    = (char*)&net2;
 
     for (size_t i = start; i != end; ++i)
     {
-        helper_functions::pointer_swap(p1 + i, p2 + i);
+        helper_functions::pointer_value_swap(p1 + i, p2 + i);
     }
 }
 

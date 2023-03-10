@@ -22,12 +22,13 @@ int flat_test()
         e = i++;
 
     constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto Swish = matrix_activation_functions::Identifiers::Swish;
 
     constexpr Layer_Signature a1{ 1, AF };
     // constexpr Layer_Signature a2{ 4, AF };
     constexpr Layer_Signature a3{ 9, AF };
     // constexpr Layer_Signature a4{ 16, AF };
-    constexpr Layer_Signature a5{ 25, AF };
+    constexpr Layer_Signature a5{ 25, Swish };
 
     using NET  = static_neural_net<float, 1, a1, a3, a5, a5, a3, a1>;
     using NET2 = static_neural_net<float, 2, a1, a3, a5, a5, a3, a1>;
@@ -82,7 +83,7 @@ void abench(int n)
 
     constexpr size_t N = 8;
 
-    constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
 
     constexpr auto ls5  = Layer_Signature{ 5, AF };
     constexpr auto ls10 = Layer_Signature{ 10, AF };
@@ -153,9 +154,10 @@ void layer_swap_test()
     constexpr size_t N = 8;
 
     constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto Swish = matrix_activation_functions::Identifiers::Swish;
 
     constexpr auto ls1 = Layer_Signature{ 1, AF };
-    constexpr auto ls5 = Layer_Signature{ 5, AF };
+    constexpr auto ls5 = Layer_Signature{ 5, Swish };
     // constexpr auto ls10 = Layer_Signature{ 10, AF };
     // constexpr auto ls25 = Layer_Signature{ 25, AF };
     // constexpr auto ls50 = Layer_Signature{ 50, AF };
@@ -177,6 +179,8 @@ void layer_swap_test()
     //net3.print_net();
     //net4.print_net();
 
+    std::cout << net1.parameter_count() << " // " << sizeof(NNet) << std::endl;
+
     //to_target_layer_swap(net1, net2, net3, net4);
     auto[p1, p2] = layer_swap(net1, net2);
 
@@ -184,12 +188,17 @@ void layer_swap_test()
     p2->print_net();
     //net3.print_net();
     //net4.print_net();
+
 }
 
 int main()
 {
     //get_layer();
+
+    //abench(100);
+
     layer_swap_test();
+
 
     return EXIT_SUCCESS;
 }

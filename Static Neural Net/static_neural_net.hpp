@@ -85,7 +85,12 @@ public:
         // return multiply_add_activate(m_weights_mat, Input, m_offset_vector,
         // s_Activation_Function);
 
-        return s_Activation_Function(matrix_vec_add(matrix_mul(Input, m_weights_mat), m_bias_vector));
+        // Comproibar si esto es mas eficiente que crear una copia, que yo entinedo que si
+        auto out = matrix_vec_add(matrix_mul(Input, m_weights_mat), m_bias_vector);
+        s_Activation_Function(out);
+        return out;
+
+        //return s_Activation_Function(matrix_vec_add(matrix_mul(Input, m_weights_mat), m_bias_vector));
     }
 
     template <typename Fn, typename... Args>

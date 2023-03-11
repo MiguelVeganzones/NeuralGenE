@@ -484,7 +484,7 @@ concept activation_function_type = requires { activation_function_dummy(std::dec
 template <activation_function_type AF>
 std::ostream& operator<<(std::ostream& os, const AF& af)
 {
-    os << '\n' << af.repr();
+    os << af.repr();
     return os;
 }
 } // namespace matrix_activation_functions

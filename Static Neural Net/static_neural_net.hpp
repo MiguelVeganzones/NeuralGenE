@@ -166,7 +166,7 @@ concept static_layer_type = requires { layer_dummy(std::declval<T>()); };
 template <static_layer_type Layer>
 std::ostream& operator<<(std::ostream& os, const Layer& layer)
 {
-    os << layer.get_weights_mat() << layer.get_bias_vector() << layer.get_activation_function() << '\n';
+    os << layer.get_weights_mat() << layer.get_bias_vector() << '\n' << layer.get_activation_function() << '\n';
     return os;
 }
 
@@ -526,6 +526,7 @@ public:
                      "################\n";
         print_layers();
         std::cout << "Net has " << parameter_count() << " parameters\n";
+        std::cout << "Net size: " << subnet_size() << " bytes\n";
         print_address();
         std::cout << "----------------------------------------------------------"
                      "----------------\n";

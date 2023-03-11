@@ -62,7 +62,9 @@ public:
     [[nodiscard]] constexpr output_vector_shape forward_pass(input_vector_shape const& Input) const
     {
         auto out = matrix_vec_add(matrix_mul(Input, m_weights_mat), m_bias_vector);
+        std::cout << out << std::endl;
         m_activation_function(out);
+        std::cout << out << std::endl;
         return out;
     }
 
@@ -467,7 +469,7 @@ public:
     [[nodiscard]] auto& layer()
     {
         return m_Layers.template get<Idx>();
-    } // you arent a real template programmer if you dont use .template  /s
+    }
 
     template <std::size_t Idx>
     [[nodiscard]] auto const& const_layer() const
@@ -534,7 +536,7 @@ public:
 
     void print_address() const
     {
-        std::cout << "Net address " << this << '\n';
+        std::cout << "Net address: " << this << '\n';
     }
 
     void store(const std::filesystem::path& filename) const

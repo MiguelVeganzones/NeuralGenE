@@ -181,7 +181,7 @@ private:
         case loss:
             return 0;
         default:
-            throw std::invalid_argument("Invalid result value: " + result);
+            std::unreachable();
         }
     }
 

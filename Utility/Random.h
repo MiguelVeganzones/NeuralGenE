@@ -3,15 +3,20 @@
 #ifndef RANDOM_NUMBER_GENERATOR
 #define RANDOM_NUMBER_GENERATOR
 
-#ifdef max
-#undef max
-#endif // max
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #include <random>
 // #include <mutex>
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <limits>
+
+#ifdef max
+#undef max
+#endif
 
 class random
 {

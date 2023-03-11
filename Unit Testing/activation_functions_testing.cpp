@@ -19,7 +19,7 @@ TEST_CLASS(unittesting_activation_functions)
     using Md20 = ga_sm::static_matrix<double, 20, 20>;
     using Mi20 = ga_sm::static_matrix<int, 20, 20>;
 
-    using AF_ReLU = matrix_activation_functions::activation_function<Mf5, matrix_activation_functions::ReLU>;
+    using AF_ReLU = matrix_activation_functions::activation_function<Mf5, matrix_activation_functions::Identifiers::ReLU>;
 
 public:
     TEST_METHOD(assert_is_trivially_copiable)

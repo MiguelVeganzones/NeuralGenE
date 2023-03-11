@@ -22,7 +22,7 @@ public:
 
     inline static constexpr double epsilon = 1e-5;
 
-    inline static const matrix_activation_functions::Identifiers AF = matrix_activation_functions::Identifiers::Sigmoid;
+    inline static const matrix_activation_functions::Identifiers::Identifiers_ AF = matrix_activation_functions::Identifiers::Sigmoid;
 
     inline static constexpr ga_snn::Layer_Signature a3{ 9, AF };
 

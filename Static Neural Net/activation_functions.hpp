@@ -1,110 +1,62 @@
 #ifndef ACTIVATION_FUNCTIONS
 #define ACTIVATION_FUNCTIONS
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #include <functional>
 #include <stdexcept>
 #include <cmath>
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
 
 //--------------------------------------------------------------------------------------//
 
-// namespace activation_functions
-//{
-//   template<typename T>
-//   [[nodiscard]] inline static
-//     T ReLU_impl(T x)
-//   {
-//     return std::max(x, T(0));
-//   }
-//
-//   template<typename T>
-//   [[nodiscard]] inline static
-//     T Identity_impl(T x) {
-//     return x;
-//   }
-//
-//   template<typename T>
-//     requires std::is_floating_point<T>::value
-//   [[nodiscard]] inline static
-//     T Sigmoid_impl(T x)
-//   {
-//     return static_cast<T>(T(1) / (T(1) + std::exp(-x)));
-//   }
-//
-//   template<typename T>
-//   [[nodiscard]] inline static
-//     T Tanh_impl(T x)
-//   {
-//     return static_cast<T>(std::tanh(x));
-//   }
-//
-//   enum Identifiers : int {
-//     ReLU = 0,
-//     Sigmoid,
-//     Tanh,
-//     Identity
-//   };
-//
-//   template<typename T, activation_functions::Identifiers Function_Identifier>
-//   [[nodiscard]]
-//   constexpr
-//     std::function<T(T)> choose_func()
-//   {
-//     if constexpr (Function_Identifier == activation_functions::ReLU)
-//       return activation_functions::ReLU_impl<T>;
-//     else if constexpr (Function_Identifier == activation_functions::Sigmoid)
-//       return activation_functions::Sigmoid_impl<T>;
-//     else if constexpr (Function_Identifier == activation_functions::Tanh)
-//       return activation_functions::Tanh_impl<T>;
-//     else if constexpr (Function_Identifier == activation_functions::Identity)
-//       return activation_functions::Identity_impl<T>;
-//   }
-// }
 
 namespace matrix_activation_functions
 {
+template <typename T>
+struct default_activation_function_parameters
+{
+    template <typename Fn>
+    void mutate(Fn&& fn)
+    {
+    }
+
+    template <typename Fn, typename... Args>
+        requires std::is_invocable_r_v<T, Fn, Args...>
+    constexpr void fill(Fn&& fn, Args... args)
+    {
+    }
+
+    [[nodiscard]] constexpr auto repr() const -> const char*
+    {
+        return "";
+    }
+
+    [[nodiscard]] static constexpr size_t parameter_count()
+    {
+        return 0;
+    }
+};
+
 // ReSharper disable once CppInconsistentNaming
 template <typename Mat>
 struct ReLU
 {
     using T = typename Mat::value_type;
+    using parameters_type = default_activation_function_parameters<T>;
 
-    struct params
-    {
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 0;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> const char*
-        {
-            return "";
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
-        {
-        }
-    } m_params;
-
-    using parameters_type = params;
-
-    inline void operator()(Mat& mat) const
+    inline void operator()(Mat& mat, const parameters_type&) const
     {
         std::invoke(ReLU_impl, mat);
     }
 
     inline static void ReLU_impl(Mat& mat)
     {
-        mat.transform([](T x) { return x > T{} ? x : T{}; }); // { return std::max(T{}, x); }
+        mat.transform([](T x) { return std::max(T{}, x); }); //  { return x > T{} ? x : T{}; }); 
     }
 
     static constexpr auto name = "ReLU";
@@ -115,34 +67,9 @@ template <typename Mat>
 struct Sigmoid
 {
     using T = typename Mat::value_type;
+    using parameters_type = default_activation_function_parameters<T>;
 
-    struct params
-    {
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 0;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> const char*
-        {
-            return "";
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
-        {
-        }
-    } m_params;
-
-    using parameters_type = params;
-
-    inline void operator()(Mat& mat) const
+    inline void operator()(Mat& mat, const parameters_type&) const
     {
         std::invoke(Sigmoid_impl, mat);
     }
@@ -159,34 +86,10 @@ template <typename Mat>
 struct Identity
 {
     using T = typename Mat::value_type;
+    using parameters_type = default_activation_function_parameters<T>;
 
-    struct params
+    inline void operator()(Mat& mat, const parameters_type&) const
     {
-         [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 0;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> const char*
-        {
-            return "";
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
-        {
-        }
-    } m_params;
-
-    using parameters_type = params;
-
-    inline void operator()(Mat& mat) const {
         std::invoke(Identity_impl, mat);
     }
 
@@ -201,34 +104,9 @@ template <typename Mat>
 struct Tanh
 {
     using T = typename Mat::value_type;
+    using parameters_type = default_activation_function_parameters<T>;
 
-    struct params
-    {
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 0;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> const char*
-        {
-            return "";
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
-        {
-        }
-    } m_params;
-
-    using parameters_type = params;
-
-    inline void operator()(Mat& mat) const
+    inline void operator()(Mat& mat, const parameters_type&) const
     {
         std::invoke(Tanh_impl, mat);
     }
@@ -248,34 +126,9 @@ template <typename Mat>
 struct GELU
 {
     using T = typename Mat::value_type;
+    using parameters_type = default_activation_function_parameters<T>;
 
-    struct params
-    {
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 0;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> const char*
-        {
-            return "";
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
-        {
-        }
-    } m_params;
-
-    using parameters_type = params;
-
-    inline void operator()(Mat& mat) const
+    inline void operator()(Mat& mat, const parameters_type&) const
     {
         std::invoke(GELU_impl, mat);
     }
@@ -296,34 +149,9 @@ template <typename Mat>
 struct SiLU
 {
     using T = typename Mat::value_type;
+    using parameters_type = default_activation_function_parameters<T>;
 
-    struct params
-    {
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 0;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> const char*
-        {
-            return "";
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
-        {
-        }
-    } m_params;
-
-    using parameters_type = params;
-
-    inline void operator()(Mat& mat) const
+    inline void operator()(Mat& mat, const parameters_type&) const
     {
         std::invoke(SiLU_impl, mat);
     }
@@ -346,6 +174,9 @@ struct Swish
 
     struct params
     {
+        static constexpr T lower_range_bound = -2;
+        static constexpr T upper_range_bound = 2;
+
         T beta;
 
         [[nodiscard]] static constexpr size_t parameter_count()
@@ -361,32 +192,93 @@ struct Swish
         template <typename Fn>
         void mutate(Fn&& fn)
         {
-            // todo enforce restrictions restrictions
-            beta = fn(beta); 
+            beta = restrict_value(fn(beta)); 
         }
 
         template <typename Fn, typename... Args>
             requires std::is_invocable_r_v<T, Fn, Args...>
         constexpr void fill(Fn&& fn, Args... args)
         {
-            // todo enforce restrictions
-            beta = std::invoke(fn, args...);
+            beta = restrict_value(std::invoke(fn, args...));
         }
-    } m_params;
+
+        static T restrict_value(const T value)
+        {
+            return std::min(std::max(value, lower_range_bound), upper_range_bound);
+        }
+    };
 
     using parameters_type = params;
 
-    inline void operator()(Mat& mat) const
+    inline void operator()(Mat& mat, const parameters_type& params) const
     {
-        Swish_impl(mat, m_params.beta);
+        Swish_impl(mat, params.beta);
     }
 
     inline static void Swish_impl(Mat& mat, T beta)
     {
-        mat.transform([_beta=beta](T x) { return static_cast<T>(x / (T(1) + std::exp(-_beta*x))); });
+        mat.transform([_beta = beta](T x) { return static_cast<T>(x / (T(1) + std::exp(-_beta * x))); });
     }
 
     static constexpr auto name = "Swish";
+};
+
+template <typename Mat>
+struct PReLU
+{
+    using T = typename Mat::value_type;
+
+    struct params
+    {
+        static constexpr T lower_range_bound = -0.5;
+        static constexpr T upper_range_bound =  0.5;
+
+        T alpha;
+
+        [[nodiscard]] static constexpr size_t parameter_count()
+        {
+            return 1;
+        }
+
+        [[nodiscard]] constexpr auto repr() const -> std::string
+        {
+            return std::string("Alpha: ") + std::to_string(alpha);
+        }
+
+        template <typename Fn>
+        void mutate(Fn&& fn)
+        {
+            alpha = restrict_value(fn(alpha)); 
+        }
+
+        template <typename Fn, typename... Args>
+            requires std::is_invocable_r_v<T, Fn, Args...>
+        constexpr void fill(Fn&& fn, Args... args)
+        {
+            alpha = restrict_value(std::invoke(fn, args...));
+        }
+
+        inline static T restrict_value(const T value)
+        {
+            return std::min(std::max(value, lower_range_bound), upper_range_bound);
+        }
+    };
+
+    using parameters_type = params;
+
+    inline void operator()(Mat& mat, const parameters_type& params) const
+    {
+        PReLU_impl(mat, params.alpha);
+    }
+
+    inline static void PReLU_impl(Mat& mat, T alpha)
+    {
+        mat.transform([_alpha = alpha](T x) {
+            return static_cast<T>(std::max(T{}, x) + _alpha * std::min(T{}, x));
+        });
+    }
+
+    static constexpr auto name = "PReLU";
 };
 
 struct Identifiers
@@ -399,7 +291,8 @@ struct Identifiers
          Identity,
          GELU,
          SiLU,
-         Swish
+         Swish,
+         PReLU
     };
 };
 
@@ -421,6 +314,8 @@ template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ F
         return matrix_activation_functions::SiLU<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Swish)
         return matrix_activation_functions::Swish<Mat>();
+    else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::PReLU)
+        return matrix_activation_functions::PReLU<Mat>();
     std::unreachable();
 }
 
@@ -428,15 +323,15 @@ template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ F
 class activation_function
 {
 public:
-    inline static constexpr auto s_impl = choose_func<Mat, Function_Identifier>();
+    inline static constexpr auto activation_function_impl = choose_func<Mat, Function_Identifier>();
 
-    using activation_function_type = decltype(s_impl);
+    using activation_function_type = decltype(activation_function_impl);
     using parameters_type = typename activation_function_type::parameters_type;
 
     parameters_type params;
 
     void operator()(Mat& mat) const {
-        std::invoke(s_impl, mat);
+        std::invoke(activation_function_impl, mat, params);
     }
 
     template<typename Fn>

@@ -21,17 +21,20 @@ int flat_test()
     for (float i = 0; auto& e : in)
         e = i++;
 
-    constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
+    constexpr auto ReLU = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto PReLU = matrix_activation_functions::Identifiers::PReLU;
+    constexpr auto Sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
     constexpr auto Swish = matrix_activation_functions::Identifiers::Swish;
 
-    constexpr Layer_Signature a1{ 1, AF };
-    // constexpr Layer_Signature a2{ 4, AF };
-    constexpr Layer_Signature a3{ 9, AF };
-    // constexpr Layer_Signature a4{ 16, AF };
+    constexpr Layer_Signature a1{ 1, Identity };
+    constexpr Layer_Signature a2{ 4, ReLU };
+    constexpr Layer_Signature a3{ 9, PReLU };
+    constexpr Layer_Signature a4{ 16, Sigmoid };
     constexpr Layer_Signature a5{ 25, Swish };
 
-    using NET  = static_neural_net<float, 1, a1, a3, a5, a5, a3, a1>;
-    using NET2 = static_neural_net<float, 2, a1, a3, a5, a5, a3, a1>;
+    using NET  = static_neural_net<float, 1, a1, a2, a3, a4, a5, a1>;
+    using NET2 = static_neural_net<float, 2, a1, a2, a3, a4, a5, a1>;
 
     auto ptr_net  = std::make_unique<NET>();
     auto ptr_net2 = std::make_unique<NET2>();
@@ -191,14 +194,62 @@ void layer_swap_test()
 
 }
 
+int activation_functions_test()
+{
+    //random::init();
+    stopwatch s0;
+    using namespace ga_snn;
+    using namespace ga_sm;
+
+    constexpr int N = 5;
+
+    ga_sm::static_matrix<float, N, 1> in{};
+
+    for (float i = -(N/2); auto& e : in)
+        e = i++;
+
+    constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
+    constexpr auto ReLU     = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto PReLU    = matrix_activation_functions::Identifiers::PReLU;
+    constexpr auto Sigmoid  = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto Swish    = matrix_activation_functions::Identifiers::Swish;
+
+    constexpr Layer_Signature identity_layer{ 1, Identity };
+    constexpr Layer_Signature relu_layer{ 4, ReLU };
+    constexpr Layer_Signature prelu_layer{ 5, PReLU };
+    constexpr Layer_Signature sigmoid_layer{ 4, Sigmoid };
+    constexpr Layer_Signature swish_layer{ 2, Swish };
+
+    using NET  = static_neural_net<float, 1, identity_layer, relu_layer, prelu_layer, sigmoid_layer, swish_layer>;
+
+    auto ptr_net  = std::make_unique<NET>();
+
+    ptr_net->init(random::randnormal, 0, 1);
+
+    ptr_net->print_net();
+
+    for (const auto& e : in)
+    {
+        std::cout << "Input:: " << e << "\n###############\n";
+        std::cout << ptr_net->forward_pass<1, 2>(static_matrix<float, 1, 1>{ e }) << std::endl;
+    }
+
+    ptr_net->print_net();
+
+    return 0;
+}
+
 int main()
 {
     //get_layer();
 
     //abench(100);
 
-    layer_swap_test();
+    //layer_swap_test();
 
+    //flat_test();
+
+    activation_functions_test();
 
     return EXIT_SUCCESS;
 }

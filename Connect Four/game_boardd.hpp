@@ -1,12 +1,18 @@
 #ifndef GAME_BOARD
 #define GAME_BOARD
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #include <iostream>
 #include <type_traits>
 
-#include "cx_helper_functions.h"
+#include "cx_helper_functions.h" 
 #include "polystate.hpp"
 
+#ifdef max
+#undef max
+#endif
 
 namespace game_board
 {

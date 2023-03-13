@@ -59,7 +59,7 @@ int flat_test()
 
     ptr_net2->print_net();
 
-    std::cout << "L11:" << L11_net_distance<double>(*ptr_net3.get(), *ptr_net2.get()) << std::endl;
+    std::cout << "L1:" << L1_net_distance<double>(*ptr_net3.get(), *ptr_net2.get()) << std::endl;
 
     for (size_t i = 0; const auto& e : in)
     {
@@ -71,7 +71,7 @@ int flat_test()
 
     ptr_net3->init_from_ptr(ptr_net.get());
 
-    // std::cout << L11_net_distance(ptr_net3.get(), ptr_net2.get()) << std::endl;
+    // std::cout << L1_net_distance(ptr_net3.get(), ptr_net2.get()) << std::endl;
 
     std::cout << pred << std::endl << pred2 << std::endl;
 
@@ -249,7 +249,20 @@ int main()
 
     //flat_test();
 
-    activation_functions_test();
+    //activation_functions_test();
+
+    ga_sm::static_matrix<double, 6, 5> mat{};
+    mat.fill(random::randnormal, 0, 10);
+
+    auto af = matrix_activation_functions::activation_function<decltype(mat),
+                                                               matrix_activation_functions::Identifiers::Softmax>();
+
+    std::cout << mat << std::endl;
+
+    af(mat);
+
+    std::cout << mat << std::endl;
+
 
     return EXIT_SUCCESS;
 }

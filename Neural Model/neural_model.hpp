@@ -227,9 +227,9 @@ concept brain_type = requires { nnet_dummy(std::declval<T>()); };
 //--------------------------------------------------------------------------------------//
 
 template <brain_type Brain>
-[[nodiscard]] auto L11_brain_net_distance(const Brain& c4_brain_a, const Brain& c4_brain_b)
+[[nodiscard]] auto L1_brain_net_distance(const Brain& c4_brain_a, const Brain& c4_brain_b)
 {
-    return L11_net_distance(c4_brain_a.get(), c4_brain_b.get());
+    return L1_net_distance(c4_brain_a.get(), c4_brain_b.get());
 }
 
 template <brain_type Brain>

@@ -311,8 +311,8 @@ public:
     using row_matrix      = static_matrix<T, 1, N>;
     using column_matrix   = static_matrix<T, M, 1>;
 
-    static inline auto s_M = M;
-    static inline auto s_N = N;
+    inline static constexpr auto num_rows = M;
+    inline static constexpr auto num_cols = N;
 
     T m_Elems[M * N];
 
@@ -487,10 +487,10 @@ public:
     }
 
     /**
-     * \brief Rescales the L11 norm of the matrix to the input norm value by dividing every element by a constant
+     * \brief Rescales the L1 norm of the matrix to the input norm value by dividing every element by a constant
      * amount.
      *
-     * \param norm The resulting L11 norm of the matrix
+     * \param norm The resulting L1 norm of the matrix
      *
      * \note Only works for floating point matrix value types
      * \throws std::logic_error (or other, implementation dependent) when divsion by zero
@@ -538,7 +538,7 @@ public:
         out << '\n';
     }
 
-    // Overrides matrix with matrix read fron in
+    // Overrides matrix with matrix read from in
     // Ifstream file should be closed outside this function
     void load(std::ifstream& in)
     {

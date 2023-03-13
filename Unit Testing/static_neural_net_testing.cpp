@@ -22,13 +22,15 @@ public:
 
     inline static constexpr double epsilon = 1e-5;
 
-    inline static const matrix_activation_functions::Identifiers::Identifiers_ AF = matrix_activation_functions::Identifiers::Sigmoid;
+    inline static const matrix_activation_functions::Identifiers::Identifiers_ PReLU = matrix_activation_functions::Identifiers::PReLU;
+    inline static const matrix_activation_functions::Identifiers::Identifiers_ Sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
 
-    inline static constexpr ga_snn::Layer_Signature a3{ 9, AF };
+    inline static constexpr ga_snn::Layer_Signature a3{ 9, PReLU };
+    inline static constexpr ga_snn::Layer_Signature a4{ 16, Sigmoid };
 
     using T  = float;
-    using N  = ga_snn::static_neural_net<T, 1, a3, a3, a3>;
-    using L  = ga_snn::layer<T, 1, ga_snn::Layer_Structure{ 3, 3, AF }>;
+    using N  = ga_snn::static_neural_net<T, 1, a3, a3, a3, a4>;
+    using L  = ga_snn::layer<T, 1, ga_snn::Layer_Structure{ 3, 3, PReLU }>;
     using LU = ga_snn::layer_unroll<T, 3, 1, a3>;
 
     TEST_METHOD(assert_init_from_ptr)
@@ -40,7 +42,7 @@ public:
 
         uptr2->init_from_ptr(uptr1.get());
 
-        Assert::IsTrue(ga_snn::L11_net_distance<double>(*uptr1.get(), *uptr2.get()) == 0.0);
+        Assert::IsTrue(ga_snn::L1_net_distance<double>(*uptr1.get(), *uptr2.get()) == 0.0);
     }
 
     TEST_METHOD(assert_store_and_load)
@@ -51,7 +53,7 @@ public:
         auto uptr2 = std::make_unique<N>();
         uptr2->load(output_file);
 
-        Assert::IsTrue(ga_snn::L11_net_distance<double>(*uptr1.get(), *uptr2.get()) < epsilon);
+        Assert::IsTrue(ga_snn::L1_net_distance<double>(*uptr1.get(), *uptr2.get()) < epsilon);
     }
 
     TEST_METHOD(assert_population_variability_same_net)

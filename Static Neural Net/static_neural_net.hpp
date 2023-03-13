@@ -42,8 +42,9 @@ template <std::floating_point T, size_t Batch_Size, Layer_Structure Structure>
 class layer
 {
 public:
-    static constexpr size_t s_Inputs  = Structure.Inputs;
-    static constexpr size_t s_Outputs = Structure.Outputs;
+    static constexpr size_t s_Inputs     = Structure.Inputs;
+    static constexpr size_t s_Outputs    = Structure.Outputs;
+    static constexpr auto   s_Activation = Structure.Activation;
 
     using weights_shape       = ga_sm::static_matrix<T, s_Inputs, s_Outputs>;
     using output_vector_shape = ga_sm::static_matrix<T, Batch_Size, s_Outputs>;
@@ -85,18 +86,18 @@ public:
         m_activation_function.mutate_params(fn);
     }
 
-    // todo store activation function parameters
     void store(std::ofstream& out) const
     {
         m_weights_mat.store(out);
         m_bias_vector.store(out);
+        m_activation_function.store(out);
     }
 
-    // todo load activation function parameters
     void load(std::ifstream& in)
     {
         m_weights_mat.load(in);
         m_bias_vector.load(in);
+        m_activation_function.load(in);
     }
 
     [[nodiscard]] inline constexpr const weights_shape& get_weights_mat() const
@@ -823,17 +824,17 @@ template <std::floating_point R, size_t N, static_neural_net_type NNet>
 [[nodiscard]] ga_sm::static_matrix<R, N, N> population_variability(
     std::array<std::reference_wrapper<const NNet>, N> const& net_ptr_arr)
 {
-    ga_sm::static_matrix<double, N, N> L11_distance_matrix{};
+    ga_sm::static_matrix<double, N, N> L1_distance_matrix{};
     for (size_t j = 0; j != N - 1; ++j)
     {
         for (size_t i = j + 1; i != N; ++i)
         {
-            const auto distance       = L11_net_distance<R>(net_ptr_arr[j].get(), net_ptr_arr[i].get());
-            L11_distance_matrix(j, i) = distance;
-            L11_distance_matrix(i, j) = distance;
+            const auto distance       = L1_net_distance<R>(net_ptr_arr[j].get(), net_ptr_arr[i].get());
+            L1_distance_matrix(j, i) = distance;
+            L1_distance_matrix(i, j) = distance;
         }
     }
-    return L11_distance_matrix;
+    return L1_distance_matrix;
 }
 
 /**
@@ -845,11 +846,14 @@ template <std::floating_point R, size_t N, static_neural_net_type NNet>
  * \return
  */
 template <std::floating_point R, static_layer_type Layer1, static_layer_type Layer2>
-    requires(Layer1::s_Inputs == Layer2::s_Inputs) && (Layer1::s_Outputs == Layer2::s_Outputs)
-[[nodiscard]] R L11_layer_distance(Layer1 const& layer1, Layer2 const& layer2)
+    requires(Layer1::s_Inputs == Layer2::s_Inputs) && (Layer1::s_Outputs == Layer2::s_Outputs) &&
+            (Layer1::s_Activation == Layer2::s_Activation)
+[[nodiscard]] R L1_layer_distance(Layer1 const& layer1, Layer2 const& layer2)
 {
     return normalized_L1_distance<R>(layer1.get_weights_mat(), layer2.get_weights_mat()) +
-        normalized_L1_distance<R>(layer1.get_bias_vector(), layer2.get_bias_vector());
+        normalized_L1_distance<R>(layer1.get_bias_vector(), layer2.get_bias_vector()) +
+        Layer1::activation_function::template L1_distance<R>(layer1.get_activation_function(),
+                                                             layer2.get_activation_function());
 }
 
 /**
@@ -865,16 +869,16 @@ template <std::floating_point R, static_layer_type Layer1, static_layer_type Lay
  */
 template <std::floating_point R, static_neural_net_type NNet1, static_neural_net_type NNet2, size_t I = 0>
     requires(NNet1::s_Layers == NNet2::s_Layers)
-[[nodiscard]] R L11_net_distance(const NNet1& net1, const NNet2& net2)
+[[nodiscard]] R L1_net_distance(const NNet1& net1, const NNet2& net2)
 {
-    const auto current_distance = L11_layer_distance<R>(net1.template const_layer<I>(), net2.template const_layer<I>());
+    const auto current_distance = L1_layer_distance<R>(net1.template const_layer<I>(), net2.template const_layer<I>());
     if constexpr (I == NNet1::s_Layers - 1)
     {
         return current_distance;
     }
     else
     {
-        return current_distance + L11_net_distance<R, NNet1, NNet2, I + 1>(net1, net2);
+        return current_distance + L1_net_distance<R, NNet1, NNet2, I + 1>(net1, net2);
     }
 }
 

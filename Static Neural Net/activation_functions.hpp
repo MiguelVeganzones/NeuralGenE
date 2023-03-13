@@ -40,6 +40,21 @@ struct default_activation_function_parameters
     {
         return 0;
     }
+
+    template <typename R>
+    [[nodiscard]] inline static constexpr R L1_distance(const default_activation_function_parameters&,
+                                                        const default_activation_function_parameters&)
+    {
+        return 0;
+    }
+
+    void store(std::ofstream& out) const
+    {
+    }
+
+    void load(std::ifstream& in)
+    {
+    }
 };
 
 // ReSharper disable once CppInconsistentNaming
@@ -164,6 +179,47 @@ struct SiLU
     static constexpr auto name = "SiLU";
 };
 
+template<typename Mat>
+    requires std::is_standard_layout_v<Mat> && std::is_trivial_v<Mat>
+struct Softmax
+{
+    using T = typename Mat::value_type;
+    using parameters_type = default_activation_function_parameters<T>;
+    using matrix_iterator = typename Mat::iterator;
+
+    static constexpr auto N = Mat::num_cols;
+    static constexpr auto M = Mat::num_rows;
+
+    inline void operator()(Mat& mat, const parameters_type&) const
+    {
+        std::invoke(Softmax_impl, mat);
+    }
+
+    inline static void Softmax_impl(Mat& mat)
+    {
+        for (size_t j = 0; j != M; ++j)
+        {
+            matrix_iterator start   = mat.begin() + j * N;
+            matrix_iterator end     = start + N;
+            const auto      row_max = *std::max_element(start, end);
+            T               row_sum = T{};
+
+            for(auto p = start; p != end; ++p)
+            {
+                *p = std::exp(*p - row_max);
+                row_sum += *p;
+            }
+
+            for (;start != end; ++start)
+            {
+                *start /= row_sum;
+            }
+        }
+    }
+
+    static constexpr auto name = "Softmax";
+};
+
 /**
  * \brief Swish linear unit activation function
  */
@@ -205,6 +261,22 @@ struct Swish
         static T restrict_value(const T value)
         {
             return std::min(std::max(value, lower_range_bound), upper_range_bound);
+        }
+
+        template <typename R>
+        [[nodiscard]] inline static constexpr R L1_distance(const params& p1, const params& p2)
+        {
+            return std::abs(p1.beta - p2.beta);
+        }
+
+        void store(std::ofstream& out) const
+        {
+            out << beta << "\n\n";
+        }
+
+        void load(std::ifstream& in)
+        {
+            in >> beta;
         }
     };
 
@@ -262,6 +334,22 @@ struct PReLU
         {
             return std::min(std::max(value, lower_range_bound), upper_range_bound);
         }
+
+        template<typename R>
+        [[nodiscard]] inline static constexpr R L1_distance(const params& p1, const params& p2)
+        {
+            return std::abs(p1.alpha - p2.alpha);
+        }
+
+        void store(std::ofstream& out) const
+        {
+            out << alpha << "\n\n";
+        }
+
+        void load(std::ifstream& in)
+        {
+            in >> alpha;
+        }
     };
 
     using parameters_type = params;
@@ -291,6 +379,7 @@ struct Identifiers
          Identity,
          GELU,
          SiLU,
+         Softmax,
          Swish,
          PReLU
     };
@@ -301,17 +390,19 @@ template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ F
 [[nodiscard]] constexpr auto choose_func()
 {
     if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::ReLU)
-        return matrix_activation_functions::ReLU<Mat>();
+         return matrix_activation_functions::ReLU<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Sigmoid)
-        return matrix_activation_functions::Sigmoid<Mat>();
+         return matrix_activation_functions::Sigmoid<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Tanh)
-        return matrix_activation_functions::Tanh<Mat>();
+         return matrix_activation_functions::Tanh<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Identity)
-        return matrix_activation_functions::Identity<Mat>();
+         return matrix_activation_functions::Identity<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::GELU)
-        return matrix_activation_functions::GELU<Mat>();
+         return matrix_activation_functions::GELU<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::SiLU)
-        return matrix_activation_functions::SiLU<Mat>();
+         return matrix_activation_functions::SiLU<Mat>();
+    else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Softmax)
+         return matrix_activation_functions::Softmax<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Swish)
         return matrix_activation_functions::Swish<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::PReLU)
@@ -357,6 +448,22 @@ public:
         std::stringstream ss{};
         ss << activation_function_type::name << '\t' << params.repr();
         return ss.str();
+    }
+
+    template<typename R>
+    [[nodiscard]] static R L1_distance(const activation_function& af1, const activation_function& af2)
+    {
+        return parameters_type::template L1_distance<R>(af1.params, af2.params);
+    }
+
+    void store(std::ofstream& out) const
+    {
+        params.store(out);
+    }
+
+    void load(std::ifstream& in)
+    {
+        params.load(in);
     }
 };
 

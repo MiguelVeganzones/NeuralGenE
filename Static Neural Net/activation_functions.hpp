@@ -66,7 +66,7 @@ struct ReLU
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
-        std::invoke(ReLU_impl, mat);
+        ReLU_impl(mat);
     }
 
     inline static void ReLU_impl(Mat& mat)
@@ -86,7 +86,7 @@ struct Sigmoid
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
-        std::invoke(Sigmoid_impl, mat);
+        Sigmoid_impl(mat);
     }
 
      inline static void Sigmoid_impl(Mat& mat)
@@ -105,7 +105,7 @@ struct Identity
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
-        std::invoke(Identity_impl, mat);
+        Identity_impl(mat);
     }
 
     inline static void Identity_impl(Mat& mat)
@@ -123,7 +123,7 @@ struct Tanh
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
-        std::invoke(Tanh_impl, mat);
+        Tanh_impl(mat);
     }
 
     inline static void Tanh_impl(Mat& mat)
@@ -145,7 +145,7 @@ struct GELU
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
-        std::invoke(GELU_impl, mat);
+        GELU_impl(mat);
     }
 
     inline static void GELU_impl(Mat& mat)
@@ -168,7 +168,7 @@ struct SiLU
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
-        std::invoke(SiLU_impl, mat);
+        SiLU_impl(mat);
     }
 
     inline static void SiLU_impl(Mat& mat)

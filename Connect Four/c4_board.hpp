@@ -30,7 +30,7 @@ public:
     using encode_type           = typename game_board_type::encode_type;
 
 public:
-    board(const game_board_type& board) : m_Board_state{ board }
+    board(const game_board_type& board_type) : m_Board_state{ board_type }
     {
         m_Valid_moves = calculate_valid_moves();
     }
@@ -249,7 +249,7 @@ public:
         return m_Board_state.encode();
     }
 
-    static [[nodiscard]] board decode(const encode_type& encoded_board)
+    [[nodiscard]] static board decode(const encode_type& encoded_board)
     {
         board b{};
         b.m_Board_state = game_board_type::decode(encoded_board);

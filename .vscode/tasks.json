@@ -1,0 +1,142 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ debug build active file",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color",
+                "-fdiagnostics-show-template-tree",
+                "-fsanitize=undefined",
+                "-g",
+				"-Wall",
+                "-Wextra",
+                "-Wshadow",
+                //"-Wconversion",
+                "-Wpedantic",
+				"-Werror",
+                "-mavx2",
+                "-std=c++2b",
+                "-I${workspaceFolder}/Utility",
+                "${file}",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}",
+                "-v"
+
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+			"group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: /usr/bin g++"
+        },   
+		{
+            "type": "cppbuild",
+            "label": "C/C++: g++ release build active file",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color",
+                "-fdiagnostics-show-template-tree",
+                "-O3",
+				"-Wall",
+                "-Wextra",
+                "-Wshadow",
+                "-Wconversion",
+                "-Wpedantic",
+				"-Werror",
+                "-std=c++2b",
+                "${file}",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}",
+			],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+			"group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: /usr/bin g++"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: clang++ debug build active file",
+            "command": "/usr/bin/clang++",
+            "args": [
+                "-fcolor-diagnostics",
+                "-fansi-escape-codes",
+                "-fdiagnostics-show-template-tree",
+                "-fsanitize=memory",
+                "-fsanitize=undefined",
+                "-fsanitize-stats",
+                "-g",
+				"-Wall",
+                "-Wextra",
+                "-Wshadow",
+                "-Wconversion",
+                "-Wpedantic",
+				"-Werror",
+                "-std=c++2b",
+                "-I ${workspaceFolder}/Utility",
+                "${file}",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}",
+                "-v"
+
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+			"group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: /usr/bin/clang++"
+        },   
+		{
+            "type": "cppbuild",
+            "label": "C/C++: clang++ release build active file",
+            "command": "/usr/bin/clang++",
+            "args": [
+                "-fcolor-diagnostics",
+                "-fansi-escape-codes",
+                "-fdiagnostics-show-template-tree",
+                "-O3",
+				"-Wall",
+                "-Wextra",
+                "-Wshadow",
+                "-Wconversion",
+                "-Wpedantic",
+				"-Werror",
+                "-std=c++2b",
+                "${file}",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}",
+			],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+			"group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: /usr/bin/clang++"
+        }
+    ]
+}

@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         { 
-            "name": "(gdb) Debug launch",
+            "name": "(gdb) g++ Debug launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/bin/${fileBasenameNoExtension}",
@@ -24,10 +24,10 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "C/C++: gcc debug build active file"
+            "preLaunchTask": "C/C++: g++ debug build active file"
         },
         { 
-            "name": "(gdb) Release launch",
+            "name": "(gdb) g++ Release launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/bin/${fileBasenameNoExtension}",
@@ -44,7 +44,7 @@
                     "ignoreFailures": true
                 },
             ],
-            "preLaunchTask": "C/C++: gcc release build active file"
+            "preLaunchTask": "C/C++: g++ release build active file"
         }
     ],
     "compounds": []

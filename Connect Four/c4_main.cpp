@@ -26,7 +26,7 @@ int main0()
         {
             for (int i = 0; i != N; ++i)
             {
-                b.set_position({ j, i }, random::randint(0, K - 1));
+                b.set_position({ j, i }, static_cast<decltype(b)::repr_type>(random::randint(0, K - 1)));
             }
         }
     };

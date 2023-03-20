@@ -268,7 +268,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
         {
             return current_layer_type::layer_size();
         }
-        std::unreachable();
+        //std::unreachable();
+        throw std::runtime_error("Reached unreachable code");
     }
 
     [[nodiscard]] static size_t parameter_count(const int idx_to_target_layer)
@@ -277,7 +278,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
         {
             return current_layer_type::parameter_count();
         }
-        std::unreachable();
+        //std::unreachable();
+        throw std::runtime_error("Reached unreachable code");
     }
 };
 
@@ -415,55 +417,41 @@ public:
     using output_type = ga_sm::static_matrix<T, Batch_Size, s_Output_Size>;
 
 public:
-    [[nodiscard]] static constexpr size_t parameter_count(const int first_layer = 0,
-                                                          const int last_layer  = s_Layers - 1)
+    [[nodiscard]] static constexpr size_t parameter_count(unsigned int first_layer_idx = 0,
+                                                          const unsigned int last_layer_idx  = s_Layers - 1)
     {
-        assert(first_layer >= 0);
-        assert(last_layer < s_Layers);
-        assert(first_layer <= s_Layers);
+        assert(last_layer_idx < s_Layers);
+        assert(first_layer_idx <= s_Layers);
 
         size_t p{};
-        for (int i = first_layer; i != last_layer + 1; ++i)
+        for (;first_layer_idx != last_layer_idx + 1; ++first_layer_idx)
         {
-            p += layer_parameter_count(i);
+            p += layer_parameter_count(first_layer_idx);
         }
         return p;
     }
 
-    [[nodiscard]] static constexpr size_t layer_parameter_count(const int layer_idx)
+    [[nodiscard]] static constexpr size_t layer_parameter_count(const unsigned int layer_idx)
     {
-        assert(layer_idx >= 0);
         assert(layer_idx < s_Layers);
 
         return layers_type::parameter_count(layer_idx);
     }
 
-    [[nodiscard]] static constexpr size_t subnet_size(const int first_layer = 0,
-                                                      const int last_layer  = s_Layers - 1)
+    [[nodiscard]] static constexpr size_t subnet_size(unsigned int first_layer_idx = 0,
+                                                      const unsigned int last_layer_idx  = s_Layers - 1)
     {
         size_t p{};
-        for (int i = first_layer; i != last_layer + 1; ++i)
+        for (; first_layer_idx != last_layer_idx + 1; ++first_layer_idx)
         {
-            p += layer_size(i);
+            p += layer_size(first_layer_idx);
         }
         return p;
     }
 
-    [[nodiscard]] static constexpr size_t layer_size(const int layer_idx)
+    [[nodiscard]] static constexpr size_t layer_size(const unsigned int layer_idx)
     {
         return layers_type::layer_size(layer_idx);
-    }
-
-    template <size_t Batch_Size_Other>
-    void init_from_ptr(const static_neural_net<T,
-                                               Batch_Size_Other,
-                                               Signatures...>* const ptr_other)
-        requires(std::is_standard_layout_v<static_neural_net> &&
-                 std::is_trivial_v<static_neural_net> // creo que no hacen falta
-                                                      // las dos pero bueno
-        )
-    {
-        std::memcpy(this, ptr_other, sizeof(static_neural_net));
     }
 
     template <std::size_t Idx>
@@ -620,6 +608,17 @@ public:
     {
         return m_Layers.forward_pass(ga_sm::static_matrix<value_type, 1, 1>{ input_value })(0, 0);
     }
+
+    template <size_t Other_Batch_Size, Layer_Signature... Other_Signatures>
+    void init_from_ptr(const static_neural_net<T,
+                                               Other_Batch_Size,
+                                               Other_Signatures...>* const src_ptr)
+    requires (
+              (sizeof...(Signatures) == sizeof...(Other_Signatures)) &&
+              std::bool_constant<((Signatures == Other_Signatures) && ...)>::value)
+    {
+        std::memcpy(this, src_ptr, sizeof(static_neural_net));
+    }
 };
 
 //--------------------------------------------------------------------------------------//
@@ -650,7 +649,7 @@ template <static_neural_net_type NNet, typename Fn, typename... Args>
 
     auto ptr = std::make_unique<NNet>();
     ptr->init(fn, args...);
-    return std::move(ptr);
+    return ptr;
 }
 
 template <static_neural_net_type NNet>
@@ -671,9 +670,9 @@ std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> net_x_crossover(NNet con
     auto ptr_ret_net2 = std::make_unique<NNet>(net2);
 
     /*
-    Si *ptr_net hace una copia local dará problemas de memoria. Por las pruebas
-    que he hecho concluyo que está optimizado y no se hace. Sino habría que
-    utilizar esta versión que utiliza memcpy y por lo tanto no hace una copia
+    Si *ptr_net hace una copia local darï¿½ problemas de memoria. Por las pruebas
+    que he hecho concluyo que estï¿½ optimizado y no se hace. Sino habrï¿½a que
+    utilizar esta versiï¿½n que utiliza memcpy y por lo tanto no hace una copia
     local
     */
     // auto ptr_ret_net1 = std::make_unique< static_neural_net<T, Shapes...>>();
@@ -771,12 +770,9 @@ inline void to_target_layer_swap(const NNet& in_net1, const NNet& in_net2, NNet&
  */
 template <static_neural_net_type NNet>
     requires(std::is_standard_layout_v<std::remove_reference<NNet>> && std::is_trivial_v<std::remove_reference<NNet>>)
-inline void in_place_layer_swap(NNet& net1, NNet& net2)
+inline void in_place_layer_swap([[maybe_unused]] NNet& net1, [[maybe_unused]] NNet& net2)
 {
-    using value_type = typename NNet::value_type;
-
     const auto layers = NNet::s_Layers;
-
     const auto a = random::randint(0, layers - 1);
 
     if (a == 0 || a == layers - 1)

@@ -6,6 +6,8 @@
 
 #include <iostream>
 #include <type_traits>
+#include <limits.h>
+#include <limits>
 
 #include "cx_helper_functions.h" 
 #include "polystate.hpp"
@@ -106,12 +108,12 @@ public:
         return board_2D{ board_state_type::decode(encoded_board2D) };
     }
 
-    static [[nodiscard]] board_2D_position up(const board_2D_position pos)
+    [[nodiscard]] static board_2D_position up(const board_2D_position pos)
     {
         return board_2D_position{ pos.y - 1, pos.x };
     }
 
-    static [[nodiscard]] board_2D_position down(const board_2D_position pos)
+    [[nodiscard]] static board_2D_position down(const board_2D_position pos)
     {
         return board_2D_position{ pos.y + 1, pos.x };
     }

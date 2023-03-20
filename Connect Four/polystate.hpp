@@ -1,13 +1,12 @@
-#pragma once
-
 #ifndef TRISTATE_BOARD
 #define TRISTATE_BOARD
 
 #include <bitset>
+#include <limits.h>
+#include <cassert>
 
 #include "cx_helper_functions.h"
 
-#include <cassert>
 
 namespace polystate
 {
@@ -37,13 +36,13 @@ public:
 
     class reference
     {
-        using polystate = polystate_set<N, Interface_Type, Repr_Type, Data_Unit_Bits>;
-        friend polystate;
+        using polystate_type = polystate_set<N, Interface_Type, Repr_Type, Data_Unit_Bits>;
+        friend polystate_type;
 
     public:
         constexpr reference& operator=(Interface_Type value) noexcept
         {
-            assert(value <= polystate::s_max_data_value);
+            assert(value <= polystate_type::s_max_data_value);
             set(value);
             return *this;
         }
@@ -52,7 +51,7 @@ public:
         {
         }
 
-        constexpr reference(polystate& polystate, const size_t pos) noexcept :
+        constexpr reference(polystate_type& polystate, const size_t pos) noexcept :
             m_ptr_polystate(&polystate), m_position(pos)
         {
         }
@@ -74,7 +73,7 @@ public:
 
         constexpr operator Interface_Type() const noexcept
         {
-            return const_cast<polystate const*>(m_ptr_polystate)->operator[](m_position);
+            return const_cast<polystate_type const*>(m_ptr_polystate)->operator[](m_position);
         }
 
     private:
@@ -88,7 +87,7 @@ public:
         ~reference() noexcept = default;
 
     private:
-        polystate* m_ptr_polystate;
+        polystate_type* m_ptr_polystate;
         size_t     m_position;
     };
 
@@ -111,7 +110,7 @@ public:
         return m_Data;
     }
 
-    static [[nodiscard]] polystate_set decode(const encode_type& encoded_state)
+    [[nodiscard]] static polystate_set decode(const encode_type& encoded_state)
     {
         return polystate_set{ encoded_state };
     }

@@ -21,13 +21,13 @@ template <typename T>
 struct default_activation_function_parameters
 {
     template <typename Fn>
-    void mutate(Fn&& fn)
+    void mutate(Fn&&)
     {
     }
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    constexpr void fill(Fn&& fn, Args... args)
+    constexpr void fill(Fn&&, Args...)
     {
     }
 
@@ -48,11 +48,11 @@ struct default_activation_function_parameters
         return 0;
     }
 
-    void store(std::ofstream& out) const
+    void store(std::ofstream&) const
     {
     }
 
-    void load(std::ifstream& in)
+    void load(std::ifstream&)
     {
     }
 };
@@ -108,7 +108,7 @@ struct Identity
         Identity_impl(mat);
     }
 
-    inline static void Identity_impl(Mat& mat)
+    inline static void Identity_impl(Mat&)
     {
     }
 
@@ -227,7 +227,7 @@ struct Swish
 {
     using T = typename Mat::value_type;
 
-    struct params
+    struct parameters_type
     {
         static constexpr T lower_range_bound = -2;
         static constexpr T upper_range_bound = 2;
@@ -263,7 +263,7 @@ struct Swish
         }
 
         template <typename R>
-        [[nodiscard]] inline static constexpr R L1_distance(const params& p1, const params& p2)
+        [[nodiscard]] inline static constexpr R L1_distance(const parameters_type& p1, const parameters_type& p2)
         {
             return std::abs(p1.beta - p2.beta);
         }
@@ -278,8 +278,6 @@ struct Swish
             in >> beta;
         }
     };
-
-    using parameters_type = params;
 
     inline void operator()(Mat& mat, const parameters_type& params) const
     {
@@ -299,7 +297,7 @@ struct PReLU
 {
     using T = typename Mat::value_type;
 
-    struct params
+    struct parameters_type
     {
         static constexpr T lower_range_bound = -0.5;
         static constexpr T upper_range_bound =  0.5;
@@ -329,13 +327,13 @@ struct PReLU
             alpha = restrict_value(std::invoke(fn, args...));
         }
 
-        inline static T restrict_value(const T value)
+        [[nodiscard]] inline static T restrict_value(const T value)
         {
             return std::min(std::max(value, lower_range_bound), upper_range_bound);
         }
 
         template<typename R>
-        [[nodiscard]] inline static constexpr R L1_distance(const params& p1, const params& p2)
+        [[nodiscard]] inline static constexpr R L1_distance(const parameters_type& p1, const parameters_type& p2)
         {
             return std::abs(p1.alpha - p2.alpha);
         }
@@ -350,8 +348,6 @@ struct PReLU
             in >> alpha;
         }
     };
-
-    using parameters_type = params;
 
     inline void operator()(Mat& mat, const parameters_type& params) const
     {
@@ -406,7 +402,8 @@ template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ F
         return matrix_activation_functions::Swish<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::PReLU)
         return matrix_activation_functions::PReLU<Mat>();
-    std::unreachable();
+    //std::unreachable();
+    throw std::runtime_error("Reached unreachable code");
 }
 
 template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ Function_Identifier>

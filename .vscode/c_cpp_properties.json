@@ -4,10 +4,42 @@
     "env": {
       "myDefaultIncludePath": [],
       "clangCompilerPath": "/usr/bin/clang++",
+      "gccCompilerPath": "/usr/bin/gcc",
       "myCppStandard" : "c++23"
     },
 
     "configurations": [
+        {
+            "name": "gcc debug",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${myDefaultIncludePath}"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++23",
+            "compilerPath": "${gccCompilerPath}",
+            "intelliSenseMode": "${default}"
+        },
+        {
+            "name": "gcc release",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "NDEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++23",
+            "compilerPath": "${gccCompilerPath}",
+            "intelliSenseMode": "${default}"
+        },
         {
             "name": "clang++ debug",
             "includePath": [

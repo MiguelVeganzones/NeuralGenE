@@ -63,7 +63,7 @@ public:
 private:
     static void init()
     {
-        if (const auto error_code = ::localtime_s(&s_tm, &s_Compile_time); error_code == 0)
+        if (const auto error_code = ::localtime_r(&s_Compile_time, &s_tm); error_code == 0)
         {
             s_Log_filename << std::put_time(&s_tm, "%Y_%m_%d__%H_%M_%S") << "_Log.txt";
             s_Logging_file_path /= s_Log_filename.str();

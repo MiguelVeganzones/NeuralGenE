@@ -28,9 +28,6 @@ based on:
   and: https://github.com/douglasrizzo/matrix/blob/master/include/nr3/nr3.h
 */
 
-#pragma warning(push)
-#pragma warning(disable : 4244)
-
 #ifndef NDEBUG
 #define CHECKBOUNDS
 #endif
@@ -1171,7 +1168,5 @@ template <typename T, size_t M, size_t N>
 }
 
 } /* namespace ga_sm */
-
-#pragma warning(pop)
 
 #endif // !STATIC_MATRIX

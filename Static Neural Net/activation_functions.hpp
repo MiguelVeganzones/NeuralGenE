@@ -180,7 +180,6 @@ struct SiLU
 };
 
 template<typename Mat>
-    requires std::is_standard_layout_v<Mat> && std::is_trivial_v<Mat>
 struct Softmax
 {
     using T = typename Mat::value_type;
@@ -192,7 +191,7 @@ struct Softmax
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
-        std::invoke(Softmax_impl, mat);
+        Softmax_impl(mat);
     }
 
     inline static void Softmax_impl(Mat& mat)

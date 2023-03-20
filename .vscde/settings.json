@@ -1,0 +1,18 @@
+{
+    "files.associations": {
+        "compare": "cpp",
+        "type_traits": "cpp",
+        "cwchar": "cpp",
+        "vector": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "iosfwd": "cpp",
+        "istream": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp",
+        "memory": "cpp",
+        "array": "cpp"
+    }
+}

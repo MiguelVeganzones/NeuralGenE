@@ -1,7 +1,6 @@
 #ifndef MONTE_CARLO_TREE_SEARCH
 #define MONTE_CARLO_TREE_SEARCH
 
-#include "../Database Connection/SQL_utility.hpp"
 #include "Random.h"
 
 #include <cassert>
@@ -17,10 +16,16 @@ class initial_state;
 
 struct mtcs_results
 {
-    using points_type        = float;
+    using points_type       = float;
     using sample_count_type = int;
-    points_type        points;
-    sample_count_type samples;
+    points_type        points {};
+    sample_count_type samples {};
+
+    constexpr void add_trial_score(const points_type trial_score) noexcept
+    {
+        points += trial_score;
+        ++samples;
+    }
 };
 
 template <class Game_Encode_Type>
@@ -38,7 +43,7 @@ class initial_state
 {
     // TODO Remove public
 public:
-    using game_state                     = Game_Board;
+    using game_state_type                = Game_Board;
     using valid_moves_container          = typename Game_Board::valid_moves_container;
     using move_type                      = typename valid_moves_container::value_type;
     using encode_type                    = typename Game_Board::encode_type;
@@ -49,17 +54,18 @@ public:
     using player_type                    = typename Game_Board::player_repr_type;
     using sampling_states_container_type = std::vector<flat_tree_node>;
     using leaf_nodes_container_type      = std::vector<flat_tree_idx>;
-    using game_result_type               = int;
 
 private:
-    static constexpr game_result_type win  = 1;
-    static constexpr game_result_type loss = 0;
-    static constexpr game_result_type tie  = -1;
+    enum game_result_type {
+        win,
+        loss,
+        tie
+    };
 
 public:
-    initial_state(const game_state& game_state) :
+    initial_state(const game_state_type& game_state) :
         m_Initial_game_board(game_state),
-        m_Monte_carlo_sampling{ mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, { 0.f, 0 } } },
+        m_Monte_carlo_sampling{ mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } },
         m_Target_player{ m_Initial_game_board.current_player() }
     {
         assert(m_Initial_game_board.any_moves_left());
@@ -67,8 +73,8 @@ public:
     }
 
     initial_state() :
-        m_Initial_game_board{ game_state{} },
-        m_Monte_carlo_sampling{ mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, { 0.f, 0 } } }
+        m_Initial_game_board{ game_state_type{} },
+        m_Monte_carlo_sampling{ mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } }
     {
     }
 
@@ -91,9 +97,9 @@ public:
 
     flat_tree_idx expansion(const flat_tree_idx next_parent_idx)
     {
-        auto       parent_game_state = game_state::decode(m_Monte_carlo_sampling[next_parent_idx].encoded_game_state);
-        auto next_leaf_idx  = static_cast<flat_tree_idx>(m_Monte_carlo_sampling.size());
-        const auto valid_moves       = parent_game_state.get_valid_moves();
+        auto          parent_game_state = game_state_type::decode(m_Monte_carlo_sampling[next_parent_idx].encoded_game_state);
+        flat_tree_idx next_leaf_idx     = m_Monte_carlo_sampling.size();
+        const auto    valid_moves       = parent_game_state.get_valid_moves();
 
         const auto leaf_nodes_initial_size = m_Leaf_nodes_idx.size();
         size_t     added_leaves            = 0;
@@ -104,11 +110,10 @@ public:
                 continue;
 
             parent_game_state.make_move(move);
-            m_Monte_carlo_sampling.push_back({ parent_game_state.encode(), next_parent_idx, { 0, 0 } });
+            m_Monte_carlo_sampling.push_back({ parent_game_state.encode(), next_parent_idx, {} });
 
             if (!parent_game_state.winning_move(move))
             {
-                //std::cout << parent_game_state.board_state() << std::endl;
                 m_Leaf_nodes_idx.push_back(next_leaf_idx);
                 ++added_leaves;
             }
@@ -121,8 +126,6 @@ public:
             parent_game_state.undo_move(move);
         }
 
-        const auto current_last_leaf_idx_ptr = m_Leaf_nodes_idx.end();
-
         if (added_leaves == 0)
             return m_Leaf_nodes_idx.back();
 
@@ -134,7 +137,7 @@ public:
     game_result_type simulation(const flat_tree_idx game_state_idx)
     {
         auto& selected_node     = m_Monte_carlo_sampling[game_state_idx];
-        auto  sample_game_state = game_state::decode(selected_node.encoded_game_state);
+        auto  sample_game_state = game_state_type::decode(selected_node.encoded_game_state);
 
         while (sample_game_state.any_moves_left())
         {
@@ -148,40 +151,43 @@ public:
 
     void backpropagation(flat_tree_idx game_state_idx, const game_result_type result)
     {
+        const auto trial_score = points_increment(result);
+        std::cout << game_state_idx;
         while (game_state_idx > -1)
         {
-            auto& prev_result = m_Monte_carlo_sampling[game_state_idx].results;
-            prev_result.points += points_increment(result);
-            ++prev_result.samples;
+            m_Monte_carlo_sampling[game_state_idx].results.add_trial_score(trial_score);
             game_state_idx = m_Monte_carlo_sampling[game_state_idx].parent_idx;
+            std::cout << "->" << game_state_idx;
         }
+        std::cout << "\n";
     }
 
 private:
     static constexpr game_result_type won()
     {
-        return win;
+        return game_result_type::win;
     }
     static constexpr game_result_type tied()
     {
-        return tie;
+        return game_result_type::tie;
     }
     static constexpr game_result_type lost()
     {
-        return loss;
+        return game_result_type::loss;
     }
     static constexpr points_type points_increment(const game_result_type result)
     {
         switch (result)
         {
-        case win:
+        case game_result_type::win:
             return 1;
-        case tie:
+        case game_result_type::tie:
             return 0.001f;
-        case loss:
+        case game_result_type::loss:
             return 0;
         default:
-            std::unreachable();
+            //std::unreachable();
+            throw std::runtime_error("Reached unreachable code");
         }
     }
 
@@ -189,7 +195,7 @@ private:
 private:
     // TODO: Remove public
 public:
-    game_state                     m_Initial_game_board;
+    game_state_type                m_Initial_game_board;
     sampling_states_container_type m_Monte_carlo_sampling;
     leaf_nodes_container_type      m_Leaf_nodes_idx{ 0 };
     player_type                    m_Target_player{};

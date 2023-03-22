@@ -24,13 +24,12 @@ class polystate_set
 public:
     using repr_type = Repr_Type;
 
-    inline static constexpr size_t    s_data_units         = N;
-    inline static constexpr size_t    s_bits_per_data_unit = Data_Unit_Bits;
-    inline static constexpr repr_type s_max_data_value =
-        repr_type{ cx_helper_func::cx_pow(2, s_bits_per_data_unit) - 1 };
-    inline static constexpr size_t s_bits_per_word       = sizeof(repr_type) * CHAR_BIT;
-    inline static constexpr size_t s_data_units_per_word = s_bits_per_word / s_bits_per_data_unit;
-    inline static constexpr size_t s_word_count = N / s_data_units_per_word + (N % s_data_units_per_word == 0 ? 0 : 1);
+    inline static constexpr std::size_t  s_data_units          = N;
+    inline static constexpr std::uint8_t s_bits_per_data_unit  = Data_Unit_Bits;
+    inline static constexpr repr_type    s_max_data_value      = repr_type{ cx_helper_func::cx_pow(2, s_bits_per_data_unit) - 1 };
+    inline static constexpr std::uint8_t s_bits_per_word       = sizeof(repr_type) * CHAR_BIT;
+    inline static constexpr std::uint8_t s_data_units_per_word = s_bits_per_word / s_bits_per_data_unit;
+    inline static constexpr std::size_t  s_word_count          = N / s_data_units_per_word + (N % s_data_units_per_word == 0 ? 0 : 1);
 
     using encode_type = std::array<repr_type, s_word_count>;
 
@@ -58,14 +57,13 @@ public:
 
         constexpr void set(const Interface_Type value) noexcept
         {
-            auto&      selected_word      = m_ptr_polystate->m_Data[m_position / s_data_units_per_word];
-            const auto shift_offset       = (m_position % s_data_units_per_word) * s_bits_per_data_unit;
-            const auto selected_bits_mask = s_max_data_value << shift_offset;
+            repr_type&      selected_word      = m_ptr_polystate->m_Data[m_position / s_data_units_per_word];
+            const repr_type shift_offset       = (m_position % s_data_units_per_word) * s_bits_per_data_unit;
+            const repr_type selected_bits_mask = s_max_data_value << shift_offset;
 
             // Cast value to the repr type in case sizeof(Interface_Type) < sizeof(Repr_Type). The repr_type is
             // guaranteed to be able to hold max word value
-            const auto repr_type_value = static_cast<repr_type>(value) << shift_offset;
-
+            const repr_type repr_type_value = static_cast<repr_type>(value) << shift_offset;
 
             selected_word &= ~selected_bits_mask;
             selected_word ^= repr_type_value;
@@ -88,15 +86,15 @@ public:
 
     private:
         polystate_type* m_ptr_polystate;
-        size_t     m_position;
+        size_t          m_position;
     };
 
 public:
     [[nodiscard]] constexpr Interface_Type operator[](const size_t idx) const noexcept
     {
         assert(idx < N);
-        const auto shift_offset = ((idx % s_data_units_per_word) * s_bits_per_data_unit);
-        return (m_Data[idx / s_data_units_per_word] & (s_max_data_value << shift_offset)) >> shift_offset;
+        const repr_type shift_offset = (idx % s_data_units_per_word) * s_bits_per_data_unit;
+        return static_cast<repr_type>((m_Data[idx / s_data_units_per_word] & (s_max_data_value << shift_offset)) >> shift_offset);
     }
 
     [[nodiscard]] constexpr reference operator[](const size_t idx) noexcept

@@ -63,22 +63,15 @@ public:
 private:
     static void init()
     {
-        if (const auto error_code = ::localtime_r(&s_Compile_time, &s_tm); error_code == 0)
-        {
-            s_Log_filename << std::put_time(&s_tm, "%Y_%m_%d__%H_%M_%S") << "_Log.txt";
-            s_Logging_file_path /= s_Log_filename.str();
-            s_Initialized = true;
-        }
-        else
-        {
-            std::cerr << "Error while formatting local time. Error code: std::errno(" << error_code << ')';
-        }
+        s_Log_filename << std::put_time(&s_tm, "%Y_%m_%d__%H_%M_%S") << "_Log.txt";
+        s_Logging_file_path /= s_Log_filename.str();
+        s_Initialized = true;
     }
 
     static inline bool s_Initialized = false;
 
     static inline const std::time_t s_Compile_time = std::time(nullptr); // Current time
-    static inline std::tm           s_tm;
+    static inline const std::tm     s_tm           = *std::localtime(&s_Compile_time);
     static inline std::stringstream s_Log_filename;
 
     static inline std::filesystem::path s_Logging_file_path = "../Logs";

@@ -1,8 +1,8 @@
 #include <iostream>
 
+#include "Log.h"
 #include "Precision_totalizer.h"
 #include "Random.h"
-#include "Log.h"
 
 auto rng()
 {
@@ -41,5 +41,4 @@ int main()
     log::flush_log();
 
     return EXIT_SUCCESS;
-
 }

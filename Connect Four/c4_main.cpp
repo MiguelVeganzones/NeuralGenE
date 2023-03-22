@@ -1,7 +1,7 @@
 #include <array>
 #include <bitset>
-#include <ranges>
 #include <iostream>
+#include <ranges>
 
 #include "Random.h"
 #include "Stopwatch.h"
@@ -97,8 +97,7 @@ int main()
     auto e = b.encode();
 
     for (auto _e : e)
-    {
-        std::cout << (int)_e << ' ';
+    {std::cout << (int)_e << ' ';
     }
     std::cout << std::endl;
 

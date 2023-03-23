@@ -1,6 +1,7 @@
 #ifndef CONNECT_FOUR_BOARD
 #define CONNECT_FOUR_BOARD
 
+#include "Random.h"
 #include "game_boardd.hpp"
 #include <array>
 #include <cassert>
@@ -9,20 +10,19 @@
 namespace c4_board
 {
 template <size_t Size_Y, size_t Size_X, size_t Target_Count, std::uint8_t Player_Count>
-    requires(Target_Count > 1) && (Size_X >= Target_Count) && (Size_Y >= Target_Count) && (Player_Count > 1)
-class board
+requires(Target_Count > 1) && (Size_X >= Target_Count) && (Size_Y >= Target_Count) && (Player_Count > 1) class board
 {
 public:
     using board_position   = game_board::board_2D_position;
     using player_repr_type = std::uint8_t;
 
 private:
-    inline static constexpr int              s_Size_y       = Size_Y;
-    inline static constexpr int              s_Size_x       = Size_X;
+    inline static constexpr int              s_Size_y          = Size_Y;
+    inline static constexpr int              s_Size_x          = Size_X;
     inline static constexpr int              s_Max_moves_count = s_Size_x;
-    inline static constexpr int              s_Target_count = Target_Count;
-    inline static constexpr player_repr_type s_Player_count = Player_Count;
-    inline static constexpr player_repr_type s_Valid_states = Player_Count + 1;
+    inline static constexpr int              s_Target_count    = Target_Count;
+    inline static constexpr player_repr_type s_Player_count    = Player_Count;
+    inline static constexpr player_repr_type s_Valid_states    = Player_Count + 1;
 
 public:
     using game_board_type       = game_board::board_2D<s_Size_y, s_Size_x, s_Valid_states, player_repr_type>;
@@ -100,7 +100,7 @@ public:
     [[nodiscard]] bool is_valid_move(const board_position pos) const
     {
         return m_Board_state.is_empty(pos) &&
-            (pos.y == s_Size_y - 1 ? true : !m_Board_state.is_empty( game_board_type::down(pos) ));
+            (pos.y == s_Size_y - 1 ? true : !m_Board_state.is_empty(game_board_type::down(pos)));
     }
 
     [[nodiscard]] bool any_moves_left() const
@@ -329,7 +329,7 @@ private:
 
 private:
     game_board_type       m_Board_state{};
-    valid_moves_container m_Valid_moves = init_valid_moves();
+    valid_moves_container m_Valid_moves    = init_valid_moves();
     player_repr_type      m_Current_player = 0;
 
 public:

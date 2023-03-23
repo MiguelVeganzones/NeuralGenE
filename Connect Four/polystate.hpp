@@ -1,9 +1,10 @@
 #ifndef TRISTATE_BOARD
 #define TRISTATE_BOARD
 
+#include <array>
 #include <bitset>
-#include <limits.h>
 #include <cassert>
+#include <limits.h>
 
 #include "cx_helper_functions.h"
 
@@ -16,20 +17,22 @@ template <size_t                 N,
           std::unsigned_integral Interface_Type = unsigned int,
           std::unsigned_integral Repr_Type      = std::uint8_t,
           size_t                 Data_Unit_Bits = 2>
-    requires(N > 0) && ((sizeof(Repr_Type) * CHAR_BIT) % Data_Unit_Bits == 0) &&
+requires(N > 0) && ((sizeof(Repr_Type) * CHAR_BIT) % Data_Unit_Bits == 0) &&
     ((sizeof(Repr_Type) * CHAR_BIT) >= Data_Unit_Bits) &&
     (Data_Unit_Bits > 0) //&& (sizeof(Repr_Type) >= sizeof(Interface_Type))
-class polystate_set
+    class polystate_set
 {
 public:
     using repr_type = Repr_Type;
 
-    inline static constexpr std::size_t  s_data_units          = N;
-    inline static constexpr std::uint8_t s_bits_per_data_unit  = Data_Unit_Bits;
-    inline static constexpr repr_type    s_max_data_value      = repr_type{ cx_helper_func::cx_pow(2, s_bits_per_data_unit) - 1 };
+    inline static constexpr std::size_t  s_data_units         = N;
+    inline static constexpr std::uint8_t s_bits_per_data_unit = Data_Unit_Bits;
+    inline static constexpr repr_type    s_max_data_value =
+        repr_type{ cx_helper_func::cx_pow(2, s_bits_per_data_unit) - 1 };
     inline static constexpr std::uint8_t s_bits_per_word       = sizeof(repr_type) * CHAR_BIT;
     inline static constexpr std::uint8_t s_data_units_per_word = s_bits_per_word / s_bits_per_data_unit;
-    inline static constexpr std::size_t  s_word_count          = N / s_data_units_per_word + (N % s_data_units_per_word == 0 ? 0 : 1);
+    inline static constexpr std::size_t  s_word_count =
+        N / s_data_units_per_word + (N % s_data_units_per_word == 0 ? 0 : 1);
 
     using encode_type = std::array<repr_type, s_word_count>;
 
@@ -94,7 +97,8 @@ public:
     {
         assert(idx < N);
         const repr_type shift_offset = (idx % s_data_units_per_word) * s_bits_per_data_unit;
-        return static_cast<repr_type>((m_Data[idx / s_data_units_per_word] & (s_max_data_value << shift_offset)) >> shift_offset);
+        return static_cast<repr_type>((m_Data[idx / s_data_units_per_word] & (s_max_data_value << shift_offset)) >>
+                                      shift_offset);
     }
 
     [[nodiscard]] constexpr reference operator[](const size_t idx) noexcept
@@ -124,7 +128,10 @@ void polystate_dummy(polystate_set<N, Return_Type, Repr_Type, Data_Unit_Bits>)
 }
 
 template <typename T>
-concept polystate_set_type = requires { polystate_dummy(std::declval<T>()); };
+concept polystate_set_type = requires
+{
+    polystate_dummy(std::declval<T>());
+};
 
 /* ---------------------------------------------------- */
 

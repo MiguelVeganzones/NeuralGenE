@@ -73,6 +73,11 @@ int main()
 
     board_type b{};
 
+    for (int i = 0; i != 100000; ++i)
+    {
+        std::cout << random::randfloat() << std::endl;
+    }
+
     int i = 0;
     while (b.any_moves_left() && random::randfloat() > 0.03f)
     {
@@ -92,6 +97,7 @@ int main()
                 break;
             }
         }
+        std::cout << std::endl;
     }
 
     auto e = b.encode();

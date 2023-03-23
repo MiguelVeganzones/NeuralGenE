@@ -1,13 +1,10 @@
-
-
 {
     "env": {
-      "myDefaultIncludePath": [],
-      "clangCompilerPath": "/usr/bin/clang++",
-      "gccCompilerPath": "/usr/bin/gcc",
-      "myCppStandard" : "c++23"
+        "myDefaultIncludePath": [],
+        "clangCompilerPath": "/usr/bin/clang++",
+        "gccCompilerPath": "/usr/bin/gcc",
+        "myCppStandard": "c++23"
     },
-
     "configurations": [
         {
             "name": "gcc debug",
@@ -54,7 +51,8 @@
             "cStandard": "c17",
             "cppStandard": "c++23",
             "compilerPath": "${clangCompilerPath}",
-            "intelliSenseMode": "${default}"
+            "intelliSenseMode": "${default}",
+            "configurationProvider": "ms-vscode.makefile-tools"
         },
         {
             "name": "clang++ release",
@@ -73,5 +71,4 @@
         }
     ],
     "version": 4
-  }
-  
+}

@@ -17,11 +17,9 @@ Exception safety: https://www.boost.org/community/exception_safety.html
 class log
 {
 public:
-    static inline void add(const std::string_view sv)
+    static inline void add(const std::string s)
     {
-        for (const auto c : sv)
-            s_log += c;
-        s_log += '\n';
+        s_log += s + '\n';
         ++s_logs;
     }
 
@@ -40,14 +38,14 @@ public:
 
         if (std::ofstream out(s_Logging_file_path); out.is_open())
         {
-            out << s_log << s_Final_message << std::endl;
+            out << s_log << s_Final_message << '\n';
         }
         else
         {
             std::cout << "Could not log info to file\n";
         }
 
-        std::cout << s_log << s_Final_message << std::endl;
+        std::cout << s_log << s_Final_message << '\n';
     }
 
     [[nodiscard]] static inline std::string_view get()

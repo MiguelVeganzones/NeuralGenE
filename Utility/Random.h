@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <iostream>
 #include <limits>
 
 #ifdef max
@@ -29,8 +30,7 @@ public:
 
     inline static float randfloat()
     {
-        const auto gen = static_cast<float>(s_Distribution(random::s_Random_engine));
-        return gen / int32_max_float;
+        return s_Uniform_real(s_Random_engine);
     }
 
     inline static int randint(const int min, const int max)
@@ -41,7 +41,7 @@ public:
 
     inline static size_t randsize_t(const size_t min, const size_t max)
     {
-        assert(min <= max);  
+        assert(min <= max);
         std::uniform_int_distribution<size_t> u(min, max);
         return u(random::s_Random_engine);
     }
@@ -59,9 +59,9 @@ public:
     // static float mt_randnormal(const float avg = 0.f, const float stddev = 1.f);
 
 private:
-    inline static std::mt19937                                             s_Random_engine;
-    inline static std::uniform_int_distribution<std::mt19937::result_type> s_Distribution;
-    inline static constexpr float int32_max_float = static_cast<float>(std::numeric_limits<uint32_t>::max());
+    inline static std::mt19937 s_Random_engine;
+
+    inline static auto s_Uniform_real = std::uniform_real_distribution<float>(0.f, 1.f);
 };
 
 // std::mutex mu_randint;

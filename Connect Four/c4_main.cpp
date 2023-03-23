@@ -97,7 +97,8 @@ int main()
     auto e = b.encode();
 
     for (auto _e : e)
-    {std::cout << (int)_e << ' ';
+    {
+        std::cout << (int)_e << ' ';
     }
     std::cout << std::endl;
 

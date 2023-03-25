@@ -1,11 +1,9 @@
-#pragma once
-
 #include <array>
-#include <vector>
-#include <filesystem>
 #include <concepts>
+#include <filesystem>
 #include <future>
 #include <thread>
+#include <vector>
 
 #include "Random.h"
 #include "Stopwatch.h"
@@ -26,7 +24,8 @@ void score_functions_test()
     constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
         choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
 
-    constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto AF   = matrix_activation_functions::Identifiers::GELU;
+    constexpr auto Tanh = matrix_activation_functions::Identifiers::Tanh;
     auto           SM =
         score_function_objects::score_function_object<decltype(fn), std::uint16_t, std::uint16_t, std::uint16_t>(fn);
 
@@ -34,10 +33,11 @@ void score_functions_test()
     using SM_t = decltype(SM);
 
     constexpr Layer_Signature a1{ 1, AF };
+    constexpr Layer_Signature a1_tanh{ 1, Tanh };
     constexpr Layer_Signature a9{ 9, AF };
     constexpr Layer_Signature a25{ 25, AF };
 
-    using NET = static_neural_net<float, 1, a1, a9, a25, a25, a25, a25, a9, a1>;
+    using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9, a9, a1_tanh>;
 
     auto brain_a = ga_neural_model::brain<NET, SM_t>(random::randnormal, 0, 1);
 
@@ -66,10 +66,10 @@ void init_plotting(const size_t len)
 
     s << "python " << py_path << ' ' << data_path << ' ' << len;
 
-    system(s.str().c_str());
+    [[maybe_unused]] auto t = system(s.str().c_str());
 }
 
-template<typename Iterable>
+template <typename Iterable>
 void output_to_file(const size_t gen, const Iterable& iter)
 {
     const std::filesystem::path data_path = "../__Plotting_files/plotting_numbers.txt";
@@ -91,7 +91,7 @@ void training_test()
     constexpr size_t N = 20;
     constexpr size_t M = 2000;
 
-    //std::thread(init_plotting, M).detach();
+    // std::thread(init_plotting, M).detach();
 
     using namespace ga_snn;
     using namespace ga_sm;
@@ -99,7 +99,7 @@ void training_test()
     constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
         choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
 
-    constexpr auto AF_relu = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto AF_relu = matrix_activation_functions::Identifiers::GELU;
     constexpr auto AF_tanh = matrix_activation_functions::Identifiers::Sigmoid;
     auto           SM =
         score_function_objects::score_function_object<decltype(fn), std::uint16_t, std::uint16_t, std::uint16_t>(fn);
@@ -107,25 +107,24 @@ void training_test()
 
     using SM_t = decltype(SM);
 
-    constexpr Layer_Signature a1{ 1, AF_relu };
-    constexpr Layer_Signature a1_tanh{ 1, AF_tanh };
-    constexpr Layer_Signature a9{ 9, AF_relu };
-    constexpr Layer_Signature a25{ 25, AF_relu };
-    constexpr Layer_Signature a42{ 42, AF_relu };
-    constexpr Layer_Signature a16{ 16, AF_relu };
+    [[maybe_unused]] constexpr Layer_Signature a1{ 1, AF_relu };
+    [[maybe_unused]] constexpr Layer_Signature a1_tanh{ 1, AF_tanh };
+    [[maybe_unused]] constexpr Layer_Signature a9{ 9, AF_relu };
+    [[maybe_unused]] constexpr Layer_Signature a25{ 25, AF_relu };
+    [[maybe_unused]] constexpr Layer_Signature a42{ 42, AF_relu };
+    [[maybe_unused]] constexpr Layer_Signature a16{ 16, AF_relu };
 
-    using NET2 = static_neural_net<float, 1, a1, a42, a16, a1_tanh>;
-    using NET = static_neural_net<float, 1, a1, a25, a25, a9, a9, a25, a25, a9, a1_tanh>;
+    using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9, a9, a1_tanh>;
 
     std::cout << NET::parameter_count() << std::endl;
-    //std::cout << NET2::parameter_count() << std::endl;
+    // std::cout << NET2::parameter_count() << std::endl;
 
     std::array<std::array<ga_neural_model::brain<NET, SM_t>, N>, 2> gen{};
 
     for (size_t i = 0; i != N; ++i)
     {
         gen[0][i] = ga_neural_model::brain<NET, SM_t>(SM, [] { return random::randfloat() * 0.001f; });
-        gen[1][i] = ga_neural_model::brain<NET, SM_t>(SM, [] { return 0; });
+        gen[1][i] = ga_neural_model::brain<NET, SM_t>(SM, [] { return 0.f; });
     }
 
     std::vector<float> in(M), out(M), pred(M), best_pred(M);
@@ -134,7 +133,7 @@ void training_test()
 
     for (size_t iter = 0; iter != 100000; ++iter)
     {
-        std::array<float, N> error{ };
+        std::array<float, N> error{};
         for (size_t j = 0; j != N; ++j)
         {
             for (size_t i = 0; i != M; ++i)
@@ -142,10 +141,10 @@ void training_test()
                 pred[i] = gen[iter % 2][j].weigh(in[i]);
                 error[j] += std::abs(pred[i] - out[i]);
             }
-            //if (j == 0 || (j > 0 && error[j] < error[j - 1]))
+            // if (j == 0 || (j > 0 && error[j] < error[j - 1]))
             //{
-            //    best_pred = pred;
-            //}
+            //     best_pred = pred;
+            // }
         }
 
         // for (const auto e :error)
@@ -189,8 +188,12 @@ void training_test()
         {
             if (random::randfloat() < 0.6f)
             {
-                e.mutate([] <std::floating_point F> (F f) {
+                e.mutate([]<std::floating_point F>(F f) {
                     const auto r = random::randfloat();
+                    if (r >= 0.009)
+                    {
+                        return f * F(0.9999);
+                    }
                     if (r < 0.0006f)
                     {
                         return random::randfloat();
@@ -201,11 +204,11 @@ void training_test()
                     }
                     if (r < 0.0018f)
                     {
-                        return decltype(f){};
+                        return F{};
                     }
                     if (r < 0.0024f)
                     {
-                        return f + random::randnormal(random::randnormal(), random::randfloat());
+                        return f += random::randnormal(random::randnormal(), random::randfloat());
                     }
                     if (r < 0.0030f)
                     {
@@ -219,7 +222,7 @@ void training_test()
         if (iter % 99 == 0)
         {
             std::cout << iter << " " << *std::ranges::min_element(error) << '\n';
-            //output_to_file(iter, best_pred);
+            // output_to_file(iter, best_pred);
         }
     }
 }

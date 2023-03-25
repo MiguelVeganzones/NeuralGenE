@@ -1,8 +1,8 @@
 #include "Random.h"
-#include "plotting_utility.h"
-#include "static_matrix.hpp"
 #include "neural_model.hpp"
+#include "plotting_utility.h"
 #include "score_functions.hpp"
+#include "static_matrix.hpp"
 
 void test0()
 {
@@ -45,7 +45,7 @@ void test2()
     y5.fill(random::randfloat);
     y6.fill(random::randfloat);
 
-    plotting_utility::plot(x, { y1, y2, y3, y4, y5, y6 });
+    plotting_utility::plot(x, std::vector{ y1, y2, y3, y4, y5, y6 });
 }
 
 void training_test()
@@ -184,7 +184,7 @@ void training_test()
 int main()
 {
     // test0();
-    //test2();
+    // test2();
     training_test();
 
     return EXIT_SUCCESS;

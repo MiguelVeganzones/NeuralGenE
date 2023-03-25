@@ -3,7 +3,33 @@
 #define PLOTTING_UTILITY_EVOLUTION_ENV
 
 #include <cassert>
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#endif
+
+#if defined(_MSC_VER)
+#pragma warning(push, 0)
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#endif
+
 #include <matplot/matplot.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 
 #include <array>
 #include <cmath>
@@ -14,9 +40,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#pragma warning(push)
-#pragma warning(disable : 4244)
 
 namespace plotting_utility
 {
@@ -43,11 +66,14 @@ public:
 
 // iterator concept
 template <typename Vec>
-concept iterable_type = requires(Vec& v) {
-                            std::ranges::range<Vec>;
-                            Vec::value_type;
-                            v.size();
-                        };
+concept iterable_type = requires(Vec& v)
+{
+    // std::ranges::range<Vec>;
+    v.begin();
+    v.end();
+    // Vec::value_type;
+    v.size();
+};
 
 template <iterable_type Vec>
 void plot(const Vec& y)
@@ -95,7 +121,5 @@ void plot(const Vec& x, const std::vector<Vec>& y_)
 }
 
 } // namespace plotting_utility
-
-#pragma warning(pop)
 
 #endif // PLOTTING_UTILITY_EVOLUTION_ENV

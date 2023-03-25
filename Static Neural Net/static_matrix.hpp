@@ -293,8 +293,7 @@ public:
 
 //-------------------------------------------------------------------//
 template <typename T, size_t M, size_t N>
-    requires(std::is_arithmetic_v<T> && (N > 0) && (M > 0))
-class static_matrix
+requires(std::is_arithmetic_v<T> && (N > 0) && (M > 0)) class static_matrix
 {
 public:
     using value_type      = T;
@@ -326,7 +325,7 @@ public:
     }
 
     template <class Fn, class... Args>
-        requires std::is_invocable_r_v<T, Fn, Args...>
+    requires std::is_invocable_r_v<T, Fn, Args...>
     void fill(Fn&& fn, Args&&... args) noexcept(noexcept(std::invoke(fn, args...)))
     {
         for (iterator it = begin(); it != end(); ++it)
@@ -361,18 +360,18 @@ public:
     }
 
     template <typename Fn>
-        requires std::is_invocable_r_v<T, Fn, T>
+    requires std::is_invocable_r_v<T, Fn, T>
     constexpr void transform(Fn&& fn)
     {
-        for (auto& e: *this)
+        for (auto& e : *this)
             e = fn(e);
     }
 
     template <typename Fn>
-        requires std::is_invocable_r_v<T, Fn, T>
+    requires std::is_invocable_r_v<T, Fn, T>
     [[nodiscard]] static_matrix apply_fn(Fn&& fn) const noexcept(noexcept(fn))
     {
-        static_matrix ret{ };
+        static_matrix ret{};
         std::transform(begin(), end(), ret.begin(), fn);
         return ret;
     }
@@ -492,8 +491,7 @@ public:
      * \note Only works for floating point matrix value types
      * \throws std::logic_error (or other, implementation dependent) when divsion by zero
      */
-    constexpr void rescale_L_1_1_norm(const float norm = 1.f)
-        requires std::is_floating_point_v<T>
+    constexpr void rescale_L_1_1_norm(const float norm = 1.f) requires std::is_floating_point_v<T>
     {
         assert(norm != 0.f);
         const T sum    = this->sum();
@@ -505,8 +503,7 @@ public:
     /// <summary>
     /// Rescales all values in the matrix to fit a normal distribution N(0,1) (mean 0 and sttdev 1)
     /// </summary>
-    void standarize()
-        requires std::is_floating_point_v<T>
+    void standarize() requires std::is_floating_point_v<T>
     {
         const auto mean = this->mean();
 
@@ -554,7 +551,10 @@ void matrix_dummy(static_matrix<T, M, N>)
 }
 
 template <typename T>
-concept static_matrix_type = requires { matrix_dummy(std::declval<T>()); };
+concept static_matrix_type = requires
+{
+    matrix_dummy(std::declval<T>());
+};
 
 // -----------------------------------------------
 // -----------------------------------------------
@@ -574,8 +574,8 @@ template <typename T2, typename T1, size_t M, size_t N>
 }
 
 template <size_t Out_M, size_t Out_N, typename T, size_t M, size_t N>
-    requires(M* N == Out_M * Out_N)
-[[nodiscard]] constexpr static_matrix<T, Out_M, Out_N> cast_to_shape(static_matrix<T, M, N> const& src) noexcept
+requires(M* N == Out_M * Out_N)
+    [[nodiscard]] constexpr static_matrix<T, Out_M, Out_N> cast_to_shape(static_matrix<T, M, N> const& src) noexcept
 {
     static_matrix<T, Out_M, Out_N> ret{};
     std::memcpy(ret.m_Elems, src.m_Elems, N * M * sizeof(T));
@@ -712,7 +712,7 @@ void to_target_x_crossover(static_matrix<T, M, N> const& in_mat1,
     {
         for (size_t i = 0; i != N; ++i)
         {
-            auto main_diagonal = j < a == i < b;
+            auto main_diagonal = (j < a) == (i < b);
             out_mat1(j, i)     = main_diagonal ? in_mat1(j, i) : in_mat2(j, i);
             out_mat2(j, i)     = main_diagonal ? in_mat2(j, i) : in_mat1(j, i);
         }
@@ -855,7 +855,7 @@ template <typename T, size_t M, size_t N>
 }
 
 template <typename T, size_t M, size_t N, size_t P, typename Fn>
-    requires std::is_invocable_r_v<T, Fn, T>
+requires std::is_invocable_r_v<T, Fn, T>
 [[nodiscard]] constexpr static_matrix<T, M, 1> multiply_add_activate(const static_matrix<T, M, N>& mat_mul_a,
                                                                      const static_matrix<T, N, P>& mat_mul_b,
                                                                      const static_matrix<T, M, P>& mat_add,
@@ -884,9 +884,9 @@ returns:
 
 */
 template <typename T_In, typename T_Out, size_t N>
-    requires(N > 1)
-[[nodiscard]] constexpr std::tuple<bool, double, static_matrix<T_Out, N, N>, std::array<size_t, N>> PII_LUDecomposition(
-    static_matrix<T_In, N, N> const& scr)
+requires(N > 1) [[nodiscard]] constexpr std::
+    tuple<bool, double, static_matrix<T_Out, N, N>, std::array<size_t, N>> PII_LUDecomposition(
+        static_matrix<T_In, N, N> const& scr)
 {
     /*
     source:
@@ -988,8 +988,7 @@ template <typename T, size_t N>
  *       Mutates input
  */
 template <std::floating_point T, size_t M, size_t N>
-    requires(M <= N)
-[[nodiscard]] constexpr bool RREF(static_matrix<T, M, N>& scr)
+requires(M <= N) [[nodiscard]] constexpr bool RREF(static_matrix<T, M, N>& scr)
 {
     using cx_helper_func::cx_abs; // constexpr abs
 

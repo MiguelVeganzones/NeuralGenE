@@ -4,12 +4,12 @@
 #define NOMINMAX
 #endif
 
-#include <functional>
-#include <stdexcept>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <functional>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 //--------------------------------------------------------------------------------------//
@@ -26,7 +26,7 @@ struct default_activation_function_parameters
     }
 
     template <typename Fn, typename... Args>
-        requires std::is_invocable_r_v<T, Fn, Args...>
+    requires std::is_invocable_r_v<T, Fn, Args...>
     constexpr void fill(Fn&&, Args...)
     {
     }
@@ -61,7 +61,7 @@ struct default_activation_function_parameters
 template <typename Mat>
 struct ReLU
 {
-    using T = typename Mat::value_type;
+    using T               = typename Mat::value_type;
     using parameters_type = default_activation_function_parameters<T>;
 
     inline void operator()(Mat& mat, const parameters_type&) const
@@ -71,7 +71,7 @@ struct ReLU
 
     inline static void ReLU_impl(Mat& mat)
     {
-        mat.transform([](T x) { return std::max(T{}, x); }); //  { return x > T{} ? x : T{}; }); 
+        mat.transform([](T x) { return std::max(T{}, x); }); //  { return x > T{} ? x : T{}; });
     }
 
     static constexpr auto name = "ReLU";
@@ -81,7 +81,7 @@ struct ReLU
 template <typename Mat>
 struct Sigmoid
 {
-    using T = typename Mat::value_type;
+    using T               = typename Mat::value_type;
     using parameters_type = default_activation_function_parameters<T>;
 
     inline void operator()(Mat& mat, const parameters_type&) const
@@ -89,10 +89,10 @@ struct Sigmoid
         Sigmoid_impl(mat);
     }
 
-     inline static void Sigmoid_impl(Mat& mat)
-     {
-         mat.transform([](T x) { return static_cast<T>(T(1) / (T(1) + std::exp(-x))); });
-     }
+    inline static void Sigmoid_impl(Mat& mat)
+    {
+        mat.transform([](T x) { return static_cast<T>(T(1) / (T(1) + std::exp(-x))); });
+    }
 
     static constexpr auto name = "Sigmoid";
 };
@@ -100,7 +100,7 @@ struct Sigmoid
 template <typename Mat>
 struct Identity
 {
-    using T = typename Mat::value_type;
+    using T               = typename Mat::value_type;
     using parameters_type = default_activation_function_parameters<T>;
 
     inline void operator()(Mat& mat, const parameters_type&) const
@@ -118,7 +118,7 @@ struct Identity
 template <typename Mat>
 struct Tanh
 {
-    using T = typename Mat::value_type;
+    using T               = typename Mat::value_type;
     using parameters_type = default_activation_function_parameters<T>;
 
     inline void operator()(Mat& mat, const parameters_type&) const
@@ -140,7 +140,7 @@ struct Tanh
 template <typename Mat>
 struct GELU
 {
-    using T = typename Mat::value_type;
+    using T               = typename Mat::value_type;
     using parameters_type = default_activation_function_parameters<T>;
 
     inline void operator()(Mat& mat, const parameters_type&) const
@@ -163,7 +163,7 @@ struct GELU
 template <typename Mat>
 struct SiLU
 {
-    using T = typename Mat::value_type;
+    using T               = typename Mat::value_type;
     using parameters_type = default_activation_function_parameters<T>;
 
     inline void operator()(Mat& mat, const parameters_type&) const
@@ -179,10 +179,10 @@ struct SiLU
     static constexpr auto name = "SiLU";
 };
 
-template<typename Mat>
+template <typename Mat>
 struct Softmax
 {
-    using T = typename Mat::value_type;
+    using T               = typename Mat::value_type;
     using parameters_type = default_activation_function_parameters<T>;
     using matrix_iterator = typename Mat::iterator;
 
@@ -203,13 +203,13 @@ struct Softmax
             const auto      row_max = *std::max_element(start, end);
             T               row_sum = T{};
 
-            for(auto p = start; p != end; ++p)
+            for (auto p = start; p != end; ++p)
             {
                 *p = std::exp(*p - row_max);
                 row_sum += *p;
             }
 
-            for (;start != end; ++start)
+            for (; start != end; ++start)
             {
                 *start /= row_sum;
             }
@@ -247,11 +247,11 @@ struct Swish
         template <typename Fn>
         void mutate(Fn&& fn)
         {
-            beta = restrict_value(fn(beta)); 
+            beta = restrict_value(fn(beta));
         }
 
         template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
+        requires std::is_invocable_r_v<T, Fn, Args...>
         constexpr void fill(Fn&& fn, Args... args)
         {
             beta = restrict_value(std::invoke(fn, args...));
@@ -300,7 +300,7 @@ struct PReLU
     struct parameters_type
     {
         static constexpr T lower_range_bound = -0.5;
-        static constexpr T upper_range_bound =  0.5;
+        static constexpr T upper_range_bound = 0.5;
 
         T alpha;
 
@@ -317,11 +317,11 @@ struct PReLU
         template <typename Fn>
         void mutate(Fn&& fn)
         {
-            alpha = restrict_value(fn(alpha)); 
+            alpha = restrict_value(fn(alpha));
         }
 
         template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
+        requires std::is_invocable_r_v<T, Fn, Args...>
         constexpr void fill(Fn&& fn, Args... args)
         {
             alpha = restrict_value(std::invoke(fn, args...));
@@ -332,7 +332,7 @@ struct PReLU
             return std::min(std::max(value, lower_range_bound), upper_range_bound);
         }
 
-        template<typename R>
+        template <typename R>
         [[nodiscard]] inline static constexpr R L1_distance(const parameters_type& p1, const parameters_type& p2)
         {
             return std::abs(p1.alpha - p2.alpha);
@@ -356,9 +356,8 @@ struct PReLU
 
     inline static void PReLU_impl(Mat& mat, T alpha)
     {
-        mat.transform([_alpha = alpha](T x) {
-            return static_cast<T>(std::max(T{}, x) + _alpha * std::min(T{}, x));
-        });
+        mat.transform(
+            [_alpha = alpha](T x) { return static_cast<T>(std::max<T>(T{}, x) + _alpha * std::min<T>(T{}, x)); });
     }
 
     static constexpr auto name = "PReLU";
@@ -368,15 +367,15 @@ struct Identifiers
 {
     enum Identifiers_
     {
-         ReLU,
-         Sigmoid,
-         Tanh,
-         Identity,
-         GELU,
-         SiLU,
-         Softmax,
-         Swish,
-         PReLU
+        ReLU,
+        Sigmoid,
+        Tanh,
+        Identity,
+        GELU,
+        SiLU,
+        Softmax,
+        Swish,
+        PReLU
     };
 };
 
@@ -385,24 +384,24 @@ template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ F
 [[nodiscard]] constexpr auto choose_func()
 {
     if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::ReLU)
-         return matrix_activation_functions::ReLU<Mat>();
+        return matrix_activation_functions::ReLU<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Sigmoid)
-         return matrix_activation_functions::Sigmoid<Mat>();
+        return matrix_activation_functions::Sigmoid<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Tanh)
-         return matrix_activation_functions::Tanh<Mat>();
+        return matrix_activation_functions::Tanh<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Identity)
-         return matrix_activation_functions::Identity<Mat>();
+        return matrix_activation_functions::Identity<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::GELU)
-         return matrix_activation_functions::GELU<Mat>();
+        return matrix_activation_functions::GELU<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::SiLU)
-         return matrix_activation_functions::SiLU<Mat>();
+        return matrix_activation_functions::SiLU<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Softmax)
-         return matrix_activation_functions::Softmax<Mat>();
+        return matrix_activation_functions::Softmax<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Swish)
         return matrix_activation_functions::Swish<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::PReLU)
         return matrix_activation_functions::PReLU<Mat>();
-    //std::unreachable();
+    // std::unreachable();
     throw std::runtime_error("Reached unreachable code");
 }
 
@@ -413,22 +412,23 @@ public:
     inline static constexpr auto activation_function_impl = choose_func<Mat, Function_Identifier>();
 
     using activation_function_type = decltype(activation_function_impl);
-    using parameters_type = typename activation_function_type::parameters_type;
+    using parameters_type          = typename activation_function_type::parameters_type;
 
     parameters_type params;
 
-    void operator()(Mat& mat) const {
+    void operator()(Mat& mat) const
+    {
         std::invoke(activation_function_impl, mat, params);
     }
 
-    template<typename Fn>
+    template <typename Fn>
     void mutate_params(Fn&& fn)
     {
         params.mutate(fn);
     }
 
     template <typename Fn, typename... Args>
-        requires std::is_invocable_r_v<typename activation_function_type::T, Fn, Args...>
+    requires std::is_invocable_r_v<typename activation_function_type::T, Fn, Args...>
     constexpr void fill(Fn&& fn, Args... args)
     {
         params.fill(fn, args...);
@@ -446,7 +446,7 @@ public:
         return ss.str();
     }
 
-    template<typename R>
+    template <typename R>
     [[nodiscard]] static R L1_distance(const activation_function& af1, const activation_function& af2)
     {
         return parameters_type::template L1_distance<R>(af1.params, af2.params);
@@ -474,7 +474,10 @@ void activation_function_dummy(activation_function<Mat, Function_Identifier>)
 }
 
 template <typename T>
-concept activation_function_type = requires { activation_function_dummy(std::declval<T>()); };
+concept activation_function_type = requires
+{
+    activation_function_dummy(std::declval<T>());
+};
 
 // -----------------------------------------------
 // -----------------------------------------------

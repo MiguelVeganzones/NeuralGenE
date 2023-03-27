@@ -123,7 +123,7 @@ void training_test()
 
     for (size_t i = 0; i != N; ++i)
     {
-        gen[0][i] = ga_neural_model::brain<NET, SM_t>(SM, [] { return random::randfloat() * 0.001f; });
+        gen[0][i] = ga_neural_model::brain<NET, SM_t>(SM, [] { return random::randnormal() * 0.001f; });
         gen[1][i] = ga_neural_model::brain<NET, SM_t>(SM, [] { return 0.f; });
     }
 
@@ -188,7 +188,7 @@ void training_test()
         {
             if (random::randfloat() < 0.6f)
             {
-                e.mutate([]<std::floating_point F>(F f) {
+                e.mutate([]<std::floating_point F>(F f) -> F {
                     const auto r = random::randfloat();
                     if (r >= 0.009)
                     {
@@ -212,7 +212,7 @@ void training_test()
                     }
                     if (r < 0.0030f)
                     {
-                        return random::randnormal(f, 1);
+                        return random::randnormal(f, F(0.01));
                     }
                     return f;
                 });

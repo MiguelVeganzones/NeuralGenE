@@ -16,6 +16,7 @@ CXXFLAGS =  		-fdiagnostics-color=always \
 					-Werror \
 					-mavx \
 					-fbounds-check \
+					-fconcepts-diagnostics-depth=3 \
 					-std=c++23 
 
 RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
@@ -31,6 +32,7 @@ RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
 					-Werror \
 					-mavx \
 					-fbounds-check \
+					-fconcepts-diagnostics-depth=3 \
 					-std=c++23 
 					
 PLT_CXXFLAGS =  -fdiagnostics-color=always \
@@ -45,6 +47,7 @@ PLT_CXXFLAGS =  -fdiagnostics-color=always \
 					-pedantic \
 					-mavx \
 					-fbounds-check \
+					-fconcepts-diagnostics-depth=3 \
 					-std=c++23 
 
 UTILITY_DIR = Utility
@@ -56,19 +59,19 @@ NEURAL_MODEL_DIR = Neural\ Model
 MINIMAX_SEARCH_DIR = Minimax\ Tree\ Search
 
 UTILITY_INCL =		
-GENERAL_INCL =		-I./$(UTILITY_DIR)
-MTCS_INCL =			-I./$(C4_DIR) $(GENERAL_INCL)
-C4_INCL =			$(GENERAL_INCL)
-SNN_INCL =			$(GENERAL_INCL)
-PLT_INCL =			-I./$(SNN_DIR) \
-					-I/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/include \
-					-I./$(NEURAL_MODEL_DIR) $(GENERAL_INCL)
-NEURAL_MODEL_INCL = -I./$(SNN_DIR) $(GENERAL_INCL)
-NEURAL_MODEL_INCL = -I./$(SNN_DIR) $(GENERAL_INCL)
-MINIMAX_SEARCH_INCL = 
+GENERAL_INCL =			-I./$(UTILITY_DIR)
+MTCS_INCL =				-I./$(C4_DIR) $(GENERAL_INCL)
+C4_INCL =				$(GENERAL_INCL)
+SNN_INCL =				$(GENERAL_INCL)
+PLT_INCL =				-I./$(SNN_DIR) \
+						-I/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/include \
+						-I./$(NEURAL_MODEL_DIR) $(GENERAL_INCL)
+NEURAL_MODEL_INCL = 	-I./$(SNN_DIR) -I./$(C4_DIR) $(GENERAL_INCL)
+MINIMAX_SEARCH_INCL = 	-I./$(C4_DIR) $(GENERAL_INCL) -I./$(NEURAL_MODEL_DIR) \
+						-I./$(SNN_DIR)
 
-PLT_LIB = 			-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib -l:libmatplot.a \
-					-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib/Matplot++ -l:libnodesoup.a
+PLT_LIB = 				-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib -l:libmatplot.a \
+						-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib/Matplot++ -l:libnodesoup.a
 
 mtcs_main: 
 	$(CXX) $(CXXFLAGS) $(MTCS_INCL) $(MTCS_DIR)/$@.cpp -o $(MTCS_DIR)/bin/$@
@@ -82,8 +85,8 @@ static_nn_main:
 utility_main:
 	$(CXX) $(CXXFLAGS) $(UTILITY_INCL) $(UTILITY_DIR)/$@.cpp -o $(UTILITY_DIR)/bin/$@
 
-minimax_search:
-	$(CXX) $(CXXFLAGS) $(MINIMAX_SEARCH_INCL) $(MINIMAX_SEARCH_DIR)/$@.cpp -o $(MINIMAX_SEARCHDIR)/bin/$@
+minimax_main:
+	$(CXX) $(CXXFLAGS) $(MINIMAX_SEARCH_INCL) $(MINIMAX_SEARCH_DIR)/$@.cpp -o $(MINIMAX_SEARCH_DIR)/bin/$@
 	
 neural_model_main:
 	$(CXX) $(RELEASE_CXXFLAGS) $(NEURAL_MODEL_INCL) $(NEURAL_MODEL_DIR)/$@.cpp -o $(NEURAL_MODEL_DIR)/bin/$@

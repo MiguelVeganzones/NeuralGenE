@@ -12,14 +12,14 @@
 namespace mcts
 {
 template <class Game_Board>
-class initial_state;
+class mtcs_search_engine;
 
 struct mtcs_results
 {
     using points_type       = float;
     using sample_count_type = int;
-    points_type        points {};
-    sample_count_type samples {};
+    points_type       points{};
+    sample_count_type samples{};
 
     constexpr void add_trial_score(const points_type trial_score) noexcept
     {
@@ -39,13 +39,13 @@ struct mtcs_flat_tree_node
 };
 
 template <class Game_Board>
-class initial_state
+class mtcs_search_engine
 {
-    // TODO Remove public
+    // FIXME Remove public
 public:
     using game_state_type                = Game_Board;
     using valid_moves_container          = typename Game_Board::valid_moves_container;
-    using move_type                      = typename valid_moves_container::value_type;
+    using action_type                    = typename Game_Board::action_type;
     using encode_type                    = typename Game_Board::encode_type;
     using flat_tree_node                 = mtcs_flat_tree_node<encode_type>;
     using flat_tree_idx                  = typename flat_tree_node::flat_tree_idx;
@@ -55,26 +55,29 @@ public:
     using sampling_states_container_type = std::vector<flat_tree_node>;
     using leaf_nodes_container_type      = std::vector<flat_tree_idx>;
 
+
 private:
-    enum game_result_type {
+    static constexpr s_Parent_tree_node = mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, {} };
+    enum game_result_type
+    {
         win,
         loss,
         tie
     };
 
 public:
-    initial_state(const game_state_type& game_state) :
+    mtcs_search_engine(const game_state_type& game_state) :
         m_Initial_game_board(game_state),
-        m_Monte_carlo_sampling{ mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } },
+        m_Monte_carlo_sampling{ s_Parent_tree_node },
         m_Target_player{ m_Initial_game_board.current_player() }
     {
         assert(m_Initial_game_board.any_moves_left());
         std::cout << "Here!\n";
     }
 
-    initial_state() :
+    mtcs_search_engine() :
         m_Initial_game_board{ game_state_type{} },
-        m_Monte_carlo_sampling{ mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } }
+        m_Monte_carlo_sampling{ s_Parent_tree_node }
     {
     }
 
@@ -97,9 +100,9 @@ public:
 
     flat_tree_idx expansion(const flat_tree_idx next_parent_idx)
     {
-        auto          parent_game_state = game_state_type::decode(m_Monte_carlo_sampling[next_parent_idx].encoded_game_state);
-        flat_tree_idx next_leaf_idx     = m_Monte_carlo_sampling.size();
-        const auto    valid_moves       = parent_game_state.get_valid_moves();
+        auto parent_game_state = game_state_type::decode(m_Monte_carlo_sampling[next_parent_idx].encoded_game_state);
+        flat_tree_idx next_leaf_idx = m_Monte_carlo_sampling.size();
+        const auto    valid_moves   = parent_game_state.get_valid_moves();
 
         const auto leaf_nodes_initial_size = m_Leaf_nodes_idx.size();
         size_t     added_leaves            = 0;
@@ -119,8 +122,7 @@ public:
             }
             else
             {
-                backpropagation(next_leaf_idx,
-                                parent_game_state.previous_player() == m_Target_player ? won() : lost());
+                backpropagation(next_leaf_idx, parent_game_state.previous_player() == m_Target_player ? won() : lost());
             }
             ++next_leaf_idx;
             parent_game_state.undo_move(move);
@@ -186,14 +188,14 @@ private:
         case game_result_type::loss:
             return 0;
         default:
-            //std::unreachable();
+            // std::unreachable();
             throw std::runtime_error("Reached unreachable code");
         }
     }
 
 
 private:
-    // TODO: Remove public
+    // FIXME: Remove public
 public:
     game_state_type                m_Initial_game_board;
     sampling_states_container_type m_Monte_carlo_sampling;

@@ -93,7 +93,7 @@ public:
     };
 
 public:
-    [[nodiscard]] constexpr Interface_Type operator[](const size_t idx) const noexcept
+    [[nodiscard]] constexpr auto operator[](const size_t idx) const noexcept -> repr_type
     {
         assert(idx < N);
         const repr_type shift_offset = (idx % s_data_units_per_word) * s_bits_per_data_unit;

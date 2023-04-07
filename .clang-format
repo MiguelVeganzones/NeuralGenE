@@ -1,20 +1,30 @@
 ---
 Language: Cpp
 BasedOnStyle: Microsoft
+
 AccessModifierOffset: -4
+AlignAfterOpenBracket: BlockIndent
 AlignOperands: false
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
 AlignTrailingComments: false
 AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllArgumentsOnNextLine: true
+AlwaysBreakTemplateDeclarations: Yes
 BinPackParameters: false
 BinPackArguments: false 
-AlignConsecutiveDeclarations: true
-AlignConsecutiveAssignments: true
-AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeConceptDeclarations: Always
 BreakConstructorInitializers: AfterColon
 IndentCaseBlocks: true
+IndentRequiresClause: true
 MaxEmptyLinesToKeep: 2
-PointerAlignment: Left
 PackConstructorInitializers: NextLine 
+PackConstructorInitializers: Never
+PenaltyBreakTemplateDeclaration: 0
+PointerAlignment: Left
+SeparateDefinitionBlocks: Always
+SpaceAfterTemplateKeyword: true
+SpacesInAngles: false
 
 Cpp11BracedListStyle: false
 ...

@@ -5,11 +5,11 @@
 #endif
 
 #include <iostream>
-#include <type_traits>
 #include <limits.h>
 #include <limits>
+#include <type_traits>
 
-#include "cx_helper_functions.h" 
+#include "cx_helper_functions.h"
 #include "polystate.hpp"
 
 #ifdef max
@@ -41,12 +41,12 @@ template <size_t                 Size_Y,
           size_t                 Valid_States,
           std::unsigned_integral Repr_Type,
           Repr_Type              Empty_State = Repr_Type{}>
-    requires(cx_helper_func::cx_pow(2, sizeof(Repr_Type) * CHAR_BIT) >= Valid_States) &&
-    (Size_X < std::numeric_limits<int>::max()) && (Size_Y < std::numeric_limits<int>::max())
-class board_2D
+requires(cx_helper_func::cx_pow(2, sizeof(Repr_Type) * CHAR_BIT) >= Valid_States) &&
+    (Size_X < std::numeric_limits<int>::max()) && (Size_Y < std::numeric_limits<int>::max()) class board_2D
 {
 public:
-    using repr_type = Repr_Type;
+    using repr_type      = Repr_Type;
+    using interface_type = Repr_Type;
 
     inline static constexpr repr_type  s_Empty_state_value = Empty_State;
     inline static constexpr size_t     s_Bits_per_state    = cx_helper_func::cx_pow2_bits_required(Valid_States);
@@ -57,8 +57,8 @@ public:
     inline static constexpr std::array s_Char_state_repr   = { ' ', 'x', 'o', '1', '2', '3', '4', '5', '6',
                                                                '7', '8', '9', '0', '#', '+', '*', '?', '&' };
 
-    using board_state_type = polystate::polystate_set<s_Size, repr_type, repr_type, s_Bits_per_state>;
-    using encode_type = typename board_state_type::encode_type;
+    using board_state_type = polystate::polystate_set<s_Size, interface_type, repr_type, s_Bits_per_state>;
+    using encode_type      = typename board_state_type::encode_type;
 
     void reset(const repr_type value = s_Empty_state_value)
     {
@@ -69,13 +69,13 @@ public:
         }
     }
 
-    void set_position(const board_2D_position pos, const repr_type value)
+    void set_position(const board_2D_position pos, const interface_type value)
     {
         assert(value < s_Valid_states);
         m_State[position(pos)] = value;
     }
 
-    [[nodiscard]] constexpr auto at(const board_2D_position pos) const
+    [[nodiscard]] constexpr auto at(const board_2D_position pos) const -> repr_type
     {
         return m_State[position(pos)];
     }
@@ -128,7 +128,10 @@ void game_board_2D_dummy(board_2D<Size_Y, Size_X, Valid_States, Repr_Type, Empty
 }
 
 template <typename T>
-concept game_board_type = requires { game_board_2D_dummy(std::declval<T>()); };
+concept game_board_type = requires
+{
+    game_board_2D_dummy(std::declval<T>());
+};
 
 /* ---------------------------------------------------- */
 

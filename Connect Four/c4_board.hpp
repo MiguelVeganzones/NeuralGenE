@@ -13,7 +13,7 @@ template <size_t Size_Y, size_t Size_X, size_t Target_Count, std::uint8_t Player
 requires(Target_Count > 1) && (Size_X >= Target_Count) && (Size_Y >= Target_Count) && (Player_Count > 1) class board
 {
 public:
-    using board_position   = game_board::board_2D_position;
+    using board_position   = typename game_board::board_2D_position;
     using player_repr_type = std::uint8_t;
 
 private:
@@ -25,9 +25,13 @@ private:
     inline static constexpr player_repr_type s_Valid_states    = Player_Count + 1;
 
 public:
-    using game_board_type       = game_board::board_2D<s_Size_y, s_Size_x, s_Valid_states, player_repr_type>;
-    using valid_moves_container = std::array<board_position, s_Size_x>;
-    using encode_type           = typename game_board_type::encode_type;
+    using game_board_type         = game_board::board_2D<s_Size_y, s_Size_x, s_Valid_states, player_repr_type>;
+    using repr_type               = typename game_board_type::repr_type;
+    using move_type               = board_position;
+    using valid_moves_container   = std::array<move_type, s_Size_x>;
+    using encode_type             = typename game_board_type::encode_type;
+    using valid_actions_container = valid_moves_container;
+    using action_type             = typename valid_actions_container::value_type;
 
 public:
     board(const game_board_type& board_type) : m_Board_state{ board_type }
@@ -37,7 +41,22 @@ public:
 
     board() = default;
 
-    void make_move(const board_position pos, const player_repr_type player)
+    [[nodiscard]] auto get_valid_actions() const -> const valid_actions_container&
+    {
+        return get_valid_moves();
+    }
+
+    auto perform_action(const action_type pos) -> void
+    {
+        make_move(pos);
+    }
+
+    [[nodiscard]] auto any_actions_left() const -> bool
+    {
+        return any_moves_left();
+    }
+
+    void make_move(const move_type pos, const player_repr_type player)
     {
         assert(pos.y < s_Size_y);
         assert(pos.x < s_Size_x);
@@ -50,13 +69,13 @@ public:
         --m_Valid_moves[pos.x].y;
     }
 
-    void make_move(const board_position pos)
+    auto make_move(const move_type pos) -> void
     {
         make_move(pos, m_Current_player);
         set_next_player();
     }
 
-    void undo_move(const board_position pos)
+    auto undo_move(const move_type pos) -> void
     {
         assert(pos.y < s_Size_y);
         assert(pos.x < s_Size_x);
@@ -70,7 +89,7 @@ public:
         set_previous_player();
     }
 
-    board_position select_random_move() const
+    [[nodiscard]] auto select_random_move() const -> move_type
     {
         std::array<int, s_Max_moves_count> valid_idx{};
 
@@ -87,7 +106,12 @@ public:
         return m_Valid_moves[valid_idx[random::randint(0, valid_moves - 1)]];
     }
 
-    [[nodiscard]] auto const& board_state() const
+    [[nodiscard]] auto at(const board_position pos) const -> repr_type
+    {
+        return m_Board_state.at(pos);
+    }
+
+    [[nodiscard]] auto board_state() const -> game_board_type const&
     {
         return m_Board_state;
     }
@@ -97,7 +121,7 @@ public:
         return m_Valid_moves;
     }
 
-    [[nodiscard]] bool is_valid_move(const board_position pos) const
+    [[nodiscard]] bool is_valid_move(const move_type pos) const
     {
         return m_Board_state.is_empty(pos) &&
             (pos.y == s_Size_y - 1 ? true : !m_Board_state.is_empty(game_board_type::down(pos)));
@@ -108,7 +132,7 @@ public:
         return std::ranges::any_of(m_Valid_moves, [](auto e) { return static_cast<bool>(e); });
     }
 
-    [[nodiscard]] bool winning_move(const board_position pos) const
+    [[nodiscard]] bool winning_move(const move_type pos) const
     {
         const auto player = m_Board_state.at(pos);
 
@@ -333,12 +357,28 @@ private:
     player_repr_type      m_Current_player = 0;
 
 public:
-    // TODO Remove
+    // FIXME: Remove
     mutable int leftd_count      = 0;
     mutable int rightd_count     = 0;
     mutable int vertical_count   = 0;
     mutable int horizontal_count = 0;
 };
+
+//--------------------------------------------------------------------------------------//
+//  C4 board concept
+//--------------------------------------------------------------------------------------//
+
+template <size_t Size_Y, size_t Size_X, size_t Target_Count, std::uint8_t Player_Count>
+void c4_board_dummy(board<Size_Y, Size_X, Target_Count, Player_Count>)
+{
+}
+
+template <typename T>
+concept c4_board_type = requires
+{
+    c4_board_dummy(std::declval<T>());
+};
+
 } // namespace c4_board
 
 #endif // ! CONNECT_FOUR_BOARD

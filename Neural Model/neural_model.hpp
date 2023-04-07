@@ -23,10 +23,9 @@ concept neural_net_type = (
 );
 
 template <
-    neural_net_type                                    NNet,
-    score_function_objects::score_function_object_type Score_Function,
-    data_processor::data_processor_type                Data_Preprocessor,
-    data_processor::data_processor_type                Data_Postprocessor,
+    neural_net_type                     NNet,
+    data_processor::data_processor_type Data_Preprocessor,
+    data_processor::data_processor_type Data_Postprocessor,
     typename Brain_Output_Type>
     requires requires {
                  Data_Postprocessor::template process<typename NNet::output_type, Brain_Output_Type>(
@@ -53,8 +52,7 @@ private:
     size_t m_Parent_b{};
     size_t m_Generation{};
 
-    std::unique_ptr<NNet>           m_Ptr_net;
-    std::unique_ptr<Score_Function> m_Ptr_score_function;
+    std::unique_ptr<NNet> m_Ptr_net;
 
 public:
     brain() = default;
@@ -63,15 +61,6 @@ public:
         requires std::is_invocable_r_v<nn_value_type, Fn, Args...>
     explicit brain(Fn&& fn, Args... args) :
         m_Ptr_net{ std::make_unique<NNet>() }
-    {
-        m_Ptr_net->init(fn, args...);
-    }
-
-    template <typename Fn, typename... Args>
-        requires std::is_invocable_r_v<nn_value_type, Fn, Args...>
-    explicit brain(Score_Function score_function, Fn&& fn, Args... args) :
-        m_Ptr_net{ std::make_unique<NNet>() },
-        m_Ptr_score_function{ std::make_unique<Score_Function>(score_function) }
     {
         m_Ptr_net->init(fn, args...);
     }
@@ -113,21 +102,6 @@ public:
 
     /* Getters and setters */
 
-    void set_score_function_obj(Score_Function score_function)
-    {
-        m_Ptr_score_function = score_function;
-    }
-
-    [[nodiscard]] Score_Function* get_score_function_obj()
-    {
-        return m_Ptr_score_function.get();
-    }
-
-    [[nodiscard]] auto get_score()
-    {
-        return m_Ptr_score_function->operator()();
-    }
-
     [[nodiscard]] auto ID() const
     {
         return m_ID;
@@ -161,14 +135,6 @@ public:
     [[nodiscard]] auto& get_unique()
     {
         return m_Ptr_net;
-    }
-
-    [[nodiscard]] auto get_score() const
-    {
-        if (m_Ptr_score_function)
-            return m_Ptr_score_function->operator()();
-
-        throw std::exception("m_Function_ptr is not set.");
     }
 
     /* Member functions */
@@ -239,12 +205,11 @@ private:
 //--------------------------------------------------------------------------------------//
 
 template <
-    neural_net_type                                    NNet,
-    score_function_objects::score_function_object_type Score_Function,
-    data_processor::data_processor_type                Data_Preprocessor,
-    data_processor::data_processor_type                Data_Postprocessor,
+    neural_net_type                     NNet,
+    data_processor::data_processor_type Data_Preprocessor,
+    data_processor::data_processor_type Data_Postprocessor,
     typename Brain_Output_Type>
-void nnet_dummy(brain<NNet, Score_Function, Data_Preprocessor, Data_Postprocessor, Brain_Output_Type>)
+void nnet_dummy(brain<NNet, Data_Preprocessor, Data_Postprocessor, Brain_Output_Type>)
 {
 }
 

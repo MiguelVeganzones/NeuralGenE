@@ -70,6 +70,7 @@
         "clang-format.executable": "/usr/bin/clang-format-15",
         "clang-format.language.cpp.enabe": "true",
         "editor.defaultFormatter": "xaver.clang-format",
-        "editor.semanticHighlighting.enabled": "true"
+        "editor.semanticHighlighting.enabled": "true",
+        "complex": "cpp"
     }
 }

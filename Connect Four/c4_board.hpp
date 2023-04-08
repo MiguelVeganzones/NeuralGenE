@@ -10,7 +10,8 @@
 namespace c4_board
 {
 template <size_t Size_Y, size_t Size_X, size_t Target_Count, std::uint8_t Player_Count>
-requires(Target_Count > 1) && (Size_X >= Target_Count) && (Size_Y >= Target_Count) && (Player_Count > 1) class board
+    requires(Target_Count > 1) && (Size_X >= Target_Count) && (Size_Y >= Target_Count) && (Player_Count > 1)
+class board
 {
 public:
     using board_position   = typename game_board::board_2D_position;
@@ -32,9 +33,11 @@ public:
     using encode_type             = typename game_board_type::encode_type;
     using valid_actions_container = valid_moves_container;
     using action_type             = typename valid_actions_container::value_type;
+    using hash_function           = game_board_type::hash_function;
 
 public:
-    board(const game_board_type& board_type) : m_Board_state{ board_type }
+    board(const game_board_type& board_type) :
+        m_Board_state{ board_type }
     {
         m_Valid_moves = calculate_valid_moves();
     }
@@ -374,10 +377,7 @@ void c4_board_dummy(board<Size_Y, Size_X, Target_Count, Player_Count>)
 }
 
 template <typename T>
-concept c4_board_type = requires
-{
-    c4_board_dummy(std::declval<T>());
-};
+concept c4_board_type = requires { c4_board_dummy(std::declval<T>()); };
 
 } // namespace c4_board
 

@@ -2,7 +2,6 @@
 #include "mcts.hpp"
 #include <iostream>
 
-
 int main()
 {
     random::init();
@@ -27,7 +26,7 @@ int main()
     // if (!b.any_moves_left())
     //     return 0;
 
-    mcts::initial_state initial_state(b);
+    mcts::mcts_search_engine initial_state(b);
 
     for (int i = 0; i < 100; ++i)
     {

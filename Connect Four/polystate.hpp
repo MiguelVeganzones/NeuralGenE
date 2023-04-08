@@ -8,19 +8,18 @@
 
 #include "cx_helper_functions.h"
 
-
 namespace polystate
 {
 
-
-template <size_t                 N,
-          std::unsigned_integral Interface_Type = unsigned int,
-          std::unsigned_integral Repr_Type      = std::uint8_t,
-          size_t                 Data_Unit_Bits = 2>
-requires(N > 0) && ((sizeof(Repr_Type) * CHAR_BIT) % Data_Unit_Bits == 0) &&
+template <
+    size_t                 N,
+    std::unsigned_integral Interface_Type = unsigned int,
+    std::unsigned_integral Repr_Type      = std::uint8_t,
+    size_t                 Data_Unit_Bits = 2>
+    requires(N > 0) && ((sizeof(Repr_Type) * CHAR_BIT) % Data_Unit_Bits == 0) &&
     ((sizeof(Repr_Type) * CHAR_BIT) >= Data_Unit_Bits) &&
     (Data_Unit_Bits > 0) //&& (sizeof(Repr_Type) >= sizeof(Interface_Type))
-    class polystate_set
+class polystate_set
 {
 public:
     using repr_type = Repr_Type;
@@ -36,6 +35,31 @@ public:
 
     using encode_type = std::array<repr_type, s_word_count>;
 
+    struct hash_function
+    {
+        using key         = encode_type;
+        using result_type = std::size_t;
+        using value_type  = typename key::value_type;
+
+        inline static constexpr std::size_t Size             = s_word_count;
+        inline static constexpr int         data_packet_size = sizeof(result_type) / sizeof(value_type);
+
+        [[nodiscard]] auto operator()(const key& encoded_board) const noexcept -> result_type
+        {
+            result_type hash{};
+            for (std::size_t i = 0; i != Size; ++i)
+            {
+                auto value = static_cast<std::size_t>(encoded_board[i]);
+                auto offs  = (i % data_packet_size) * sizeof(value_type) * CHAR_BIT;
+                std::cout << value << " ";
+                std::cout << offs << std::endl;
+
+                hash ^= value << offs;
+            }
+            return hash;
+        }
+    };
+
     class reference
     {
         using polystate_type = polystate_set<N, Interface_Type, Repr_Type, Data_Unit_Bits>;
@@ -49,12 +73,15 @@ public:
             return *this;
         }
 
-        constexpr reference() noexcept : m_ptr_polystate(nullptr), m_position(0)
+        constexpr reference() noexcept :
+            m_ptr_polystate(nullptr),
+            m_position(0)
         {
         }
 
         constexpr reference(polystate_type& polystate, const size_t pos) noexcept :
-            m_ptr_polystate(&polystate), m_position(pos)
+            m_ptr_polystate(&polystate),
+            m_position(pos)
         {
         }
 
@@ -97,8 +124,9 @@ public:
     {
         assert(idx < N);
         const repr_type shift_offset = (idx % s_data_units_per_word) * s_bits_per_data_unit;
-        return static_cast<repr_type>((m_Data[idx / s_data_units_per_word] & (s_max_data_value << shift_offset)) >>
-                                      shift_offset);
+        return static_cast<repr_type>(
+            (m_Data[idx / s_data_units_per_word] & (s_max_data_value << shift_offset)) >> shift_offset
+        );
     }
 
     [[nodiscard]] constexpr reference operator[](const size_t idx) noexcept
@@ -128,10 +156,7 @@ void polystate_dummy(polystate_set<N, Return_Type, Repr_Type, Data_Unit_Bits>)
 }
 
 template <typename T>
-concept polystate_set_type = requires
-{
-    polystate_dummy(std::declval<T>());
-};
+concept polystate_set_type = requires { polystate_dummy(std::declval<T>()); };
 
 /* ---------------------------------------------------- */
 

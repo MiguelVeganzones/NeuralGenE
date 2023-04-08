@@ -2,20 +2,25 @@
 #define MINIMAX_TREE_SEARCH
 
 #include "Random.h"
+#include <functional>
+#include <map>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
-#include <unordered_map>
-//#include "parallel_hashmap/phmap.h"
+
+// #include "parallel_hashmap/phmap.h"
 
 namespace minimax_tree_search
 {
 template <typename State_Type, typename Score_Type, typename Brain>
-requires(requires {
-    // Interface assumes that invalid actions can be represented by an
-    // invalid state and thus checks for action validity when necessary.
-    static_cast<bool>(std::declval<typename State_Type::action_type>());
-} && requires std::is_invocable_r_v<score_type, brain_type, state_type>) class minimax_search_engine
+    requires(requires {
+                 // Interface assumes that invalid actions can be represented by an
+                 // invalid state and thus checks for action validity when necessary.
+                 static_cast<bool>(std::declval<typename State_Type::action_type>());
+                 // Hash required for the state encode type
+                 typename State_Type::hash_function;
+             } && std::is_invocable_r_v<Score_Type, Brain, State_Type>)
+class minimax_search_engine
 {
 public:
     // TODO:
@@ -24,7 +29,8 @@ public:
     using action_type                 = typename State_Type::action_type;
     using score_type                  = Score_Type;
     using encode_type                 = typename State_Type::encode_type;
-    using search_state_container_type = std::unordered_map<encode_type, score_type>;
+    using hash                        = typename State_Type::hash_function;
+    using search_state_container_type = std::unordered_map<encode_type, score_type, hash>;
     using brain_type                  = Brain;
 
     // TODO move to the end or move the rest to the beggining
@@ -38,7 +44,9 @@ private:
     std::shared_mutex m_Search_state_mutex;
 
 public:
-    minimax_search_engine(const State_Type& state, const Brain& brain) : m_State{ state }, m_Brain{ brain }
+    minimax_search_engine(const State_Type& state, const Brain& brain) :
+        m_State{ state },
+        m_Brain{ brain }
     {
     }
 

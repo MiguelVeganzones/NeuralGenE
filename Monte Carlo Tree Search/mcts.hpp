@@ -8,13 +8,12 @@
 #include <map>
 #include <vector>
 
-
 namespace mcts
 {
 template <class Game_Board>
-class mtcs_search_engine;
+class mcts_search_engine;
 
-struct mtcs_results
+struct mcts_results
 {
     using points_type       = float;
     using sample_count_type = int;
@@ -29,17 +28,17 @@ struct mtcs_results
 };
 
 template <class Game_Encode_Type>
-struct mtcs_flat_tree_node
+struct mcts_flat_tree_node
 {
     using flat_tree_idx = long int;
-    using result_type   = mtcs_results;
+    using result_type   = mcts_results;
     Game_Encode_Type encoded_game_state;
     flat_tree_idx    parent_idx;
     result_type      results;
 };
 
 template <class Game_Board>
-class mtcs_search_engine
+class mcts_search_engine
 {
     // FIXME Remove public
 public:
@@ -47,7 +46,7 @@ public:
     using valid_moves_container          = typename Game_Board::valid_moves_container;
     using action_type                    = typename Game_Board::action_type;
     using encode_type                    = typename Game_Board::encode_type;
-    using flat_tree_node                 = mtcs_flat_tree_node<encode_type>;
+    using flat_tree_node                 = mcts_flat_tree_node<encode_type>;
     using flat_tree_idx                  = typename flat_tree_node::flat_tree_idx;
     using points_type                    = typename flat_tree_node::result_type::points_type;
     using leaf_node_idx                  = size_t;
@@ -57,7 +56,6 @@ public:
 
 
 private:
-    static constexpr s_Parent_tree_node = mtcs_flat_tree_node{ m_Initial_game_board.encode(), -1, {} };
     enum game_result_type
     {
         win,
@@ -65,19 +63,20 @@ private:
         tie
     };
 
+
 public:
-    mtcs_search_engine(const game_state_type& game_state) :
+    mcts_search_engine(const game_state_type& game_state) :
         m_Initial_game_board(game_state),
-        m_Monte_carlo_sampling{ s_Parent_tree_node },
+        m_Monte_carlo_sampling{ mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } },
         m_Target_player{ m_Initial_game_board.current_player() }
     {
         assert(m_Initial_game_board.any_moves_left());
         std::cout << "Here!\n";
     }
 
-    mtcs_search_engine() :
+    mcts_search_engine() :
         m_Initial_game_board{ game_state_type{} },
-        m_Monte_carlo_sampling{ s_Parent_tree_node }
+        m_Monte_carlo_sampling{ mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } }
     {
     }
 
@@ -169,14 +168,17 @@ private:
     {
         return game_result_type::win;
     }
+
     static constexpr game_result_type tied()
     {
         return game_result_type::tie;
     }
+
     static constexpr game_result_type lost()
     {
         return game_result_type::loss;
     }
+
     static constexpr points_type points_increment(const game_result_type result)
     {
         switch (result)

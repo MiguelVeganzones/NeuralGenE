@@ -9,7 +9,6 @@
 #include "game_boardd.hpp"
 #include "polystate.hpp"
 
-
 int main0()
 {
     random::init();
@@ -101,6 +100,10 @@ int main()
     }
 
     auto e = b.encode();
+
+    board_type::hash_function hash{};
+
+    std::cout << "Hash:\n" << hash(e) << std::endl;
 
     for (auto _e : e)
     {

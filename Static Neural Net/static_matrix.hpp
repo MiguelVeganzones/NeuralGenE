@@ -81,11 +81,13 @@ public:
     using pointer    = const T*;
     using reference  = const T&;
 
-    constexpr matrix_const_iterator() noexcept : m_Ptr(nullptr)
+    constexpr matrix_const_iterator() noexcept :
+        m_Ptr(nullptr)
     {
     }
 
-    constexpr explicit matrix_const_iterator(pointer p_arg, size_t offs = 0) noexcept : m_Ptr(p_arg + offs)
+    constexpr explicit matrix_const_iterator(pointer p_arg, size_t offs = 0) noexcept :
+        m_Ptr(p_arg + offs)
     {
     }
 
@@ -212,7 +214,8 @@ public:
 
     constexpr matrix_iterator() noexcept = default;
 
-    constexpr explicit matrix_iterator(pointer p_arg, size_t offs = 0) noexcept : My_Base(p_arg, offs)
+    constexpr explicit matrix_iterator(pointer p_arg, size_t offs = 0) noexcept :
+        My_Base(p_arg, offs)
     {
     }
 
@@ -293,7 +296,8 @@ public:
 
 //-------------------------------------------------------------------//
 template <typename T, size_t M, size_t N>
-requires(std::is_arithmetic_v<T> && (N > 0) && (M > 0)) class static_matrix
+    requires(std::is_arithmetic_v<T> && (N > 0) && (M > 0))
+class static_matrix
 {
 public:
     using value_type      = T;
@@ -307,8 +311,8 @@ public:
     using row_matrix      = static_matrix<T, 1, N>;
     using column_matrix   = static_matrix<T, M, 1>;
 
-    inline static constexpr auto num_rows = M;
-    inline static constexpr auto num_cols = N;
+    inline static constexpr auto Size_y = M;
+    inline static constexpr auto Size_x = N;
 
     T m_Elems[M * N];
 
@@ -325,7 +329,7 @@ public:
     }
 
     template <class Fn, class... Args>
-    requires std::is_invocable_r_v<T, Fn, Args...>
+        requires std::is_invocable_r_v<T, Fn, Args...>
     void fill(Fn&& fn, Args&&... args) noexcept(noexcept(std::invoke(fn, args...)))
     {
         for (iterator it = begin(); it != end(); ++it)
@@ -360,7 +364,7 @@ public:
     }
 
     template <typename Fn>
-    requires std::is_invocable_r_v<T, Fn, T>
+        requires std::is_invocable_r_v<T, Fn, T>
     constexpr void transform(Fn&& fn)
     {
         for (auto& e : *this)
@@ -368,7 +372,7 @@ public:
     }
 
     template <typename Fn>
-    requires std::is_invocable_r_v<T, Fn, T>
+        requires std::is_invocable_r_v<T, Fn, T>
     [[nodiscard]] static_matrix apply_fn(Fn&& fn) const noexcept(noexcept(fn))
     {
         static_matrix ret{};
@@ -491,7 +495,8 @@ public:
      * \note Only works for floating point matrix value types
      * \throws std::logic_error (or other, implementation dependent) when divsion by zero
      */
-    constexpr void rescale_L_1_1_norm(const float norm = 1.f) requires std::is_floating_point_v<T>
+    constexpr void rescale_L_1_1_norm(const float norm = 1.f)
+        requires std::is_floating_point_v<T>
     {
         assert(norm != 0.f);
         const T sum    = this->sum();
@@ -503,7 +508,8 @@ public:
     /// <summary>
     /// Rescales all values in the matrix to fit a normal distribution N(0,1) (mean 0 and sttdev 1)
     /// </summary>
-    void standarize() requires std::is_floating_point_v<T>
+    void standarize()
+        requires std::is_floating_point_v<T>
     {
         const auto mean = this->mean();
 
@@ -551,10 +557,7 @@ void matrix_dummy(static_matrix<T, M, N>)
 }
 
 template <typename T>
-concept static_matrix_type = requires
-{
-    matrix_dummy(std::declval<T>());
-};
+concept static_matrix_type = requires { matrix_dummy(std::declval<T>()); };
 
 // -----------------------------------------------
 // -----------------------------------------------
@@ -574,8 +577,8 @@ template <typename T2, typename T1, size_t M, size_t N>
 }
 
 template <size_t Out_M, size_t Out_N, typename T, size_t M, size_t N>
-requires(M* N == Out_M * Out_N)
-    [[nodiscard]] constexpr static_matrix<T, Out_M, Out_N> cast_to_shape(static_matrix<T, M, N> const& src) noexcept
+    requires(M* N == Out_M * Out_N)
+[[nodiscard]] constexpr static_matrix<T, Out_M, Out_N> cast_to_shape(static_matrix<T, M, N> const& src) noexcept
 {
     static_matrix<T, Out_M, Out_N> ret{};
     std::memcpy(ret.m_Elems, src.m_Elems, N * M * sizeof(T));
@@ -625,9 +628,9 @@ template <typename T, size_t M, size_t N>
 }
 
 template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr bool nearly_equals(static_matrix<T, M, N> const& mat1,
-                                           static_matrix<T, M, N> const& mat2,
-                                           const T                       epsilon = 1e-4) noexcept
+[[nodiscard]] constexpr bool nearly_equals(
+    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2, const T epsilon = 1e-4
+) noexcept
 {
     for (size_t j = 0; j != M; ++j)
     {
@@ -642,8 +645,9 @@ template <typename T, size_t M, size_t N>
 }
 
 template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr bool exactly_equals(static_matrix<T, M, N> const& mat1,
-                                            static_matrix<T, M, N> const& mat2) noexcept
+[[nodiscard]] constexpr bool exactly_equals(
+    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2
+) noexcept
 {
     for (size_t j = 0; j != M; ++j)
     {
@@ -699,10 +703,12 @@ void in_place_x_crossover(static_matrix<T, M, N>& mat1, static_matrix<T, M, N>& 
 }
 
 template <typename T, size_t M, size_t N>
-void to_target_x_crossover(static_matrix<T, M, N> const& in_mat1,
-                           static_matrix<T, M, N> const& in_mat2,
-                           static_matrix<T, M, N>&       out_mat1,
-                           static_matrix<T, M, N>&       out_mat2) noexcept
+void to_target_x_crossover(
+    static_matrix<T, M, N> const& in_mat1,
+    static_matrix<T, M, N> const& in_mat2,
+    static_matrix<T, M, N>&       out_mat1,
+    static_matrix<T, M, N>&       out_mat2
+) noexcept
 {
     // indices to slice. a: horizontal, b: vertical
     const auto a = static_cast<size_t>(random::randint(0, M));
@@ -736,8 +742,9 @@ template <typename Matrix>
 //-----------------------------------------------------------------------------
 
 template <typename T, size_t M, size_t K, size_t N>
-[[nodiscard]] constexpr static_matrix<T, M, N> matrix_mul(static_matrix<T, M, K> const& mat1,
-                                                          static_matrix<T, K, N> const& mat2) noexcept
+[[nodiscard]] constexpr static_matrix<T, M, N> matrix_mul(
+    static_matrix<T, M, K> const& mat1, static_matrix<T, K, N> const& mat2
+) noexcept
 {
     static_matrix<T, M, N> ret{};
 
@@ -755,8 +762,9 @@ template <typename T, size_t M, size_t K, size_t N>
 }
 
 template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr static_matrix<T, M, N> matrix_vec_add(static_matrix<T, M, N> const& mat,
-                                                              static_matrix<T, 1, N> const& vec) noexcept
+[[nodiscard]] constexpr static_matrix<T, M, N> matrix_vec_add(
+    static_matrix<T, M, N> const& mat, static_matrix<T, 1, N> const& vec
+) noexcept
 {
     if constexpr (M == 1)
         return mat + vec;
@@ -785,8 +793,9 @@ template <typename T, size_t M, size_t N>
  * \return Multiplied matrix
  */
 template <size_t M, size_t N>
-[[nodiscard]] static_matrix<float, M, 1> matrix_vector_mul_float_avx(static_matrix<float, M, N> const& mat,
-                                                                     static_matrix<float, N, 1> const& vec)
+[[nodiscard]] static_matrix<float, M, 1> matrix_vector_mul_float_avx(
+    static_matrix<float, M, N> const& mat, static_matrix<float, N, 1> const& vec
+)
 {
     static_matrix<float, M, 1> ret{};
     if constexpr (N > 7)
@@ -821,8 +830,9 @@ template <size_t M, size_t N>
 
 // multiplies every column of a matrix by the element of a row vector of same index as the column
 template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr static_matrix<T, M, N> vector_expand(static_matrix<T, 1, N> const& row_vector,
-                                                             static_matrix<T, M, N> const& col_vectors)
+[[nodiscard]] constexpr static_matrix<T, M, N> vector_expand(
+    static_matrix<T, 1, N> const& row_vector, static_matrix<T, M, N> const& col_vectors
+)
 {
     auto ret{ col_vectors };
     for (size_t j = 0; j != M; ++j)
@@ -840,8 +850,9 @@ Multiplies pairs of vectors stored in two matrices
 Useful to make multiple vector multiplications with one operation and one data structure
 */
 template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr static_matrix<T, 1, M> multiple_dot_product(static_matrix<T, M, N> const& row_vectors,
-                                                                    static_matrix<T, N, M> const& col_vectors)
+[[nodiscard]] constexpr static_matrix<T, 1, M> multiple_dot_product(
+    static_matrix<T, M, N> const& row_vectors, static_matrix<T, N, M> const& col_vectors
+)
 {
     static_matrix<T, 1, M> ret{};
     for (size_t j = 0; j != M; ++j)
@@ -855,11 +866,13 @@ template <typename T, size_t M, size_t N>
 }
 
 template <typename T, size_t M, size_t N, size_t P, typename Fn>
-requires std::is_invocable_r_v<T, Fn, T>
-[[nodiscard]] constexpr static_matrix<T, M, 1> multiply_add_activate(const static_matrix<T, M, N>& mat_mul_a,
-                                                                     const static_matrix<T, N, P>& mat_mul_b,
-                                                                     const static_matrix<T, M, P>& mat_add,
-                                                                     Fn&&                          activation_func)
+    requires std::is_invocable_r_v<T, Fn, T>
+[[nodiscard]] constexpr static_matrix<T, M, 1> multiply_add_activate(
+    const static_matrix<T, M, N>& mat_mul_a,
+    const static_matrix<T, N, P>& mat_mul_b,
+    const static_matrix<T, M, P>& mat_add,
+    Fn&&                          activation_func
+)
 {
     auto mul = matrix_mul(mat_mul_a, mat_mul_b);
     assert(mul.size() == mat_add.size());
@@ -884,9 +897,10 @@ returns:
 
 */
 template <typename T_In, typename T_Out, size_t N>
-requires(N > 1) [[nodiscard]] constexpr std::
-    tuple<bool, double, static_matrix<T_Out, N, N>, std::array<size_t, N>> PII_LUDecomposition(
-        static_matrix<T_In, N, N> const& scr)
+    requires(N > 1)
+[[nodiscard]] constexpr std::tuple<bool, double, static_matrix<T_Out, N, N>, std::array<size_t, N>> PII_LUDecomposition(
+    static_matrix<T_In, N, N> const& scr
+)
 {
     /*
     source:
@@ -928,7 +942,8 @@ requires(N > 1) [[nodiscard]] constexpr std::
             // The matrix is singular. //or not invertible by this method until fixed (no
             // permutations)
             return std::tuple<bool, double, return_type_congruent_matrix, std::array<size_t, N>>(
-                false, 0.0, std::move(out), {});
+                false, 0.0, std::move(out), {}
+            );
         }
         // Multiply the diagonal elements.
         det *= out(r_idx[p], p);
@@ -976,7 +991,6 @@ template <typename T, size_t N>
     return std::get<1>(PII_LUDecomposition(scr));
 }
 
-
 /**
  * \brief Mutates matrix to its reduced row echelon form
  * Can be used to solve systems of linear equations with an augmented matrix
@@ -988,7 +1002,8 @@ template <typename T, size_t N>
  *       Mutates input
  */
 template <std::floating_point T, size_t M, size_t N>
-requires(M <= N) [[nodiscard]] constexpr bool RREF(static_matrix<T, M, N>& scr)
+    requires(M <= N)
+[[nodiscard]] constexpr bool RREF(static_matrix<T, M, N>& scr)
 {
     using cx_helper_func::cx_abs; // constexpr abs
 
@@ -1121,8 +1136,9 @@ template <typename T, size_t N>
 }
 
 template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr static_matrix<T, M, N> element_wise_mul(static_matrix<T, M, N> const& mat1,
-                                                                static_matrix<T, M, N> const& mat2)
+[[nodiscard]] constexpr static_matrix<T, M, N> element_wise_mul(
+    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2
+)
 {
     static_matrix<T, M, N> ret{ mat1 };
     for (size_t j = 0; j != M; ++j)
@@ -1137,8 +1153,9 @@ template <typename T, size_t M, size_t N>
 
 // returns L1 distance divided by the number of elements
 template <std::floating_point R, typename T, size_t M, size_t N>
-[[nodiscard]] constexpr double normalized_L1_distance(static_matrix<T, M, N> const& mat1,
-                                                      static_matrix<T, M, N> const& mat2)
+[[nodiscard]] constexpr double normalized_L1_distance(
+    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2
+)
 {
     using cx_helper_func::cx_abs;
     R L1{};

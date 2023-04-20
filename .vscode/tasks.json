@@ -28,6 +28,7 @@
                 "-I${workspaceFolder}/Utility",
                 "-I${workspaceFolder}/Connect Four",
                 "-I${workspaceFolder}/Static Neural Net",
+                "-I${workspaceFolder}/Neural Model",
                 "${file}",
                 "-o",
                 "${fileDirname}/bin/${fileBasenameNoExtension}",

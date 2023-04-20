@@ -17,23 +17,24 @@ public:
     using board_position   = typename game_board::board_2D_position;
     using player_repr_type = std::uint8_t;
 
-private:
-    inline static constexpr int              s_Size_y          = Size_Y;
-    inline static constexpr int              s_Size_x          = Size_X;
-    inline static constexpr int              s_Max_moves_count = s_Size_x;
+public:
+    inline static constexpr int              Size_y            = Size_Y;
+    inline static constexpr int              Size_x            = Size_X;
+    inline static constexpr int              s_Max_moves_count = Size_x;
     inline static constexpr int              s_Target_count    = Target_Count;
     inline static constexpr player_repr_type s_Player_count    = Player_Count;
     inline static constexpr player_repr_type s_Valid_states    = Player_Count + 1;
 
 public:
-    using game_board_type         = game_board::board_2D<s_Size_y, s_Size_x, s_Valid_states, player_repr_type>;
+    using game_board_type         = game_board::board_2D<Size_y, Size_x, s_Valid_states, player_repr_type>;
     using repr_type               = typename game_board_type::repr_type;
     using move_type               = board_position;
-    using valid_moves_container   = std::array<move_type, s_Size_x>;
-    using encode_type             = typename game_board_type::encode_type;
+    using valid_moves_container   = std::array<move_type, Size_x>;
     using valid_actions_container = valid_moves_container;
     using action_type             = typename valid_actions_container::value_type;
-    using hash_function           = game_board_type::hash_function;
+    using encode_type             = typename game_board_type::encode_type;
+    using encode_type_hasher      = typename game_board_type::encode_type_hasher;
+    using encode_type_equal       = typename game_board_type::encode_type_equal;
 
 public:
     board(const game_board_type& board_type) :
@@ -54,15 +55,31 @@ public:
         make_move(pos);
     }
 
+    auto undo_action(const action_type pos) -> void
+    {
+        undo_move(pos);
+    }
+
     [[nodiscard]] auto any_actions_left() const -> bool
     {
         return any_moves_left();
     }
 
+    // TODO return action reward. score_type of some sorts
+    [[nodiscard]] auto winning_action(const move_type pos) const -> bool
+    {
+        return winning_move(pos);
+    }
+
+    [[nodiscard]] auto is_valid_action(const move_type pos) const -> bool
+    {
+        return is_valid_move(pos);
+    }
+
     void make_move(const move_type pos, const player_repr_type player)
     {
-        assert(pos.y < s_Size_y);
-        assert(pos.x < s_Size_x);
+        assert(pos.y < Size_y);
+        assert(pos.x < Size_x);
         assert(player <= s_Player_count);
         assert(m_Board_state.is_empty(pos));
 
@@ -80,8 +97,8 @@ public:
 
     auto undo_move(const move_type pos) -> void
     {
-        assert(pos.y < s_Size_y);
-        assert(pos.x < s_Size_x);
+        assert(pos.y < Size_y);
+        assert(pos.x < Size_x);
         assert(!m_Board_state.is_empty(pos));
         assert((pos.y > 0) ? m_Board_state.is_empty(game_board_type::up(pos)) : true);
 
@@ -127,7 +144,7 @@ public:
     [[nodiscard]] bool is_valid_move(const move_type pos) const
     {
         return m_Board_state.is_empty(pos) &&
-            (pos.y == s_Size_y - 1 ? true : !m_Board_state.is_empty(game_board_type::down(pos)));
+            (pos.y == Size_y - 1 ? true : !m_Board_state.is_empty(game_board_type::down(pos)));
     }
 
     [[nodiscard]] bool any_moves_left() const
@@ -165,7 +182,7 @@ public:
                 break;
         }
 
-        for (int i = x + 1, j = y + 1; i < s_Size_x && j < s_Size_y; ++i, ++j)
+        for (int i = x + 1, j = y + 1; i < Size_x && j < Size_y; ++i, ++j)
         {
             if (m_Board_state.at({ j, i }) == player)
                 ++count;
@@ -190,7 +207,7 @@ public:
 
         int count = 1;
 
-        for (int i = x - 1, j = y + 1; i >= 0 && j < s_Size_y; --i, ++j)
+        for (int i = x - 1, j = y + 1; i >= 0 && j < Size_y; --i, ++j)
         {
             if (m_Board_state.at({ j, i }) == player)
                 ++count;
@@ -198,7 +215,7 @@ public:
                 break;
         }
 
-        for (int i = x + 1, j = y - 1; i < s_Size_x && j >= 0; ++i, --j)
+        for (int i = x + 1, j = y - 1; i < Size_x && j >= 0; ++i, --j)
         {
             if (m_Board_state.at({ j, i }) == player)
                 ++count;
@@ -231,7 +248,7 @@ public:
                 break;
         }
 
-        for (int i = x + 1, j = y; i < s_Size_x; ++i)
+        for (int i = x + 1, j = y; i < Size_x; ++i)
         {
             if (m_Board_state.at({ j, i }) == player)
                 ++count;
@@ -257,7 +274,7 @@ public:
         int count = 1;
 
         // Check vertical
-        if (s_Size_y - y < s_Target_count)
+        if (Size_y - y < s_Target_count)
             return false;
 
         for (int i = x, j = y + 1, iter = 0; iter != s_Target_count - 1; ++j, ++iter)
@@ -312,9 +329,9 @@ private:
     static constexpr inline valid_moves_container init_valid_moves()
     {
         valid_moves_container initial_moves{};
-        for (int i = 0; i != s_Size_x; ++i)
+        for (int i = 0; i != Size_x; ++i)
         {
-            initial_moves[i] = board_position{ s_Size_y - 1, i };
+            initial_moves[i] = board_position{ Size_y - 1, i };
         }
         return initial_moves;
     }
@@ -349,7 +366,7 @@ private:
         size_t moves_count = 0;
         for (auto& e : m_Valid_moves)
         {
-            moves_count += s_Size_y - e.y - 1;
+            moves_count += Size_y - e.y - 1;
         }
         m_Current_player = moves_count % s_Player_count;
     }

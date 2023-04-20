@@ -26,7 +26,7 @@ struct default_activation_function_parameters
     }
 
     template <typename Fn, typename... Args>
-    requires std::is_invocable_r_v<T, Fn, Args...>
+        requires std::is_invocable_r_v<T, Fn, Args...>
     constexpr void fill(Fn&&, Args...)
     {
     }
@@ -42,8 +42,8 @@ struct default_activation_function_parameters
     }
 
     template <typename R>
-    [[nodiscard]] inline static constexpr R L1_distance(const default_activation_function_parameters&,
-                                                        const default_activation_function_parameters&)
+    [[nodiscard]] inline static constexpr R
+    L1_distance(const default_activation_function_parameters&, const default_activation_function_parameters&)
     {
         return 0;
     }
@@ -156,7 +156,6 @@ struct GELU
     static constexpr auto name = "GELU";
 };
 
-
 /**
  * \brief Sigmoid linear unit activation function
  */
@@ -186,8 +185,8 @@ struct Softmax
     using parameters_type = default_activation_function_parameters<T>;
     using matrix_iterator = typename Mat::iterator;
 
-    static constexpr auto N = Mat::num_cols;
-    static constexpr auto M = Mat::num_rows;
+    static constexpr auto N = Mat::Size_x;
+    static constexpr auto M = Mat::Size_y;
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
@@ -251,7 +250,7 @@ struct Swish
         }
 
         template <typename Fn, typename... Args>
-        requires std::is_invocable_r_v<T, Fn, Args...>
+            requires std::is_invocable_r_v<T, Fn, Args...>
         constexpr void fill(Fn&& fn, Args... args)
         {
             beta = restrict_value(std::invoke(fn, args...));
@@ -321,7 +320,7 @@ struct PReLU
         }
 
         template <typename Fn, typename... Args>
-        requires std::is_invocable_r_v<T, Fn, Args...>
+            requires std::is_invocable_r_v<T, Fn, Args...>
         constexpr void fill(Fn&& fn, Args... args)
         {
             alpha = restrict_value(std::invoke(fn, args...));
@@ -356,8 +355,9 @@ struct PReLU
 
     inline static void PReLU_impl(Mat& mat, T alpha)
     {
-        mat.transform(
-            [_alpha = alpha](T x) { return static_cast<T>(std::max<T>(T{}, x) + _alpha * std::min<T>(T{}, x)); });
+        mat.transform([_alpha = alpha](T x) {
+            return static_cast<T>(std::max<T>(T{}, x) + _alpha * std::min<T>(T{}, x));
+        });
     }
 
     static constexpr auto name = "PReLU";
@@ -428,7 +428,7 @@ public:
     }
 
     template <typename Fn, typename... Args>
-    requires std::is_invocable_r_v<typename activation_function_type::T, Fn, Args...>
+        requires std::is_invocable_r_v<typename activation_function_type::T, Fn, Args...>
     constexpr void fill(Fn&& fn, Args... args)
     {
         params.fill(fn, args...);
@@ -473,10 +473,7 @@ void activation_function_dummy(activation_function<Mat, Function_Identifier>)
 }
 
 template <typename T>
-concept activation_function_type = requires
-{
-    activation_function_dummy(std::declval<T>());
-};
+concept activation_function_type = requires { activation_function_dummy(std::declval<T>()); };
 
 // -----------------------------------------------
 // -----------------------------------------------

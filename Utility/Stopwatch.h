@@ -6,6 +6,7 @@
 #include "Precision_totalizer.h"
 #include <chrono>
 #include <exception>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -19,7 +20,8 @@
 class stopwatch
 {
 public:
-    stopwatch() : start{ std::chrono::steady_clock::now() }
+    stopwatch() :
+        start{ std::chrono::steady_clock::now() }
     {
     }
 
@@ -34,7 +36,7 @@ public:
         std::chrono::duration<double> duration = end - start;
         std::cout << std::fixed << std::setprecision(4);
         std::cout << "Process took " << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
-                  << "ms\t (" << duration.count() << "us)\t ("
+                  << "ms\t (" << std::chrono::duration_cast<std::chrono::microseconds>(duration).count() << "us)\t ("
                   << std::chrono::duration_cast<std::chrono::seconds>(duration).count() << " s)\t ("
                   << std::chrono::duration_cast<std::chrono::minutes>(duration).count() << " mins)\n"
                   << std::defaultfloat;

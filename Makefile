@@ -73,6 +73,8 @@ MINIMAX_SEARCH_INCL = 	-I./$(C4_DIR) $(GENERAL_INCL) -I./$(NEURAL_MODEL_DIR) \
 PLT_LIB = 				-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib -l:libmatplot.a \
 						-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib/Matplot++ -l:libnodesoup.a
 
+MINIMAX_LIB = 			-ltbb
+
 all: mcts_main c4_main static_nn_main utility_main minimax_main neural_model_main plotting_utility_main
 
 mcts_main: 
@@ -92,7 +94,7 @@ utility_main:
 	@echo Built $@ successfully."\n"
 
 minimax_main:
-	$(CXX) $(CXXFLAGS) $(MINIMAX_SEARCH_INCL) $(MINIMAX_SEARCH_DIR)/$@.cpp -o $(MINIMAX_SEARCH_DIR)/bin/$@
+	$(CXX) $(CXXFLAGS) $(MINIMAX_SEARCH_INCL) ${MINIMAX_LIB} $(MINIMAX_SEARCH_DIR)/$@.cpp -o $(MINIMAX_SEARCH_DIR)/bin/$@
 	@echo Built $@ successfully."\n"
 	
 neural_model_main:

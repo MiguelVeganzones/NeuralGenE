@@ -53,15 +53,16 @@ public:
     inline static constexpr repr_type  s_Empty_state_value = Empty_State;
     inline static constexpr size_t     s_Bits_per_state    = cx_helper_func::cx_pow2_bits_required(Valid_States);
     inline static constexpr size_t     s_Size              = Size_X * Size_Y;
-    inline static constexpr size_t     s_Size_x            = Size_X;
-    inline static constexpr size_t     s_Size_y            = Size_Y;
+    inline static constexpr size_t     Size_x              = Size_X;
+    inline static constexpr size_t     Size_y              = Size_Y;
     inline static constexpr size_t     s_Valid_states      = Valid_States;
     inline static constexpr std::array s_Char_state_repr   = { ' ', 'x', 'o', '1', '2', '3', '4', '5', '6',
                                                                '7', '8', '9', '0', '#', '+', '*', '?', '&' };
 
-    using board_state_type = polystate::polystate_set<s_Size, interface_type, repr_type, s_Bits_per_state>;
-    using encode_type      = typename board_state_type::encode_type;
-    using hash_function    = board_state_type::hash_function;
+    using board_state_type   = polystate::polystate_set<s_Size, interface_type, repr_type, s_Bits_per_state>;
+    using encode_type        = board_state_type::encode_type;
+    using encode_type_hasher = board_state_type::encode_type_hasher;
+    using encode_type_equal  = board_state_type::encode_type_equal;
 
     auto reset(const repr_type value = s_Empty_state_value) -> void
     {
@@ -93,7 +94,7 @@ public:
         assert(pos.x >= 0);
         assert(pos.y >= 0);
 
-        return pos.y * s_Size_x + pos.x;
+        return pos.y * Size_x + pos.x;
     }
 
     inline static constexpr char pretty_repr(const repr_type value)
@@ -138,9 +139,9 @@ concept game_board_type = requires { game_board_2D_dummy(std::declval<T>()); };
 template <game_board_type Game_Board>
 inline std::ostream& operator<<(std::ostream& os, const Game_Board& board)
 {
-    for (int j = 0; j != Game_Board::s_Size_y; ++j)
+    for (int j = 0; j != Game_Board::Size_y; ++j)
     {
-        for (int i = 0; i != Game_Board::s_Size_x; ++i)
+        for (int i = 0; i != Game_Board::Size_x; ++i)
         {
             os << Game_Board::pretty_repr(board.at({ j, i })) << ", ";
         }

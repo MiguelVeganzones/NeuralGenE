@@ -101,7 +101,7 @@ int main()
 
     auto e = b.encode();
 
-    board_type::hash_function hash{};
+    board_type::encode_type_hasher hash{};
 
     std::cout << "Hash:\n" << hash(e) << std::endl;
 

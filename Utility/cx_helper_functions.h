@@ -21,6 +21,13 @@ template <class T>
     return a < b ? b : a;
 }
 
+template <class T>
+    requires std::is_arithmetic_v<T>
+[[nodiscard]] inline constexpr T cx_min(T a, T b) noexcept
+{
+    return a > b ? b : a;
+}
+
 /**
  * \note Beware of overflow
  */

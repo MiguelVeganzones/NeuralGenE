@@ -44,17 +44,19 @@ struct c4_data_preprocessor
     using encoder = Encoder;
 
     template <c4_board::c4_board_type Input_Type, typename Output_Type>
-        requires(std::is_floating_point_v<Output_Type::value_type> && std::is_integral_v<Input_Type::repr_type> &&
-                 encoder::s_Values == Input_Type::s_Valid_states)
+        requires requires { typename Input_Type::board_position; } &&
+        (std::is_floating_point_v<typename Output_Type::value_type> &&
+         std::is_integral_v<typename Input_Type::repr_type> && encoder::s_Values == Input_Type::s_Valid_states &&
+         (Input_Type::Size_y * Input_Type::Size_x == Output_Type::Size_y * Output_Type::Size_x))
     [[nodiscard]] static auto process(const Input_Type& board) -> Output_Type
     {
         using board_position = typename Input_Type::board_position;
 
         auto ret = Output_Type{};
         auto it  = ret.begin();
-        for (int j = 0; j != Output_Type::s_Size_y; ++j)
+        for (int j = 0; j != Input_Type::Size_y; ++j)
         {
-            for (int i = 0; i != Output_Type::s_Size_x; ++i)
+            for (int i = 0; i != Input_Type::Size_x; ++i)
             {
                 *(it++) = Encoder::encode(board.at(board_position{ j, i }));
             }
@@ -88,6 +90,16 @@ struct iterable_indexer
     }
 };
 
+struct uniform_normalized_random
+{
+    template <typename Input_Type, typename Output_Type>
+        requires requires { Output_Type{ 0 }; }
+    [[nodiscard]] static auto process([[maybe_unused]] const Input_Type& input_range) -> Output_Type
+    {
+        return static_cast<Output_Type>(random::randfloat());
+    }
+};
+
 struct scalar_converter
 {
     inline static constexpr int index = 0;
@@ -99,16 +111,27 @@ struct scalar_converter
     }
 
     template <iterable_type Input_Type, typename Output_Type>
-    [[nodiscard]] static auto process(Input_Type input_range) -> Output_Type
+        requires(Input_Type::Size_y* Input_Type::Size_x == 1)
+    [[nodiscard]] static auto process([[maybe_unused]] Input_Type input_range) -> Output_Type
     {
         return static_cast<Output_Type>(*input_range.begin());
     }
 
     template <typename Input_Type, iterable_type Output_Type>
+        requires(Output_Type::Size_y* Output_Type::Size_x == 1)
     [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
     {
         Output_Type ret{};
         *ret.begin() = static_cast<Output_Type::value_type>(input_value);
+        return ret;
+    }
+
+    template <iterable_type Input_Type, iterable_type Output_Type>
+        requires((Input_Type::Size_y * Input_Type::Size_x == 1) && (Output_Type::Size_y * Output_Type::Size_x == 1))
+    [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
+    {
+        Output_Type ret{};
+        *ret.begin() = *input_value.begin();
         return ret;
     }
 };
@@ -121,17 +144,27 @@ void c4_data_processor_dummy(c4_data_preprocessor<Board>)
 {
 }
 
+template <std::size_t Idx>
+void iterable_indexer_dummy(iterable_indexer<Idx>)
+{
+}
+
 template <typename T>
 concept c4_data_processor_type = requires { c4_data_processor_dummy(std::declval<T>()); };
 
 template <typename T>
-concept iterable_indexer_type = std::is_same_v<T, iterable_indexer>;
+concept iterable_indexer_type = requires { iterable_indexer_dummy(std::declval<T>()); };
 
 template <typename T>
 concept scalar_converter_type = std::is_same_v<T, scalar_converter>;
 
 template <typename T>
-concept data_processor_type = (c4_data_processor_type<T> || iterable_indexer_type<T> || scalar_converter_type<T>);
+concept uniform_normalized_random_type = std::is_same_v<T, uniform_normalized_random>;
+
+template <typename T>
+concept data_processor_type =
+    (c4_data_processor_type<T> || iterable_indexer_type<T> || scalar_converter_type<T> ||
+     uniform_normalized_random_type<T>);
 
 } // namespace data_processor
 

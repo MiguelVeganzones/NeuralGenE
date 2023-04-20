@@ -35,7 +35,7 @@ public:
 
     using encode_type = std::array<repr_type, s_word_count>;
 
-    struct hash_function
+    struct encode_type_hasher
     {
         using key         = encode_type;
         using result_type = std::size_t;
@@ -44,6 +44,7 @@ public:
         inline static constexpr std::size_t Size             = s_word_count;
         inline static constexpr int         data_packet_size = sizeof(result_type) / sizeof(value_type);
 
+        // TODO: Remove comments
         [[nodiscard]] auto operator()(const key& encoded_board) const noexcept -> result_type
         {
             result_type hash{};
@@ -51,12 +52,31 @@ public:
             {
                 auto value = static_cast<std::size_t>(encoded_board[i]);
                 auto offs  = (i % data_packet_size) * sizeof(value_type) * CHAR_BIT;
-                std::cout << value << " ";
-                std::cout << offs << std::endl;
+                // std::cout << value << " ";
+                // std::cout << offs << std::endl;
 
                 hash ^= value << offs;
             }
+            // std::cout << "Hash: " << hash << std::endl;
             return hash;
+        }
+    };
+
+    struct encode_type_equal
+    {
+        using input_type  = encode_type;
+        using result_type = bool;
+
+        inline static constexpr std::size_t Size = s_word_count;
+
+        constexpr inline auto operator()(const input_type& lhs, const input_type& rhs) const noexcept -> bool
+        {
+            for (size_t i = 0; i != Size; ++i)
+            {
+                if (lhs[i] != rhs[i])
+                    return false;
+            }
+            return true;
         }
     };
 
@@ -129,7 +149,7 @@ public:
         );
     }
 
-    [[nodiscard]] constexpr reference operator[](const size_t idx) noexcept
+    [[nodiscard]] constexpr auto operator[](const size_t idx) noexcept -> reference
     {
         assert(idx < N);
         return reference(*this, idx);

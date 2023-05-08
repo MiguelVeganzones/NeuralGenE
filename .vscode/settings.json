@@ -72,6 +72,7 @@
         "editor.defaultFormatter": "xaver.clang-format",
         "editor.semanticHighlighting.enabled": "true",
         "complex": "cpp",
-        "cmake.cmakePath": "/snap/bin/cmake"
+        "cmake.cmakePath": "/snap/bin/cmake",
+        "cfenv": "cpp"
     }
 }

@@ -10,7 +10,6 @@
 #include <type_traits>
 
 #include "data_processor.hpp"
-#include "score_functions.hpp"
 #include "static_neural_net.hpp"
 
 namespace ga_neural_model
@@ -44,14 +43,8 @@ public:
 
     inline static constexpr size_t s_Brain_layers = NNet::s_Layers;
 
-    inline static std::atomic<size_t> s_ID = 1;
 
 private:
-    size_t m_ID = s_ID++;
-    size_t m_Parent_a{};
-    size_t m_Parent_b{};
-    size_t m_Generation{};
-
     std::unique_ptr<NNet> m_Ptr_net;
 
 public:
@@ -76,41 +69,7 @@ public:
         std::swap(m_Ptr_net, other_ptr_net);
     }
 
-    brain(const brain& other) :
-        m_Parent_a{ other.ID() },
-        m_Generation{ other.generation() + 1 },
-        m_Ptr_net{ std::make_unique<NNet>(*other.get()) }
-    {
-    }
-
-    brain(brain&&) = default;
-
-    brain& operator=(const brain& other)
-    {
-        if (this != &other)
-        {
-            m_Parent_a   = other.m_Parent_a;
-            m_Parent_b   = other.m_Parent_b;
-            m_Generation = other.m_Generation;
-            m_Ptr_net.reset(new NNet(*other.get()));
-        }
-        return *this;
-    }
-
-    brain& operator=(brain&&) = default;
-    ~brain()                  = default;
-
     /* Getters and setters */
-
-    [[nodiscard]] auto ID() const
-    {
-        return m_ID;
-    }
-
-    [[nodiscard]] auto generation() const
-    {
-        return m_Generation;
-    }
 
     [[nodiscard]] const NNet* get() const
     {
@@ -120,16 +79,6 @@ public:
     [[nodiscard]] NNet* get_raw()
     {
         return m_Ptr_net.get();
-    }
-
-    [[nodiscard]] auto parent_a() const
-    {
-        return m_Parent_a;
-    }
-
-    [[nodiscard]] auto parent_b() const
-    {
-        return m_Parent_b;
     }
 
     [[nodiscard]] auto& get_unique()
@@ -188,15 +137,6 @@ public:
     void mutate_set_layers(const std::vector<size_t>& layers_idx, Fn&& fn)
     {
         m_Ptr_net->mutate_set_layers(layers_idx, fn);
-    }
-
-private:
-    void reset()
-    {
-        m_ID = s_ID++;
-        // m_Parent_a{};
-        // m_Parent_b{};
-        // m_Generation++;
     }
 };
 

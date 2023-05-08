@@ -1,7 +1,6 @@
 #include "Random.h"
 #include "neural_model.hpp"
 #include "plotting_utility.h"
-#include "score_functions.hpp"
 #include "static_matrix.hpp"
 
 void test0()

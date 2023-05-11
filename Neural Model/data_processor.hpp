@@ -75,6 +75,24 @@ concept iterable_type = requires(T& v) {
                             v.size();
                         };
 
+struct iterable_converter
+{
+    template <iterable_type Input_Iterable_Type, iterable_type Output_Iterable_Type>
+    [[nodiscard]] static auto process(const Input_Iterable_Type& input) -> Output_Iterable_Type
+    {
+        auto ret = Output_Iterable_Type{};
+        assert(ret.size() == input.size());
+        auto it_out = ret.begin();
+        auto it_in  = input.begin();
+        while (it_out != ret.end())
+        {
+            *(it_out++) = *(it_in++);
+        }
+        assert(it_in == input.end());
+        return ret;
+    }
+};
+
 template <std::size_t Idx>
 struct iterable_indexer
 {
@@ -134,6 +152,15 @@ struct scalar_converter
         *ret.begin() = *input_value.begin();
         return ret;
     }
+
+    template <iterable_type Input_Type, iterable_type Output_Type>
+    [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
+    {
+        Output_Type ret{};
+        assert(input_value.size() == 1 && ret.size() == 1);
+        *ret.begin() = *input_value.begin();
+        return ret;
+    }
 };
 
 // -------------------------------------------------------------------------- //
@@ -156,6 +183,9 @@ template <typename T>
 concept iterable_indexer_type = requires { iterable_indexer_dummy(std::declval<T>()); };
 
 template <typename T>
+concept iterable_converter_type = std::is_same_v<T, iterable_converter>;
+
+template <typename T>
 concept scalar_converter_type = std::is_same_v<T, scalar_converter>;
 
 template <typename T>
@@ -164,7 +194,7 @@ concept uniform_normalized_random_type = std::is_same_v<T, uniform_normalized_ra
 template <typename T>
 concept data_processor_type =
     (c4_data_processor_type<T> || iterable_indexer_type<T> || scalar_converter_type<T> ||
-     uniform_normalized_random_type<T>);
+     uniform_normalized_random_type<T> || iterable_converter_type<T>);
 
 } // namespace data_processor
 

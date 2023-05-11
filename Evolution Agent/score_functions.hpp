@@ -1,6 +1,7 @@
 #ifndef SCORE_FUNCTIONS
 #define SCORE_FUNCTIONS
 
+#include <concepts>
 #include <stdexcept>
 
 namespace score_function_objects
@@ -11,7 +12,9 @@ template <typename Fn, typename... Args>
 class score_function_object
 {
 public:
-    constexpr explicit score_function_object(Fn fn, Args... args) : m_Fn{ fn }, m_Internal_state{ args... }
+    constexpr explicit score_function_object(Fn fn, Args... args) :
+        m_Fn{ fn },
+        m_Internal_state{ args... }
     {
     }
 
@@ -31,7 +34,10 @@ class score_function_object<Fn, T, T, T>
 {
 public:
     constexpr explicit score_function_object(Fn fn) :
-        m_Fn{ fn }, m_Wins{ 0 }, m_Ties{ 0 }, m_Loses{ 0 }
+        m_Fn{ fn },
+        m_Wins{ 0 },
+        m_Ties{ 0 },
+        m_Loses{ 0 }
     {
     }
 
@@ -44,10 +50,12 @@ public:
     {
         ++m_Wins;
     }
+
     void tied()
     {
         ++m_Ties;
     }
+
     void lost()
     {
         ++m_Loses;
@@ -57,10 +65,12 @@ public:
     {
         return m_Wins;
     }
+
     [[nodiscard]] auto ties() const
     {
         return m_Ties;
     }
+
     [[nodiscard]] auto losses() const
     {
         return m_Loses;
@@ -101,9 +111,9 @@ public:
 
 private:
     template <int Wins_Weight = 3, int Ties_Weight = 1, int Loses_Weight = 0>
-    inline static constexpr Return_Type weighted_normalized_score(Input_Type wins,
-                                                                  Input_Type ties,
-                                                                  Input_Type loses) noexcept
+    inline static constexpr Return_Type weighted_normalized_score(
+        Input_Type wins, Input_Type ties, Input_Type loses
+    ) noexcept
     {
         const auto count = wins + ties + loses;
 

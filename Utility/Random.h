@@ -19,13 +19,13 @@
 #undef max
 #endif
 
-class random
+struct random
 {
-public:
     inline static void init()
     {
         s_Random_engine.seed(
-            static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+            static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count())
+        );
     }
 
     inline static float randfloat()

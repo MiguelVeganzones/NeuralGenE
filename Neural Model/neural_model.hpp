@@ -64,10 +64,28 @@ public:
     }
 
     explicit brain(std::unique_ptr<NNet>&& other_ptr_net) :
-        m_Ptr_net{ nullptr }
+        m_Ptr_net(std::move(other_ptr_net))
     {
-        std::swap(m_Ptr_net, other_ptr_net);
     }
+
+    brain(brain&& other) :
+        m_Ptr_net(std::move(other.m_Ptr_net))
+    {
+    }
+
+    brain(const brain&) = default;
+
+    brain& operator=(const brain& other)
+    {
+        if (other.m_Ptr_net)
+            m_Ptr_net = std::make_unique(*other.m_Ptr_net);
+        else
+            m_Ptr_net.reset();
+        return *this;
+    }
+
+    brain& operator=(brain&&) = default;
+    ~brain()                  = default;
 
     /* Getters and setters */
 
@@ -99,7 +117,7 @@ public:
         requires requires {
                      preprocessor::template process<Brain_Input_Type, nn_input_type>(std::declval<Brain_Input_Type>());
                  }
-    auto operator()(const Brain_Input_Type& in) const -> brain_output_type
+    [[nodiscard]] auto operator()(const Brain_Input_Type& in) const -> brain_output_type
     {
         return postprocessor::template process<nn_output_type, brain_output_type>(
             weigh(preprocessor::template process<Brain_Input_Type, nn_input_type>(in))
@@ -167,22 +185,22 @@ template <brain_type Brain>
 }
 
 template <brain_type Brain>
-void in_place_brain_x_crossover(Brain& brain_a, Brain& brain_b)
+auto in_place_brain_x_crossover(Brain& brain_a, Brain& brain_b) -> void
 {
-    ga_snn::in_place_net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
+    in_place_net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
 }
 
 template <brain_type Brain>
-[[nodiscard]] std::pair<Brain, Brain> brain_x_crossover(const Brain& brain_a, const Brain& brain_b)
+[[nodiscard]] auto brain_x_crossover(const Brain& brain_a, const Brain& brain_b) -> std::pair<Brain, Brain>
 {
-    auto [ptr_net1, ptr_net2] = ga_snn::net_x_crossover(*brain_a.get(), *brain_b.get());
+    auto [ptr_net1, ptr_net2] = net_x_crossover(*brain_a.get(), *brain_b.get());
     return { Brain{ std::move(ptr_net1) }, Brain{ std::move(ptr_net2) } };
 }
 
 template <brain_type Brain>
-void to_target_brain_x_crossover(const Brain& parent_a, const Brain& parent_b, Brain& child_a, Brain& child_b)
+auto to_target_brain_x_crossover(const Brain& parent_a, const Brain& parent_b, Brain& child_a, Brain& child_b) -> void
 {
-    ga_snn::to_target_net_x_crossover(*parent_a.get(), *parent_b.get(), *child_a.get_raw(), *child_b.get_raw());
+    to_target_net_x_crossover(*parent_a.get(), *parent_b.get(), *child_a.get_raw(), *child_b.get_raw());
 }
 
 } // namespace ga_neural_model

@@ -88,7 +88,7 @@ PLT_LIB = 				-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib
 
 MINIMAX_LIB = 			-ltbb
 
-all: mcts_main c4_main static_nn_main utility_main minimax_main neural_model_main evolution_agent
+all: mcts_main c4_main static_nn_main utility_main minimax_main neural_model_main evolution_agent_main
 
 mcts_main: 
 	@mkdir -p $(MCTS_DIR)/${OUT_DIR}
@@ -125,7 +125,7 @@ plotting_utility_main:
 	$(CXX) $(PLT_CXXFLAGS) $(PLT_INCL) $(PLT_LIB) -Xlinker --verbose $(PLT_DIR)/$@.cpp -o $(PLT_DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"
 
-evolution_agent:
+evolution_agent_main:
 	@mkdir -p $(EVOLUTION_AGENT_DIR)/${OUT_DIR}
 	$(CXX) $(CXXFLAGS) $(EVOLUTION_AGENT_INCL) $(EVOLUTION_AGENT_DIR)/$@.cpp -o $(EVOLUTION_AGENT_DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"

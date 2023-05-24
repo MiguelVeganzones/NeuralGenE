@@ -1,7 +1,9 @@
 #include "evolution_agent.hpp"
+// #include "matplotlibcpp.h"
 #include <array>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 #include <vector>
 
 // void score_functions_test()
@@ -47,9 +49,9 @@
 // std::cout << gen_a[0].get_score() << std::endl;
 // }
 
-int main()
+void agent_construction()
 {
-    std::cout << "Evolution agent main\n";
+    std::cout << "Evolution agent construction\n";
 
     random::init();
 
@@ -86,13 +88,13 @@ int main()
     using agent_t = evolution_agent::agent<brain_t, score_function_t>;
 
 
-    auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
-    auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
+    const auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
+    const auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
 
     agent_a.print();
     agent_b.print();
 
-    auto [agent_c, agent_d] = agent_t::x_crossover(agent_a, agent_b);
+    const auto [agent_c, agent_d] = agent_t::crossover(agent_a, agent_b);
 
     agent_c.print();
     agent_d.print();
@@ -123,7 +125,293 @@ int main()
     std::cout << agent_b(input3) << std::endl;
     std::cout << agent_c(input3) << std::endl;
     std::cout << agent_d(input3) << std::endl;
+}
 
+void simple_agent_evolution_test()
+{
+    random::init();
+
+    // using namespace ga_snn;
+    // using namespace ga_sm;
+
+    constexpr auto AF_relu    = matrix_activation_functions::Identifiers::GELU;
+    constexpr auto AF_sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto AF_Tanh    = matrix_activation_functions::Identifiers::Tanh;
+
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1, AF_sigmoid };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Tanh{ 1, AF_Tanh };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a9{ 9, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a25{ 25, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a42{ 42, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a16{ 16, AF_relu };
+
+    using NET = ga_snn::static_neural_net<float, 1, a9, a9, a25, a25, a9, a1_Sigmoid>;
+    // using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9, a9, a1_tanh>;
+
+    // std::cout << NET::parameter_count() << std::endl;
+    // std::cout << NET2::parameter_count() << std::endl;
+
+    using preprocessor  = data_processor::iterable_converter;
+    using postprocessor = data_processor::scalar_converter;
+    using return_type   = NET::value_type;
+
+    using brain_t     = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
+        choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
+    using score_function_t = score_function_objects::score_function_object<decltype(fn), float, float, float>;
+
+    using agent_t = evolution_agent::agent<brain_t, score_function_t>;
+
+    auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
+    auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
+
+    agent_a.print();
+    agent_b.print();
+
+    using agent_input_type = ga_sm::static_matrix<float, 3, 3>;
+
+    agent_input_type input{};
+    input.fill(random::randnormal, 0, 1);
+    constexpr float target = 0.75;
+
+    auto mutation_policy = []<std::floating_point F>(F f) -> F {
+        const auto r = random::randfloat();
+        if (r >= 0.0009)
+        {
+            return f * F(0.9999);
+        }
+        if (r < 0.00006)
+        {
+            return random::randfloat();
+        }
+        if (r < 0.00012)
+        {
+            return f * random::randnormal();
+        }
+        if (r < 0.00018)
+        {
+            return F{};
+        }
+        if (r < 0.00024)
+        {
+            return f += random::randnormal(random::randnormal(), random::randfloat());
+        }
+        if (r < 0.00030)
+        {
+            return random::randnormal(f, F(0.01));
+        }
+        return f;
+    };
+
+
+    for (int i = 0; i != 100000; ++i)
+    {
+        const auto pred_a  = agent_a(input);
+        const auto pred_b  = agent_b(input);
+        const auto error_a = std::abs(pred_a - target);
+        const auto error_b = std::abs(pred_b - target);
+
+        if (error_a < error_b)
+        {
+            if (i % 1000 == 0)
+            {
+                std::cout << "Pred a: " << pred_a << "  (Pred b: " << pred_b << ')' << std::endl;
+            }
+            agent_b.mutate(mutation_policy);
+        }
+        else if (error_b < error_a)
+        {
+            if (i % 1000 == 0)
+            {
+                std::cout << "Pred b: " << pred_b << "  (Pred a: " << pred_a << ')' << std::endl;
+            }
+            agent_a.mutate(mutation_policy);
+        }
+        if (random::randfloat() < 0.0001)
+        {
+            agent_t::in_place_crossover(agent_a, agent_b);
+        }
+        // if (i % 5000 == 0)
+        // {
+        //     agent_a.print();
+        // }
+    }
+}
+
+void multi_agent_evolution_test()
+{
+    random::init();
+
+    // using namespace ga_snn;
+    // using namespace ga_sm;
+
+    [[maybe_unused]] constexpr auto AF_relu    = matrix_activation_functions::Identifiers::ReLU;
+    [[maybe_unused]] constexpr auto AF_thresh  = matrix_activation_functions::Identifiers::Threshold;
+    [[maybe_unused]] constexpr auto AF_sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
+    [[maybe_unused]] constexpr auto AF_Tanh    = matrix_activation_functions::Identifiers::Tanh;
+
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1, AF_sigmoid };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Tanh{ 1, AF_Tanh };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a9{ 9, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a25{ 25, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a42{ 42, AF_relu };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a16{ 16, AF_relu };
+
+    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a1_Tanh>;
+    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a1_Tanh>;
+    using NET = ga_snn::static_neural_net<float, 1, a1, a9, a25, a1_Tanh>;
+    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a9, a25, a9, a9, a25, a1_Tanh>;
+
+    // std::cout << NET::parameter_count() << std::endl;
+    // std::cout << NET2::parameter_count() << std::endl;
+
+    using preprocessor  = data_processor::scalar_converter;
+    using postprocessor = data_processor::scalar_converter;
+    using return_type   = NET::value_type;
+
+    using brain_t     = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    constexpr auto fn = score_functions::score_functions<float, std::uint16_t>::
+        choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
+    using score_function_t = score_function_objects::score_function_object<decltype(fn), float, float, float>;
+
+    using agent_t = evolution_agent::agent<brain_t, score_function_t>;
+
+    using agent_input_type  = brain_t::value_type;
+    using agent_output_type = brain_t::value_type;
+
+    [[maybe_unused]] auto mutation_policy = []<std::floating_point F>(F f) -> F {
+        const auto r = random::randfloat();
+        if (r >= 0.0009)
+        {
+            return f * F(0.9999);
+        }
+        if (r < 0.00006)
+        {
+            return random::randfloat();
+        }
+        if (r < 0.00012)
+        {
+            return f * random::randnormal();
+        }
+        if (r < 0.00018)
+        {
+            return F{};
+        }
+        if (r < 0.00024)
+        {
+            return f += random::randnormal(random::randnormal(), random::randfloat());
+        }
+        if (r < 0.00030)
+        {
+            return random::randnormal(f, F(0.01));
+        }
+        return f;
+    };
+
+    constexpr std::size_t N = 20;
+    constexpr std::size_t M = 1000;
+
+    std::array<std::array<agent_t, N>, 2> gen{};
+
+    std::vector<float> input(M), output(M), pred(M), best_pred(M);
+
+    for (std::size_t i = 0; i != M; ++i)
+    {
+        input[i]  = agent_input_type(i);
+        output[i] = static_cast<agent_output_type>(std::sin((float)i / 50.f));
+    }
+
+    for (size_t i = 0; i != N; ++i)
+    {
+        gen[0][i] = agent_t(brain_t(random::randnormal, 0, 0.01), score_function_t(fn));
+        gen[1][i] = agent_t(brain_t(random::randnormal, 0, 0.01), score_function_t(fn));
+    }
+
+    for (int i = 0; i != 100000; ++i)
+    {
+        std::array<float, N> error{};
+        const int            gen_idx      = i % 2;
+        const int            next_gen_idx = (i + 1) % 2;
+
+        for (int jj = 0; jj != N; ++jj)
+        {
+            for (int ii = 0; ii != M; ++ii)
+            {
+                pred[ii] = gen[gen_idx][jj](input[ii]);
+                error[jj] += std::pow(pred[ii] - output[ii], 2.f);
+            }
+            if (jj == 0 || (jj > 0 && error[jj] < error[jj - 1]))
+            {
+                best_pred = pred;
+            }
+        }
+
+        auto temp = std::array(error);
+        std::ranges::sort(temp);
+
+        const auto idx0 = std::ranges::find(error, temp[0]) - error.begin();
+        const auto idx1 = std::ranges::find(error, temp[1]) - error.begin();
+        const auto idx2 = std::ranges::find(error, temp[2]) - error.begin();
+        const auto idx3 = std::ranges::find(error, temp[3]) - error.begin();
+        const auto idx4 = std::ranges::find(error, temp[4]) - error.begin();
+        const auto idx5 = std::ranges::find(error, temp[5]) - error.begin();
+
+        gen[next_gen_idx][0] = gen[gen_idx][idx0].clone();
+        gen[next_gen_idx][1] = gen[gen_idx][idx1].clone();
+        // agent_t::to_target_crossover(
+        //     gen[gen_idx][idx0], gen[gen_idx][idx1], gen[next_gen_idx][0], gen[next_gen_idx][1]
+        // );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx0], gen[gen_idx][idx2], gen[next_gen_idx][2], gen[next_gen_idx][3]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx0], gen[gen_idx][idx3], gen[next_gen_idx][4], gen[next_gen_idx][5]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx0], gen[gen_idx][idx4], gen[next_gen_idx][6], gen[next_gen_idx][7]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx0], gen[gen_idx][idx5], gen[next_gen_idx][8], gen[next_gen_idx][9]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx1], gen[gen_idx][idx2], gen[next_gen_idx][10], gen[next_gen_idx][11]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx1], gen[gen_idx][idx3], gen[next_gen_idx][12], gen[next_gen_idx][13]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx2], gen[gen_idx][idx3], gen[next_gen_idx][14], gen[next_gen_idx][15]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx3], gen[gen_idx][idx4], gen[next_gen_idx][16], gen[next_gen_idx][17]
+        );
+        agent_t::to_target_crossover(
+            gen[gen_idx][idx4], gen[gen_idx][idx5], gen[next_gen_idx][18], gen[next_gen_idx][19]
+        );
+
+        for (auto& e : gen[next_gen_idx])
+        {
+            if (random::randfloat() < 0.6f)
+            {
+                e.mutate(mutation_policy);
+            }
+        }
+        if (i % 51 == 0)
+        {
+            std::cout << "Iteration: " << i << ". Min error: " << error[idx0] << std::endl;
+        }
+    }
+}
+
+int main()
+{
+    std::cout << "Evolution agent main\n";
+
+    // agent_construction();
+    // simple_agent_evolution_test();
+    multi_agent_evolution_test();
 
     return EXIT_SUCCESS;
 }

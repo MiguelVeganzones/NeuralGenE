@@ -11,6 +11,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 //--------------------------------------------------------------------------------------//
 
@@ -71,7 +72,7 @@ struct ReLU
 
     inline static void ReLU_impl(Mat& mat)
     {
-        mat.transform([](T x) { return std::max(T{}, x); }); //  { return x > T{} ? x : T{}; });
+        mat.transform([](T x) { return std::max(T(), x); }); //  { return x > T{} ? x : T{}; });
     }
 
     static constexpr auto name = "ReLU";
@@ -200,7 +201,7 @@ struct Softmax
             matrix_iterator start   = mat.begin() + j * N;
             matrix_iterator end     = start + N;
             const auto      row_max = *std::max_element(start, end);
-            T               row_sum = T{};
+            T               row_sum = T();
 
             for (auto p = start; p != end; ++p)
             {
@@ -356,11 +357,82 @@ struct PReLU
     inline static void PReLU_impl(Mat& mat, T alpha)
     {
         mat.transform([_alpha = alpha](T x) {
-            return static_cast<T>(std::max<T>(T{}, x) + _alpha * std::min<T>(T{}, x));
+            return static_cast<T>(std::max<T>(T(), x) + _alpha * std::min<T>(T{}, x));
         });
     }
 
     static constexpr auto name = "PReLU";
+};
+
+template <typename Mat>
+struct Threshold
+{
+    using T = typename Mat::value_type;
+
+    struct parameters_type
+    {
+        static constexpr T lower_threshold_bound = -10;
+        static constexpr T upper_threshold_bound = 10;
+
+        T threshold;
+
+        [[nodiscard]] static constexpr size_t parameter_count()
+        {
+            return 1;
+        }
+
+        [[nodiscard]] constexpr auto repr() const -> std::string
+        {
+            return std::string("Threshold: ") + std::to_string(threshold);
+        }
+
+        template <typename Fn>
+        void mutate(Fn&& fn)
+        {
+            threshold = restrict_value(fn(threshold));
+        }
+
+        template <typename Fn, typename... Args>
+            requires std::is_invocable_r_v<T, Fn, Args...>
+        constexpr void fill(Fn&& fn, Args... args)
+        {
+            threshold = restrict_value(std::invoke(fn, args...));
+        }
+
+        [[nodiscard]] inline static T restrict_value(const T value)
+        {
+            return std::min(std::max(value, lower_threshold_bound), upper_threshold_bound);
+        }
+
+        template <typename R>
+        [[nodiscard]] inline static constexpr R L1_distance(const parameters_type& p1, const parameters_type& p2)
+        {
+            return std::abs(p1.threshold - p2.threshold);
+        }
+
+        void store(std::ofstream& out) const
+        {
+            out << threshold << "\n\n";
+        }
+
+        void load(std::ifstream& in)
+        {
+            in >> threshold;
+        }
+    };
+
+    inline void operator()(Mat& mat, const parameters_type& params) const
+    {
+        Threshold_impl(mat, params.threshold);
+    }
+
+    inline static void Threshold_impl(Mat& mat, T threshold)
+    {
+        // mat.transform([_threshold = threshold](T x) { return x > _threshold ? T(1) : T(); });
+        mat.transform([_threshold = threshold](T x) { return x > T() ? T(1) : T(); });
+    }
+
+    static constexpr auto name = "Threshold";
 };
 
 struct Identifiers
@@ -375,13 +447,14 @@ struct Identifiers
         SiLU,
         Softmax,
         Swish,
-        PReLU
+        PReLU,
+        Threshold
     };
 };
 
 template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ Function_Identifier>
 // ReSharper disable once CppNotAllPathsReturnValue
-[[nodiscard]] constexpr auto choose_func()
+[[nodiscard]] constexpr auto choose_func() noexcept
 {
     if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::ReLU)
         return matrix_activation_functions::ReLU<Mat>();
@@ -401,8 +474,9 @@ template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ F
         return matrix_activation_functions::Swish<Mat>();
     else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::PReLU)
         return matrix_activation_functions::PReLU<Mat>();
-    // std::unreachable();
-    throw std::runtime_error("Reached unreachable code");
+    else if constexpr (Function_Identifier == matrix_activation_functions::Identifiers::Threshold)
+        return matrix_activation_functions::Threshold<Mat>();
+    std::unreachable();
 }
 
 template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ Function_Identifier>

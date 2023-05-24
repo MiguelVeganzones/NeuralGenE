@@ -3,19 +3,45 @@
 
 #include <concepts>
 #include <stdexcept>
+#include <type_traits>
 
 namespace score_function_objects
 {
 
 template <typename Fn, typename... Args>
-    requires std::is_invocable_v<Fn, Args...>
+    requires std::is_invocable_v<typename std::remove_const<Fn>::type, Args...>
 class score_function_object
 {
+    using function_type = typename std::remove_const<Fn>::type;
+
 public:
-    constexpr explicit score_function_object(Fn fn, Args... args) :
+    constexpr explicit score_function_object(function_type fn, Args... args) :
         m_Fn{ fn },
         m_Internal_state{ args... }
     {
+    }
+
+    score_function_object() :
+        m_Fn{ nullptr },
+        m_Internal_state{}
+    {
+    }
+
+    score_function_object(const score_function_object&) = default;
+    score_function_object(score_function_object&&)      = default;
+
+    score_function_object& operator=(const score_function_object& lhs)
+    {
+        m_Fn             = lhs.m_Fn;
+        m_Internal_state = lhs.m_Internal_state;
+        return *this;
+    }
+
+    score_function_object& operator=(score_function_object&& lhs)
+    {
+        m_Fn             = lhs.m_Fn;
+        m_Internal_state = std::move(lhs.m_Internal_state);
+        return *this;
     }
 
     auto operator()() const
@@ -23,23 +49,52 @@ public:
         return std::apply(m_Fn, m_Internal_state);
     }
 
+    // TODO: give access to internal state and make a reset fucntion
+
 private:
-    Fn                  m_Fn;
+    function_type       m_Fn;
     std::tuple<Args...> m_Internal_state;
 };
 
 template <typename Fn, typename T>
-    requires std::is_invocable_v<Fn, T, T, T>
+    requires std::is_invocable_v<typename std::remove_const<Fn>::type, T, T, T>
 class score_function_object<Fn, T, T, T>
 {
 public:
-    constexpr explicit score_function_object(Fn fn) :
-        m_Fn{ fn },
-        m_Wins{ 0 },
-        m_Ties{ 0 },
-        m_Loses{ 0 }
+    using function_type = typename std::remove_const<Fn>::type;
+
+    constexpr explicit score_function_object(function_type fn) :
+        m_Fn{ fn }
     {
     }
+
+    score_function_object() :
+        m_Fn{ nullptr }
+    {
+    }
+
+    score_function_object(const score_function_object&) = default;
+    score_function_object(score_function_object&&)      = default;
+
+    score_function_object& operator=(const score_function_object& lhs)
+    {
+        m_Fn    = lhs.m_Fn;
+        m_Wins  = lhs.m_Wins;
+        m_Ties  = lhs.m_Ties;
+        m_Loses = lhs.m_Loses;
+        return *this;
+    }
+
+    score_function_object& operator=(score_function_object&& lhs)
+    {
+        m_Fn    = lhs.m_Fn;
+        m_Wins  = lhs.m_Wins;
+        m_Ties  = lhs.m_Ties;
+        m_Loses = lhs.m_Loses;
+        return *this;
+    }
+
+    ~score_function_object() = default;
 
     auto operator()() const
     {
@@ -76,11 +131,18 @@ public:
         return m_Loses;
     }
 
+    auto reset() -> void
+    {
+        m_Wins  = T();
+        m_Loses = T();
+        m_Ties  = T();
+    }
+
 private:
-    Fn m_Fn;
-    T  m_Wins;
-    T  m_Ties;
-    T  m_Loses;
+    function_type m_Fn;
+    T             m_Wins{};
+    T             m_Ties{};
+    T             m_Loses{};
 };
 
 /* -------------------- Concept -------------------- */
@@ -111,9 +173,8 @@ public:
 
 private:
     template <int Wins_Weight = 3, int Ties_Weight = 1, int Loses_Weight = 0>
-    inline static constexpr Return_Type weighted_normalized_score(
-        Input_Type wins, Input_Type ties, Input_Type loses
-    ) noexcept
+    inline static constexpr auto weighted_normalized_score(Input_Type wins, Input_Type ties, Input_Type loses) noexcept
+        -> Return_Type
     {
         const auto count = wins + ties + loses;
 
@@ -122,7 +183,9 @@ private:
 
         const auto d_count = static_cast<double>(count);
 
-        return (wins / d_count) * Wins_Weight + (ties / d_count) * Ties_Weight + (loses / d_count) * Loses_Weight;
+        return static_cast<Return_Type>(
+            (wins / d_count) * Wins_Weight + (ties / d_count) * Ties_Weight + (loses / d_count) * Loses_Weight
+        );
     }
 
 public:

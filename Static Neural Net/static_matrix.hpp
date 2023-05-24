@@ -400,13 +400,13 @@ public:
         return const_iterator(m_Elems, M * N);
     }
 
-    [[nodiscard]] inline constexpr reference operator()(const size_t j, const size_t i) noexcept
+    [[nodiscard]] inline constexpr reference operator[](const size_t j, const size_t i) noexcept
     {
         assert(j < M and i < N);
         return m_Elems[j * N + i];
     }
 
-    [[nodiscard]] inline constexpr const_reference operator()(const size_t j, const size_t i) const noexcept
+    [[nodiscard]] inline constexpr const_reference operator[](const size_t j, const size_t i) const noexcept
     {
         assert(j < M and i < N);
         return m_Elems[j * N + i];
@@ -531,7 +531,7 @@ public:
         {
             for (size_t i = 0; i != N; ++i)
             {
-                out << this->operator()(j, i) << ' ';
+                out << this->operator[](j, i) << ' ';
             }
             out << '\n';
         }
@@ -570,7 +570,7 @@ template <typename T2, typename T1, size_t M, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            ret(j, i) = static_cast<T2>(src(j, i));
+            ret(j, i) = static_cast<T2>(src[j, i]);
         }
     }
     return ret;
@@ -599,7 +599,7 @@ std::ostream& operator<<(std::ostream& os, static_matrix<T, M, N> const& mat)
         std::cout << "\n [ ";
         for (size_t i = 0; i != N; ++i)
         {
-            os << mat(j, i) << ' ';
+            os << mat[j, i] << ' ';
         }
         os << "]";
     }
@@ -636,7 +636,7 @@ template <typename T, size_t M, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            const auto d = mat1(j, i) - mat2(j, i);
+            const auto d = mat1[j, i] - mat2[j, i];
             if (cx_helper_func::cx_abs(d) > epsilon)
                 return false;
         }
@@ -653,7 +653,7 @@ template <typename T, size_t M, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            if (mat1(j, i) != mat2(j, i))
+            if (mat1[j, i] != mat2[j, i])
                 return false;
         }
     }
@@ -688,7 +688,7 @@ void in_place_x_crossover(static_matrix<T, M, N>& mat1, static_matrix<T, M, N>& 
     {
         for (size_t i = (d ? 0 : b); i != (d ? b : N); ++i)
         {
-            std::swap(mat1(j, i), mat2(j, i));
+            std::swap(mat1[j, i], mat2[j, i]);
         }
     }
 
@@ -697,7 +697,7 @@ void in_place_x_crossover(static_matrix<T, M, N>& mat1, static_matrix<T, M, N>& 
     {
         for (size_t i = (d ? b : 0); i != (d ? N : b); ++i)
         {
-            std::swap(mat1(j, i), mat2(j, i));
+            std::swap(mat1[j, i], mat2[j, i]);
         }
     }
 }
@@ -719,8 +719,8 @@ void to_target_x_crossover(
         for (size_t i = 0; i != N; ++i)
         {
             auto main_diagonal = (j < a) == (i < b);
-            out_mat1(j, i)     = main_diagonal ? in_mat1(j, i) : in_mat2(j, i);
-            out_mat2(j, i)     = main_diagonal ? in_mat2(j, i) : in_mat1(j, i);
+            out_mat1[j, i]     = main_diagonal ? in_mat1[j, i] : in_mat2[j, i];
+            out_mat2[j, i]     = main_diagonal ? in_mat2[j, i] : in_mat1[j, i];
         }
     }
 }
@@ -754,7 +754,7 @@ template <typename T, size_t M, size_t K, size_t N>
         {
             for (size_t i = 0; i != N; ++i)
             {
-                ret(j, i) += mat1(j, k) * mat2(k, i);
+                ret[j, i] += mat1[j, k] * mat2[k, i];
             }
         }
     }
@@ -775,7 +775,7 @@ template <typename T, size_t M, size_t N>
         {
             for (size_t j = 0; j != M; ++j)
             {
-                ret(j, i) += vec(0, i);
+                ret[j, i] += vec[0, i];
             }
         }
         return ret;
@@ -821,7 +821,7 @@ template <size_t M, size_t N>
         {
             for (size_t j = 0; j != M; ++j)
             {
-                ret(j, 0) += mat(j, ii) * vec(ii, 0);
+                ret[j, 0] += mat[j, ii] * vec[ii, 0];
             }
         }
     }
@@ -839,7 +839,7 @@ template <typename T, size_t M, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            ret(j, i) *= row_vector(0, i);
+            ret[j, i] *= row_vector[0, i];
         }
     }
     return ret;
@@ -859,7 +859,7 @@ template <typename T, size_t M, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            ret(0, j) += row_vectors(j, i) * col_vectors(i, j);
+            ret[0, j] += row_vectors[j, i] * col_vectors[i, j];
         }
     }
     return ret;
@@ -951,7 +951,7 @@ template <typename T_In, typename T_Out, size_t N>
         // Form multiplier.
         for (size_t j = p + 1; j != N; ++j)
         {
-            out(r_idx[j], p) /= out(r_idx[p], p);
+            out[r_idx[j], p] /= out[r_idx[p], p];
             // Eliminate [p].
             for (size_t i = p + 1; i != N; ++i)
             {
@@ -959,7 +959,7 @@ template <typename T_In, typename T_Out, size_t N>
             }
         }
     }
-    det *= out(r_idx[N - 1], N - 1); // multiply last diagonal element
+    det *= out[r_idx[N - 1], N - 1]; // multiply last diagonal element
 
     const std::array<size_t, N> ri(r_idx);
 
@@ -1145,7 +1145,7 @@ template <typename T, size_t M, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            ret(j, i) *= mat2(j, i);
+            ret(j, i) *= mat2[j, i];
         }
     }
     return ret;
@@ -1163,7 +1163,7 @@ template <std::floating_point R, typename T, size_t M, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            L1 += static_cast<R>(cx_abs(mat1(j, i) - mat2(j, i)));
+            L1 += static_cast<R>(cx_abs(mat1[j, i] - mat2[j, i]));
         }
     }
     return L1 / static_cast<R>(M * N);

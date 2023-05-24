@@ -93,6 +93,8 @@ struct iterable_converter
     }
 };
 
+// TODO: batch processor
+
 template <std::size_t Idx>
 struct iterable_indexer
 {

@@ -22,10 +22,10 @@ int flat_test()
         e = i++;
 
     constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
-    constexpr auto ReLU = matrix_activation_functions::Identifiers::ReLU;
-    constexpr auto PReLU = matrix_activation_functions::Identifiers::PReLU;
-    constexpr auto Sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto Swish = matrix_activation_functions::Identifiers::Swish;
+    constexpr auto ReLU     = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto PReLU    = matrix_activation_functions::Identifiers::PReLU;
+    constexpr auto Sigmoid  = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto Swish    = matrix_activation_functions::Identifiers::Swish;
 
     constexpr Layer_Signature a1{ 1, Identity };
     constexpr Layer_Signature a2{ 4, ReLU };
@@ -44,8 +44,8 @@ int flat_test()
 
     for (size_t i = 0; const auto& e : in)
     {
-        std::cout << ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e })(0, 0) << std::endl;
-        pred(i++, 0) = ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e })(0, 0);
+        std::cout << ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e })[0, 0] << std::endl;
+        pred[i++, 0] = ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e })[0, 0];
     }
 
     ptr_net->print_net();
@@ -65,8 +65,8 @@ int flat_test()
     {
         const auto res = ptr_net2->batch_forward_pass(static_matrix<float, 2, 1>{ e, e });
         std::cout << res << std::endl;
-        pred2(i, 0)   = res(0, 0);
-        pred2(i++, 1) = res(1, 0);
+        pred2[i, 0]   = res[0, 0];
+        pred2[i++, 1] = res[1, 0];
     }
 
     ptr_net3->init_from_ptr(ptr_net.get());
@@ -156,7 +156,7 @@ void layer_swap_test()
 
     constexpr size_t N = 8;
 
-    constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto AF    = matrix_activation_functions::Identifiers::Sigmoid;
     constexpr auto Swish = matrix_activation_functions::Identifiers::Swish;
 
     constexpr auto ls1 = Layer_Signature{ 1, AF };
@@ -174,29 +174,28 @@ void layer_swap_test()
 
     net1.init(random::randfloat);
     net2.init(random::randfloat);
-    //net3.init(random::randfloat);
-    //net4.init(random::randfloat);
+    // net3.init(random::randfloat);
+    // net4.init(random::randfloat);
 
     net1.print_net();
     net2.print_net();
-    //net3.print_net();
-    //net4.print_net();
+    // net3.print_net();
+    // net4.print_net();
 
     std::cout << net1.parameter_count() << " // " << sizeof(NNet) << std::endl;
 
-    //to_target_layer_swap(net1, net2, net3, net4);
-    auto[p1, p2] = layer_swap(net1, net2);
+    // to_target_layer_swap(net1, net2, net3, net4);
+    auto [p1, p2] = layer_swap(net1, net2);
 
     p1->print_net();
     p2->print_net();
-    //net3.print_net();
-    //net4.print_net();
-
+    // net3.print_net();
+    // net4.print_net();
 }
 
 int activation_functions_test()
 {
-    //random::init();
+    // random::init();
     stopwatch s0;
     using namespace ga_snn;
     using namespace ga_sm;
@@ -205,7 +204,7 @@ int activation_functions_test()
 
     ga_sm::static_matrix<float, N, 1> in{};
 
-    for (float i = -(N/2); auto& e : in)
+    for (float i = -(N / 2); auto& e : in)
         e = i++;
 
     constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
@@ -220,9 +219,9 @@ int activation_functions_test()
     constexpr Layer_Signature sigmoid_layer{ 4, Sigmoid };
     constexpr Layer_Signature swish_layer{ 2, Swish };
 
-    using NET  = static_neural_net<float, 1, identity_layer, relu_layer, prelu_layer, sigmoid_layer, swish_layer>;
+    using NET = static_neural_net<float, 1, identity_layer, relu_layer, prelu_layer, sigmoid_layer, swish_layer>;
 
-    auto ptr_net  = std::make_unique<NET>();
+    auto ptr_net = std::make_unique<NET>();
 
     ptr_net->init(random::randnormal, 0, 1);
 
@@ -241,21 +240,21 @@ int activation_functions_test()
 
 int main()
 {
-    //get_layer();
+    // get_layer();
 
-    //abench(100);
+    // abench(100);
 
-    //layer_swap_test();
+    // layer_swap_test();
 
-    //flat_test();
+    // flat_test();
 
-    //activation_functions_test();
+    // activation_functions_test();
 
     ga_sm::static_matrix<double, 6, 5> mat{};
     mat.fill(random::randnormal, 0, 10);
 
-    auto af = matrix_activation_functions::activation_function<decltype(mat),
-                                                               matrix_activation_functions::Identifiers::Softmax>();
+    auto af = matrix_activation_functions::
+        activation_function<decltype(mat), matrix_activation_functions::Identifiers::Softmax>();
 
     std::cout << mat << std::endl;
 

@@ -6,6 +6,7 @@
 #include <cassert>
 #include <list>
 #include <map>
+#include <utility>
 #include <vector>
 
 namespace mcts
@@ -179,7 +180,7 @@ private:
         return game_result_type::loss;
     }
 
-    static constexpr points_type points_increment(const game_result_type result)
+    static constexpr points_type points_increment(const game_result_type result) noexcept
     {
         switch (result)
         {
@@ -190,8 +191,7 @@ private:
         case game_result_type::loss:
             return 0;
         default:
-            // std::unreachable();
-            throw std::runtime_error("Reached unreachable code");
+            std::unreachable();
         }
     }
 

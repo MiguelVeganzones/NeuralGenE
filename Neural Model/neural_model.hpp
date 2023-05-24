@@ -40,6 +40,7 @@ public:
     using preprocessor      = Data_Preprocessor;
     using postprocessor     = Data_Postprocessor;
     using brain_output_type = Brain_Output_Type;
+    using value_type        = nn_value_type;
 
     inline static constexpr size_t s_Brain_layers = NNet::s_Layers;
 
@@ -63,6 +64,11 @@ public:
     {
     }
 
+    brain(const brain& other) :
+        m_Ptr_net{ std::make_unique<NNet>(*other.get()) }
+    {
+    }
+
     explicit brain(std::unique_ptr<NNet>&& other_ptr_net) :
         m_Ptr_net(std::move(other_ptr_net))
     {
@@ -73,8 +79,6 @@ public:
     {
     }
 
-    brain(const brain&) = default;
-
     brain& operator=(const brain& other)
     {
         if (other.m_Ptr_net)
@@ -84,8 +88,13 @@ public:
         return *this;
     }
 
-    brain& operator=(brain&&) = default;
-    ~brain()                  = default;
+    brain& operator=(brain&& other)
+    {
+        m_Ptr_net = std::move(other.m_Ptr_net);
+        return *this;
+    }
+
+    ~brain() = default;
 
     /* Getters and setters */
 
@@ -185,20 +194,20 @@ template <brain_type Brain>
 }
 
 template <brain_type Brain>
-auto in_place_brain_x_crossover(Brain& brain_a, Brain& brain_b) -> void
-{
-    in_place_net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
-}
-
-template <brain_type Brain>
-[[nodiscard]] auto brain_x_crossover(const Brain& brain_a, const Brain& brain_b) -> std::pair<Brain, Brain>
+[[nodiscard]] auto brain_crossover(const Brain& brain_a, const Brain& brain_b) -> std::pair<Brain, Brain>
 {
     auto [ptr_net1, ptr_net2] = net_x_crossover(*brain_a.get(), *brain_b.get());
     return { Brain{ std::move(ptr_net1) }, Brain{ std::move(ptr_net2) } };
 }
 
 template <brain_type Brain>
-auto to_target_brain_x_crossover(const Brain& parent_a, const Brain& parent_b, Brain& child_a, Brain& child_b) -> void
+auto in_place_brain_crossover(Brain& brain_a, Brain& brain_b) -> void
+{
+    in_place_net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
+}
+
+template <brain_type Brain>
+auto to_target_brain_crossover(const Brain& parent_a, const Brain& parent_b, Brain& child_a, Brain& child_b) -> void
 {
     to_target_net_x_crossover(*parent_a.get(), *parent_b.get(), *child_a.get_raw(), *child_b.get_raw());
 }

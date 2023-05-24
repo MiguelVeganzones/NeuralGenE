@@ -263,24 +263,22 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
         return m_Data.forward_pass(input_data);
     }
 
-    [[nodiscard]] static size_t layer_size(const int idx_to_target_layer)
+    [[nodiscard]] static size_t layer_size(const int idx_to_target_layer) noexcept
     {
         if (idx_to_target_layer == 0)
         {
             return current_layer_type::layer_size();
         }
-        // std::unreachable();
-        throw std::runtime_error("Reached unreachable code");
+        std::unreachable();
     }
 
-    [[nodiscard]] static size_t parameter_count(const int idx_to_target_layer)
+    [[nodiscard]] static size_t parameter_count(const int idx_to_target_layer) noexcept
     {
         if (idx_to_target_layer == 0)
         {
             return current_layer_type::parameter_count();
         }
-        // std::unreachable();
-        throw std::runtime_error("Reached unreachable code");
+        std::unreachable();
     }
 };
 
@@ -306,7 +304,7 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 
     // getter so that we can actually get a specific layer by index
     template <size_t Idx>
-    [[nodiscard]] constexpr auto& get()
+    [[nodiscard]] constexpr auto& get() noexcept
     {
         if constexpr (Idx == 0)
         { // if its 0, return this layer
@@ -320,7 +318,7 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
     }
 
     template <size_t Idx>
-    [[nodiscard]] constexpr auto const& const_get() const
+    [[nodiscard]] constexpr auto const& const_get() const noexcept
     {
         if constexpr (Idx == 0)
         { // if its 0, return this layer

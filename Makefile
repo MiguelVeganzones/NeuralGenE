@@ -1,4 +1,4 @@
-CXX = 				g++
+CXX = 				g++-12
 
 DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
 					-fdiagnostics-show-template-tree \
@@ -28,34 +28,55 @@ RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
 					-Wextra \
 					-Wshadow \
 					-Wconversion \
-					-pedantic \
 					-Werror \
+					-pedantic \
 					-mavx \
 					-fbounds-check \
 					-fconcepts-diagnostics-depth=3 \
 					-std=c++23 
 					
-PLT_CXXFLAGS =  -fdiagnostics-color=always \
-					-fdiagnostics-show-template-tree \
-					-fdiagnostics-path-format=inline-events \
-					-fdiagnostics-show-caret \
-					-O3 \
-					-Wall \
-					-Wextra \
-					-Wshadow \
-					-Wconversion \
-					-pedantic \
-					-mavx \
-					-fbounds-check \
-					-fconcepts-diagnostics-depth=3 \
-					-std=c++23 
+					
+NO_WERROR_DEBUG_CXXFLAGS =  -fdiagnostics-color=always \
+							-fdiagnostics-show-template-tree \
+							-fdiagnostics-path-format=inline-events \
+							-fdiagnostics-show-caret \
+							-g \
+							-Wall \
+							-Wextra \
+							-Wshadow \
+							-Wconversion \
+							-fsanitize=address \
+							-fsanitize=leak \
+							-fsanitize=undefined \
+							-pedantic \
+							-mavx \
+							-fbounds-check \
+							-fconcepts-diagnostics-depth=3 \
+							-std=c++23 
+
+NO_WERROR_RELEASE_CXXFLAGS =-fdiagnostics-color=always \
+							-fdiagnostics-show-template-tree \
+							-fdiagnostics-path-format=inline-events \
+							-fdiagnostics-show-caret \
+							-O3 \
+							-Wall \
+							-Wextra \
+							-Wshadow \
+							-Wconversion \
+							-pedantic \
+							-mavx \
+							-fbounds-check \
+							-fconcepts-diagnostics-depth=3 \
+							-std=c++23 
 
 RELEASE ?= 0
 ifeq (${RELEASE}, 1)
     CXXFLAGS = ${RELEASE_CXXFLAGS}
+    NO_WERROR_CXXFLAGS = ${NO_WERROR_RELEASE_CXXFLAGS}
 	OUT_DIR = bin/release
 else
     CXXFLAGS = ${DEBUG_CXXFLAGS}
+    NO_WERROR_CXXFLAGS = ${NO_WERROR_DEBUG_CXXFLAGS}
 	OUT_DIR = bin/debug
 endif
 
@@ -81,12 +102,15 @@ PLT_INCL =				-I./$(SNN_DIR) $(SNN_INCL) -I./$(C4_DIR) $(C4_INCL) \
 MINIMAX_SEARCH_INCL = 	-I./$(C4_DIR) $(C4_INCL) $(GENERAL_INCL) \
 						-I./$(NEURAL_MODEL_DIR) $(NEURAL_MODEL_INCL) \
 						-I./$(SNN_DIR) $(SNN_INCL)
-EVOLUTION_AGENT_INCL = 	$(GENERAL_INCL) -I./$(NEURAL_MODEL_DIR) $(NEURAL_MODEL_INCL)
+EVOLUTION_AGENT_INCL = 	$(GENERAL_INCL) -I./$(NEURAL_MODEL_DIR) $(NEURAL_MODEL_INCL) \
+						-I/usr/include/python3.10 \
+						-I/home/miguelveganzones/.local/lib/python3.10/site-packages/numpy/core/include
 
 PLT_LIB = 				-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib -l:libmatplot.a \
 						-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib/Matplot++ -l:libnodesoup.a
 
 MINIMAX_LIB = 			-ltbb
+EVOLUTION_AGENT_LIB =	-lpthread -lutil -ldl -lpython3.10 -Xlinker -export-dynamic
 
 all: mcts_main c4_main static_nn_main utility_main minimax_main neural_model_main evolution_agent_main
 
@@ -122,12 +146,12 @@ neural_model_main:
 		
 plotting_utility_main:
 	@mkdir -p $(PLT_DIR)/${OUT_DIR}
-	$(CXX) $(PLT_CXXFLAGS) $(PLT_INCL) $(PLT_LIB) -Xlinker --verbose $(PLT_DIR)/$@.cpp -o $(PLT_DIR)/${OUT_DIR}/$@
+	$(CXX) $(NO_WERROR_RELEASE_CXXFLAGS) $(PLT_INCL) $(PLT_LIB) -Xlinker --verbose $(PLT_DIR)/$@.cpp -o $(PLT_DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"
 
 evolution_agent_main:
 	@mkdir -p $(EVOLUTION_AGENT_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(EVOLUTION_AGENT_INCL) $(EVOLUTION_AGENT_DIR)/$@.cpp -o $(EVOLUTION_AGENT_DIR)/${OUT_DIR}/$@
+	$(CXX) $(NO_WERROR_CXXFLAGS) $(EVOLUTION_AGENT_INCL) $(EVOLUTION_AGENT_LIB) $(EVOLUTION_AGENT_DIR)/$@.cpp -o $(EVOLUTION_AGENT_DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"
 
 #$(MCTS_DIR)/%.o: %.hpp

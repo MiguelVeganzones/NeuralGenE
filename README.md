@@ -1,2 +1,4 @@
 # Genetic Evolution Environment
-Test.
+Neuroevolution
+Direct encoding
+Fixed structure, parameters evolve

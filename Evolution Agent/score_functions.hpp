@@ -9,10 +9,10 @@ namespace score_function_objects
 {
 
 template <typename Fn, typename... Args>
-    requires std::is_invocable_v<typename std::remove_const<Fn>::type, Args...>
+    requires std::is_invocable_v<typename std::remove_cv_t<Fn>, Args...>
 class score_function_object
 {
-    using function_type = typename std::remove_const<Fn>::type;
+    using function_type = typename std::remove_cv_t<Fn>;
 
 public:
     constexpr explicit score_function_object(function_type fn, Args... args) :
@@ -57,11 +57,11 @@ private:
 };
 
 template <typename Fn, typename T>
-    requires std::is_invocable_v<typename std::remove_const<Fn>::type, T, T, T>
+    requires std::is_invocable_v<typename std::remove_cv_t<Fn>, T, T, T>
 class score_function_object<Fn, T, T, T>
 {
 public:
-    using function_type = typename std::remove_const<Fn>::type;
+    using function_type = typename std::remove_cv_t<Fn>;
 
     constexpr explicit score_function_object(function_type fn) :
         m_Fn{ fn }

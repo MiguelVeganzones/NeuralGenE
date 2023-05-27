@@ -88,6 +88,7 @@ PLT_DIR = Plotting
 NEURAL_MODEL_DIR = Neural\ Model
 MINIMAX_SEARCH_DIR = Minimax\ Tree\ Search
 EVOLUTION_AGENT_DIR = Evolution\ Agent
+C4_AGENT_TRAINING_DIR = c4\ Agent\ Training
 
 UTILITY_INCL =		
 GENERAL_INCL =			-I./$(UTILITY_DIR)
@@ -105,12 +106,14 @@ MINIMAX_SEARCH_INCL = 	-I./$(C4_DIR) $(C4_INCL) $(GENERAL_INCL) \
 EVOLUTION_AGENT_INCL = 	$(GENERAL_INCL) -I./$(NEURAL_MODEL_DIR) $(NEURAL_MODEL_INCL) \
 						-I/usr/include/python3.10 \
 						-I/home/miguelveganzones/.local/lib/python3.10/site-packages/numpy/core/include
+C4_AGENT_TRAINING_INCL = $(GENERAL_INCL) -I./$(C4_DIR) $(C4_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL)
 
 PLT_LIB = 				-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib -l:libmatplot.a \
 						-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib/Matplot++ -l:libnodesoup.a
 
 MINIMAX_LIB = 			-ltbb
 EVOLUTION_AGENT_LIB =	-lpthread -lutil -ldl -lpython3.10 -Xlinker -export-dynamic
+C4_AGENT_TRAINING_LIB = $(MINIMAX_LIB) $(EVOLUTION_AGENT_LIB)
 
 all: mcts_main c4_main static_nn_main utility_main minimax_main neural_model_main evolution_agent_main
 
@@ -152,6 +155,11 @@ plotting_utility_main:
 evolution_agent_main:
 	@mkdir -p $(EVOLUTION_AGENT_DIR)/${OUT_DIR}
 	$(CXX) $(NO_WERROR_CXXFLAGS) $(EVOLUTION_AGENT_INCL) $(EVOLUTION_AGENT_LIB) $(EVOLUTION_AGENT_DIR)/$@.cpp -o $(EVOLUTION_AGENT_DIR)/${OUT_DIR}/$@
+	@echo Built $@ successfully."\n"
+	
+c4_agent_training:
+	@mkdir -p $(C4_AGENT_TRAINING_DIR)/${OUT_DIR}
+	$(CXX) $(CXXFLAGS) $(C4_AGENT_TRAINING_INCL) $(C4_AGENT_TRAINING_LIB) $(C4_AGENT_TRAINING_DIR)/$@.cpp -o $(C4_AGENT_TRAINING__DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"
 
 #$(MCTS_DIR)/%.o: %.hpp

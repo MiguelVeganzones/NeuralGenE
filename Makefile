@@ -154,12 +154,12 @@ plotting_utility_main:
 
 evolution_agent_main:
 	@mkdir -p $(EVOLUTION_AGENT_DIR)/${OUT_DIR}
-	$(CXX) $(NO_WERROR_CXXFLAGS) $(EVOLUTION_AGENT_INCL) $(EVOLUTION_AGENT_LIB) $(EVOLUTION_AGENT_DIR)/$@.cpp -o $(EVOLUTION_AGENT_DIR)/${OUT_DIR}/$@
+	$(CXX) $(CXXFLAGS) $(EVOLUTION_AGENT_INCL) $(EVOLUTION_AGENT_LIB) $(EVOLUTION_AGENT_DIR)/$@.cpp -o $(EVOLUTION_AGENT_DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"
 	
 c4_agent_training:
 	@mkdir -p $(C4_AGENT_TRAINING_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(C4_AGENT_TRAINING_INCL) $(C4_AGENT_TRAINING_LIB) $(C4_AGENT_TRAINING_DIR)/$@.cpp -o $(C4_AGENT_TRAINING__DIR)/${OUT_DIR}/$@
+	$(CXX) $(CXXFLAGS) $(C4_AGENT_TRAINING_INCL) $(C4_AGENT_TRAINING_LIB) $(C4_AGENT_TRAINING_DIR)/$@.cpp -o $(C4_AGENT_TRAINING_DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"
 
 #$(MCTS_DIR)/%.o: %.hpp

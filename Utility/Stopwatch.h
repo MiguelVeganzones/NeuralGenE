@@ -69,10 +69,10 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<void, Fn, Args...>
-    [[maybe_unused]] static measurement_units benchmark(Fn fn, Args... args)
+    [[maybe_unused]] static measurement_units benchmark(Fn fn, Args&&... args)
     {
         const auto start = std::chrono::steady_clock::now();
-        std::invoke(fn, args...);
+        std::invoke(fn, std::forward<Args>(args)...);
         const auto end = std::chrono::steady_clock::now();
 
         return end - start;
@@ -80,13 +80,13 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<void, Fn, Args...>
-    [[maybe_unused]] static precision_totalizer multiple_run_bench(size_t n, Fn fn, Args... args)
+    [[maybe_unused]] static precision_totalizer multiple_run_bench(size_t n, Fn fn, Args&&... args)
     {
         precision_totalizer totalizer{};
 
         while (n-- > 0)
         {
-            const measurement_units t_ns = benchmark(fn, args...);
+            const measurement_units t_ns = benchmark(fn, std::forward<Args>(args)...);
             totalizer.add(t_ns.count());
         }
 

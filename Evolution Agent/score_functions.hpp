@@ -2,202 +2,36 @@
 #define SCORE_FUNCTIONS
 
 #include <concepts>
-#include <stdexcept>
 #include <type_traits>
 
 namespace score_function_objects
 {
 
-template <typename Fn, typename... Args>
-    requires std::is_invocable_v<typename std::remove_cv_t<Fn>, Args...>
-class score_function_object
+template <typename Fn_Obj>
+concept Score_Function = requires(Fn_Obj fn) {
+                             typename Fn_Obj::return_type;
+                             typename Fn_Obj::input_type;
+                             {
+                                 std::invoke(fn, std::declval<typename Fn_Obj::input_type>())
+                                 } -> std::convertible_to<typename Fn_Obj::output_type>;
+                         };
+
+template <typename R, typename Fn, typename Arg>
+    requires std::is_invocable_r_v<R, Fn, Arg>
+class score_function
 {
-    using function_type = typename std::remove_cv_t<Fn>;
+    using function_type = Fn;
+    using input_type    = Arg;
+    using output_type   = R;
 
-public:
-    constexpr explicit score_function_object(function_type fn, Args... args) :
-        m_Fn{ fn },
-        m_Internal_state{ args... }
+    auto operator()(const input_type& input) noexcept -> output_type
     {
+        // return std::invoke(m_Fn, input);
+        return 0;
     }
-
-    score_function_object() :
-        m_Fn{ nullptr },
-        m_Internal_state{}
-    {
-    }
-
-    score_function_object(const score_function_object&) = default;
-    score_function_object(score_function_object&&)      = default;
-
-    score_function_object& operator=(const score_function_object& lhs)
-    {
-        m_Fn             = lhs.m_Fn;
-        m_Internal_state = lhs.m_Internal_state;
-        return *this;
-    }
-
-    score_function_object& operator=(score_function_object&& lhs)
-    {
-        m_Fn             = lhs.m_Fn;
-        m_Internal_state = std::move(lhs.m_Internal_state);
-        return *this;
-    }
-
-    auto operator()() const
-    {
-        return std::apply(m_Fn, m_Internal_state);
-    }
-
-    // TODO: give access to internal state and make a reset fucntion
-
-private:
-    function_type       m_Fn;
-    std::tuple<Args...> m_Internal_state;
 };
 
-template <typename Fn, typename T>
-    requires std::is_invocable_v<typename std::remove_cv_t<Fn>, T, T, T>
-class score_function_object<Fn, T, T, T>
-{
-public:
-    using function_type = typename std::remove_cv_t<Fn>;
-
-    constexpr explicit score_function_object(function_type fn) :
-        m_Fn{ fn }
-    {
-    }
-
-    score_function_object() :
-        m_Fn{ nullptr }
-    {
-    }
-
-    score_function_object(const score_function_object&) = default;
-    score_function_object(score_function_object&&)      = default;
-
-    score_function_object& operator=(const score_function_object& lhs)
-    {
-        m_Fn    = lhs.m_Fn;
-        m_Wins  = lhs.m_Wins;
-        m_Ties  = lhs.m_Ties;
-        m_Loses = lhs.m_Loses;
-        return *this;
-    }
-
-    score_function_object& operator=(score_function_object&& lhs)
-    {
-        m_Fn    = lhs.m_Fn;
-        m_Wins  = lhs.m_Wins;
-        m_Ties  = lhs.m_Ties;
-        m_Loses = lhs.m_Loses;
-        return *this;
-    }
-
-    ~score_function_object() = default;
-
-    auto operator()() const
-    {
-        return std::invoke(m_Fn, m_Wins, m_Ties, m_Loses);
-    }
-
-    void won()
-    {
-        ++m_Wins;
-    }
-
-    void tied()
-    {
-        ++m_Ties;
-    }
-
-    void lost()
-    {
-        ++m_Loses;
-    }
-
-    [[nodiscard]] auto wins() const
-    {
-        return m_Wins;
-    }
-
-    [[nodiscard]] auto ties() const
-    {
-        return m_Ties;
-    }
-
-    [[nodiscard]] auto losses() const
-    {
-        return m_Loses;
-    }
-
-    auto reset() -> void
-    {
-        m_Wins  = T();
-        m_Loses = T();
-        m_Ties  = T();
-    }
-
-private:
-    function_type m_Fn;
-    T             m_Wins{};
-    T             m_Ties{};
-    T             m_Loses{};
-};
-
-/* -------------------- Concept -------------------- */
-
-template <typename Fn, typename... Args>
-void score_function_object_dummy(score_function_object<Fn, Args...>)
-{
-}
-
-template <typename T>
-concept score_function_object_type = requires { score_function_object_dummy(std::declval<T>()); };
 
 } // namespace score_function_objects
-
-namespace score_functions
-{
-
-enum Identifiers
-{
-    Weighted_normalized_score
-};
-
-template <typename Return_Type, typename Input_Type>
-class score_functions
-{
-public:
-    using f_ptr = Return_Type (*)(Input_Type, Input_Type, Input_Type);
-
-private:
-    template <int Wins_Weight = 3, int Ties_Weight = 1, int Loses_Weight = 0>
-    inline static constexpr auto weighted_normalized_score(Input_Type wins, Input_Type ties, Input_Type loses) noexcept
-        -> Return_Type
-    {
-        const auto count = wins + ties + loses;
-
-        if (count == 0)
-            return 0;
-
-        const auto d_count = static_cast<double>(count);
-
-        return static_cast<Return_Type>(
-            (wins / d_count) * Wins_Weight + (ties / d_count) * Ties_Weight + (loses / d_count) * Loses_Weight
-        );
-    }
-
-public:
-    template <Identifiers Identifier, int... Args>
-        requires(sizeof...(Args) == 3)
-    inline static constexpr f_ptr choose_function()
-    {
-        if constexpr (Identifier == Weighted_normalized_score)
-            return weighted_normalized_score<Args...>;
-        throw std::invalid_argument("Unexpected activation function identifier");
-    }
-};
-} // namespace score_functions
 
 #endif // !SCORE_FUNCTIONS

@@ -80,16 +80,12 @@ void agent_construction()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t     = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
-    constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
-        choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
-    using score_function_t = score_function_objects::score_function_object<decltype(fn), float, float, float>;
-
-    using agent_t = evolution_agent::agent<brain_t, score_function_t>;
+    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using agent_t = evolution_agent::agent<brain_t>;
 
 
-    const auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
-    const auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
+    const auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
+    const auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
 
     agent_a.print();
     agent_b.print();
@@ -156,15 +152,11 @@ void simple_agent_evolution_test()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t     = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
-    constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
-        choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
-    using score_function_t = score_function_objects::score_function_object<decltype(fn), float, float, float>;
+    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using agent_t = evolution_agent::agent<brain_t>;
 
-    using agent_t = evolution_agent::agent<brain_t, score_function_t>;
-
-    auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
-    auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), score_function_t(fn));
+    auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
+    auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
 
     agent_a.print();
     agent_b.print();
@@ -271,12 +263,8 @@ void multi_agent_evolution_test()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t     = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
-    constexpr auto fn = score_functions::score_functions<float, std::uint16_t>::
-        choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
-    using score_function_t = score_function_objects::score_function_object<decltype(fn), float, float, float>;
-
-    using agent_t = evolution_agent::agent<brain_t, score_function_t>;
+    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using agent_t = evolution_agent::agent<brain_t>;
 
     using agent_input_type  = brain_t::value_type;
     using agent_output_type = brain_t::value_type;
@@ -325,8 +313,8 @@ void multi_agent_evolution_test()
 
     for (size_t i = 0; i != N; ++i)
     {
-        gen[0][i] = agent_t(brain_t(random::randnormal, 0, 0.01), score_function_t(fn));
-        gen[1][i] = agent_t(brain_t(random::randnormal, 0, 0.01), score_function_t(fn));
+        gen[0][i] = agent_t(brain_t(random::randnormal, 0, 0.01));
+        gen[1][i] = agent_t(brain_t(random::randnormal, 0, 0.01));
     }
 
     for (int i = 0; i != 100000; ++i)
@@ -412,6 +400,16 @@ int main()
     // agent_construction();
     // simple_agent_evolution_test();
     multi_agent_evolution_test();
+
+    using namespace score_function_objects;
+
+    auto fn = [](int) -> float { return 0.f; };
+
+    using sf = score_function<float, decltype(fn), int>;
+
+    [[maybe_unused]] auto func = sf();
+
+    // std::cout << func(0) << std::endl;
 
     return EXIT_SUCCESS;
 }

@@ -72,11 +72,11 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    constexpr void init(Fn&& fn, Args... args)
+    constexpr void init(Fn&& fn, Args&&... args)
     {
-        m_weights_mat.fill(fn, args...);
-        m_bias_vector.fill(fn, args...);
-        m_activation_function.fill(fn, args...);
+        m_weights_mat.fill(fn, std::forward<Args>(args)...);
+        m_bias_vector.fill(fn, std::forward<Args>(args)...);
+        m_activation_function.fill(fn, std::forward<Args>(args)...);
     }
 
     template <typename Fn>
@@ -224,9 +224,9 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void init(Fn&& fn, Args... args)
+    void init(Fn&& fn, Args&&... args)
     {
-        m_Data.init(fn, args...);
+        m_Data.init(fn, std::forward<Args>(args)...);
     }
 
     template <typename Fn>
@@ -333,10 +333,10 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void init(Fn&& fn, Args... args)
+    void init(Fn&& fn, Args&&... args)
     {
-        m_Data.init(fn, args...);
-        m_Next.init(fn, args...);
+        m_Data.init(fn, std::forward<Args>(args)...);
+        m_Next.init(fn, std::forward<Args>(args)...);
     }
 
     template <typename Fn>
@@ -470,9 +470,9 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void init(Fn&& fn, Args... args)
+    void init(Fn&& fn, Args&&... args)
     {
-        m_Layers.init(fn, args...);
+        m_Layers.init(fn, std::forward<Args>(args)...);
     }
 
     template <typename Fn>
@@ -648,14 +648,11 @@ concept static_neural_net_type = requires { nnet_dummy(std::declval<T>()); };
 // Factory functions
 
 template <static_neural_net_type NNet, typename Fn, typename... Args>
-    requires std::is_invocable_v<Fn, Args...>
-[[nodiscard]] std::unique_ptr<NNet> static_neural_net_factory(Fn&& fn, Args... args)
+    requires std::is_invocable_r_v<typename NNet::value_type, Fn, Args...>
+[[nodiscard]] std::unique_ptr<NNet> static_neural_net_factory(Fn&& fn, Args&&... args)
 {
-    using T = typename NNet::value_type;
-    static_assert(std::is_invocable_r_v<T, Fn, Args...>);
-
     auto ptr = std::make_unique<NNet>();
-    ptr->init(fn, args...);
+    ptr->init(fn, std::forward<Args>(args)...);
     return ptr;
 }
 

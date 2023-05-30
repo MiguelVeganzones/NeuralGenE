@@ -28,7 +28,7 @@ struct default_activation_function_parameters
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    constexpr void fill(Fn&&, Args...)
+    constexpr void fill(Fn&&, Args&&...)
     {
     }
 
@@ -252,9 +252,9 @@ struct Swish
 
         template <typename Fn, typename... Args>
             requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
+        constexpr void fill(Fn&& fn, Args&&... args)
         {
-            beta = restrict_value(std::invoke(fn, args...));
+            beta = restrict_value(std::invoke(fn, std::forward<Args>(args)...));
         }
 
         static T restrict_value(const T value)
@@ -322,9 +322,9 @@ struct PReLU
 
         template <typename Fn, typename... Args>
             requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
+        constexpr void fill(Fn&& fn, Args&&... args)
         {
-            alpha = restrict_value(std::invoke(fn, args...));
+            alpha = restrict_value(std::invoke(fn, std::forward<Args>(args)...));
         }
 
         [[nodiscard]] inline static T restrict_value(const T value)
@@ -393,10 +393,10 @@ struct Threshold
         }
 
         template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args... args)
+            requires std::is_invocable_r_v<T, Fn, Args&&...>
+        constexpr void fill(Fn&& fn, Args&&... args)
         {
-            threshold = restrict_value(std::invoke(fn, args...));
+            threshold = restrict_value(std::invoke(fn, std::forward<Args>(args)...));
         }
 
         [[nodiscard]] inline static T restrict_value(const T value)
@@ -503,9 +503,9 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<typename activation_function_type::T, Fn, Args...>
-    constexpr void fill(Fn&& fn, Args... args)
+    constexpr void fill(Fn&& fn, Args&&... args)
     {
-        params.fill(fn, args...);
+        params.fill(fn, std::forward<Args>(args)...);
     }
 
     static constexpr size_t parameter_count()

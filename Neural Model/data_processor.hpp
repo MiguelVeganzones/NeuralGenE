@@ -102,7 +102,7 @@ struct iterable_indexer
     inline static constexpr std::size_t index = Idx;
 
     template <iterable_type Input_Type, typename Output_Type>
-        requires std::is_convertible_v<typename Input_Type::value_type, Output_Type>
+        requires std::convertible_to<typename Input_Type::value_type, Output_Type>
     [[nodiscard]] static auto process(const Input_Type& input_range) -> Output_Type
     {
         assert(index < input_range.size());

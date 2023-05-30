@@ -6,6 +6,7 @@
 #include "score_functions.hpp"
 #include "static_matrix.hpp"
 #include "static_neural_net.hpp"
+#include <iostream>
 
 void multi_agent_evolution_test()
 {
@@ -49,29 +50,46 @@ void multi_agent_evolution_test()
     using agent_input_type  = brain_t::value_type;
     using agent_output_type = brain_t::value_type;
 
-    [[maybe_unused]] auto mutation_policy = []<std::floating_point F>(F f) -> F {
+    constexpr int                  P  = 5;
+    constexpr float                p0 = 0.00006f;
+    constexpr std::array<float, P> mutation_probabilities{ p0, p0, p0, p0, p0 };
+    std::array<float, P>           cummulative_mutation_probabilities{};
+
+    for (int i = 0; i != P; ++i)
+    {
+        for (int j = i; j != P; ++j)
+        {
+            cummulative_mutation_probabilities[j] += mutation_probabilities[i];
+        }
+    }
+    for (auto e : cummulative_mutation_probabilities)
+    {
+        std::cout << e << std::endl;
+    }
+
+    auto mutation_policy = [&]<std::floating_point F>(F f) -> F {
         const auto r = random::randfloat();
-        if (r >= 0.0009)
+        if (r >= cummulative_mutation_probabilities[4] * 2)
         {
             return f * F(0.9999);
         }
-        if (r < 0.00006)
+        if (r < cummulative_mutation_probabilities[0])
         {
             return random::randfloat();
         }
-        if (r < 0.00012)
+        if (r < cummulative_mutation_probabilities[1])
         {
-            return f * random::randnormal();
+            return f * (T(1) + random::randnormal(0, 0.001));
         }
-        if (r < 0.00018)
+        if (r < cummulative_mutation_probabilities[2])
         {
             return F{};
         }
-        if (r < 0.00024)
+        if (r < cummulative_mutation_probabilities[3])
         {
-            return f += random::randnormal(random::randnormal(), random::randfloat());
+            return f += random::randnormal(random::randnormal(), random::randfloat() * 0.1f);
         }
-        if (r < 0.00030)
+        if (r < cummulative_mutation_probabilities[4])
         {
             return random::randnormal(f, F(0.01));
         }
@@ -171,4 +189,9 @@ void multi_agent_evolution_test()
             std::cout << "Iteration: " << i << ". Min error: " << error[idx0] << std::endl;
         }
     }
+}
+
+int main()
+{
+    multi_agent_evolution_test();
 }

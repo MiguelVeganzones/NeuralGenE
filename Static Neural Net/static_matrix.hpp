@@ -330,10 +330,10 @@ public:
 
     template <class Fn, class... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void fill(Fn&& fn, Args&&... args) noexcept(noexcept(std::invoke(fn, args...)))
+    void fill(Fn&& fn, Args&&... args) noexcept(noexcept(std::invoke(fn, std::forward<Args>(args)...)))
     {
         for (iterator it = begin(); it != end(); ++it)
-            *it = static_cast<T>(std::invoke(fn, args...));
+            *it = static_cast<T>(std::invoke(fn, std::forward<Args>(args)...));
     }
 
     constexpr void fill_n(iterator dest, const ptrdiff_t count, const T val) noexcept
@@ -379,6 +379,17 @@ public:
         std::transform(begin(), end(), ret.begin(), fn);
         return ret;
     }
+
+    // TODO Deducing this (not yet supported)
+    //  [[nodiscard]] constexpr auto&& begin(this auto&&) const noexcept
+    //  {
+    //      return m_Elems;
+    //  }
+
+    // [[nodiscard]] constexpr auto&& end(this auto&& self) noexcept
+    // {
+    //     return m_Elems + M * N;
+    // }
 
     [[nodiscard]] constexpr iterator begin() noexcept
     {
@@ -495,12 +506,12 @@ public:
      * \note Only works for floating point matrix value types
      * \throws std::logic_error (or other, implementation dependent) when divsion by zero
      */
-    constexpr void rescale_L_1_1_norm(const float norm = 1.f)
+    constexpr void rescale_L_1_1_norm(const T norm = T(1)) noexcept(false)
         requires std::is_floating_point_v<T>
     {
         assert(norm != 0.f);
-        const T sum    = this->sum();
-        const T factor = norm / sum;
+        const auto sum    = sum();
+        const auto factor = static_cast<T>(norm / sum);
         for (auto& e : *this)
             e *= factor;
     }

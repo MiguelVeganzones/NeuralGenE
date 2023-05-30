@@ -53,33 +53,30 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<nn_value_type, Fn, Args...>
-    explicit brain(Fn&& fn, Args... args) :
+    explicit brain(Fn&& fn, Args&&... args) noexcept :
         m_Ptr_net{ std::make_unique<NNet>() }
     {
-        m_Ptr_net->init(fn, args...);
+        m_Ptr_net->init(fn, std::forward<Args>(args)...);
     }
 
-    explicit brain(const NNet& net) :
+    explicit brain(const NNet& net) noexcept :
         m_Ptr_net{ std::make_unique<NNet>(net) }
     {
     }
 
-    brain(const brain& other) :
+    brain(const brain& other) noexcept :
         m_Ptr_net{ std::make_unique<NNet>(*other.get()) }
     {
     }
 
-    explicit brain(std::unique_ptr<NNet>&& other_ptr_net) :
+    explicit brain(std::unique_ptr<NNet>&& other_ptr_net) noexcept :
         m_Ptr_net(std::move(other_ptr_net))
     {
     }
 
-    brain(brain&& other) :
-        m_Ptr_net(std::move(other.m_Ptr_net))
-    {
-    }
+    brain(brain&& other) noexcept = default;
 
-    brain& operator=(const brain& other)
+    brain& operator=(const brain& other) noexcept
     {
         if (other.m_Ptr_net)
             m_Ptr_net = std::make_unique(*other.m_Ptr_net);
@@ -88,11 +85,7 @@ public:
         return *this;
     }
 
-    brain& operator=(brain&& other)
-    {
-        m_Ptr_net = std::move(other.m_Ptr_net);
-        return *this;
-    }
+    brain& operator=(brain&& other) noexcept = default;
 
     ~brain() = default;
 
@@ -117,9 +110,9 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<nn_value_type, Fn, Args...>
-    void init(Fn&& fn, Args... args)
+    void init(Fn&& fn, Args&&... args)
     {
-        m_Ptr_net->init(fn, args...);
+        m_Ptr_net->init(fn, std::forward<Args>(args)...);
     }
 
     template <typename Brain_Input_Type>

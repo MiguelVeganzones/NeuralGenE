@@ -617,12 +617,19 @@ public:
         return m_Layers.forward_pass(ga_sm::static_matrix<value_type, 1, 1>{ input_value })(0, 0);
     }
 
-    template <size_t Other_Batch_Size, Layer_Signature... Other_Signatures>
-    void init_from_ptr(const static_neural_net<T, Other_Batch_Size, Other_Signatures...>* const src_ptr)
-        requires(
-            (sizeof...(Signatures) == sizeof...(Other_Signatures)) &&
-            std::bool_constant<((Signatures == Other_Signatures) && ...)>::value
-        )
+    // TODO: remove
+    // template <size_t Other_Batch_Size, Layer_Signature... Other_Signatures>
+    // void init_from_ptr(const static_neural_net<T, Other_Batch_Size, Other_Signatures...>* const src_ptr)
+    //     requires(
+    //         (sizeof...(Signatures) == sizeof...(Other_Signatures)) &&
+    //         std::bool_constant<((Signatures == Other_Signatures) && ...)>::value
+    //     )
+    // {
+    //     std::memcpy(this, src_ptr, sizeof(static_neural_net));
+    // }
+
+    template <size_t Other_Batch_Size>
+    void init_from_ptr(const static_neural_net<T, Other_Batch_Size, Signatures...>* const src_ptr)
     {
         std::memcpy(this, src_ptr, sizeof(static_neural_net));
     }
@@ -693,7 +700,6 @@ template <static_layer_type Layer>
 inline void in_place_layer_x_crossover(Layer& layer1, Layer& layer2)
 {
     in_place_x_crossover(layer1.get_weights_mat(), layer2.get_weights_mat());
-
     in_place_x_crossover(layer1.get_bias_vector(), layer2.get_bias_vector());
 }
 
@@ -852,8 +858,10 @@ template <std::floating_point R, size_t N, static_neural_net_type NNet>
  * \return
  */
 template <std::floating_point R, static_layer_type Layer1, static_layer_type Layer2>
-    requires(Layer1::s_Inputs == Layer2::s_Inputs) && (Layer1::s_Outputs == Layer2::s_Outputs) &&
-    (Layer1::s_Activation == Layer2::s_Activation)
+    requires(
+        (Layer1::s_Inputs == Layer2::s_Inputs) && (Layer1::s_Outputs == Layer2::s_Outputs) &&
+        (Layer1::s_Activation == Layer2::s_Activation)
+    )
 [[nodiscard]] R L1_layer_distance(Layer1 const& layer1, Layer2 const& layer2)
 {
     return normalized_L1_distance<R>(layer1.get_weights_mat(), layer2.get_weights_mat()) +

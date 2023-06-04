@@ -63,9 +63,9 @@ namespace helper_functions
 template <typename T>
 void pointer_value_swap(T* r, T* s)
 {
-    auto temp = *r;
-    *r        = *s;
-    *s        = temp;
+    auto temp = std::move(*r);
+    *r        = std::move(*s);
+    *s        = std::move(temp);
 }
 
 } // namespace helper_functions

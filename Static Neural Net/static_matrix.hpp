@@ -19,6 +19,7 @@
 #include <type_traits>
 
 #include "Random.h"
+#include "Stopwatch.h"
 #include "cx_helper_functions.h"
 
 
@@ -772,6 +773,52 @@ template <typename T, size_t M, size_t K, size_t N>
     return ret;
 }
 
+// // TODO check impl
+// template <size_t M, size_t K, size_t N>
+// [[nodiscard]] constexpr static_matrix<float, M, N> matrix_mul_avx(
+//     static_matrix<float, M, K> const& mat1, static_matrix<float, K, N> const& mat2
+// ) noexcept
+// {
+//     static_matrix<float, M, N> ret{};
+//     static_matrix<float, N, K> tmat2 = transpose(mat2);
+
+//     if constexpr (K > 7)
+//     {
+//         for (size_t j = 0; j != M; ++j)
+//         {
+//             for (size_t jj = 0; jj < K - 7; jj += 8)
+//             {
+//                 // std::cout << "Here2\n";
+//                 const __m256 row_piece = _mm256_loadu_ps(mat1.m_Elems + j * K + jj);
+//                 for (size_t k = 0; k != N; ++k)
+//                 {
+//                     // std::cout << "Here3\n";
+//                     const __m256 v_piece = _mm256_loadu_ps(tmat2.m_Elems + k * K + jj);
+
+//                     const __m256 m256_dot_piece = _mm256_dp_ps(v_piece, row_piece, 0xf1); // compare 0xff with 0xf1
+
+//                     const auto float8_dot_piece = std::bit_cast<std::array<float, 8>>(m256_dot_piece);
+//                     ret[j, k] += float8_dot_piece[0] + float8_dot_piece[4]; // Now without UB! std::bit_cast edition
+//                 }
+//             }
+//         }
+//     }
+//     if constexpr (K % 8 != 0)
+//     {
+//         for (size_t j = 0; j != M; ++j)
+//         {
+//             for (size_t k = (K & (~static_cast<size_t>(7))); k < K; ++k)
+//             {
+//                 for (size_t i = 0; i != N; ++i)
+//                 {
+//                     ret[j, i] += mat1[j, k] * mat2[k, i];
+//                 }
+//             }
+//         }
+//     }
+//     return ret;
+// }
+
 template <typename T, size_t M, size_t N>
 [[nodiscard]] constexpr static_matrix<T, M, N> matrix_vec_add(
     static_matrix<T, M, N> const& mat, static_matrix<T, 1, N> const& vec
@@ -820,7 +867,7 @@ template <size_t M, size_t N>
                 const __m256 m256_dot_piece = _mm256_dp_ps(v_piece, row_piece, 0xf1); // compare 0xff with 0xf1
 
                 const auto float8_dot_piece = std::bit_cast<std::array<float, 8>>(m256_dot_piece);
-                ret(j, 0) += float8_dot_piece[0] + float8_dot_piece[4]; // Now without UB! std::bit_cast edition
+                ret[j, 0] += float8_dot_piece[0] + float8_dot_piece[4]; // Now without UB! std::bit_cast edition
             }
         }
     }
@@ -1068,9 +1115,6 @@ template <std::floating_point T, size_t M, size_t N>
     return true;
 }
 
-/*
- */
-
 /**
  * \brief Inverts N*N matrix using gauss-jordan reduction with pivoting
  *        Not the most stable algorithm, nor the most efficient in space or time
@@ -1140,7 +1184,21 @@ template <typename T, size_t N>
     {
         for (size_t i = j + 1; i != N; ++i)
         {
-            std::swap(ret(j, i), ret(i, j));
+            std::swap(ret[j, i], ret[i, j]);
+        }
+    }
+    return ret;
+}
+
+template <typename T, size_t M, size_t N>
+[[nodiscard]] constexpr static_matrix<T, N, M> transpose(static_matrix<T, M, N> const& scr)
+{
+    static_matrix<T, N, M> ret{};
+    for (size_t j = 0; j != M; ++j)
+    {
+        for (size_t i = 0; i != N; ++i)
+        {
+            ret[i, j] = scr[j, i];
         }
     }
     return ret;

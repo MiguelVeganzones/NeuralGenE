@@ -20,14 +20,28 @@ template <typename R, typename Fn, typename Arg>
     requires std::is_invocable_r_v<R, Fn, Arg>
 class score_function
 {
+public:
     using function_type = Fn;
     using input_type    = Arg;
     using output_type   = R;
 
+    Fn m_Fn;
+
+    score_function(Fn fn) noexcept :
+        m_Fn(fn)
+    {
+    }
+
+    score_function() noexcept                                 = delete;
+    score_function(const score_function&) noexcept            = default;
+    score_function(score_function&&) noexcept                 = default;
+    score_function& operator=(const score_function&) noexcept = default;
+    score_function& operator=(score_function&&) noexcept      = default;
+    ~score_function() noexcept                                = default;
+
     auto operator()(const input_type& input) noexcept -> output_type
     {
-        // return std::invoke(m_Fn, input);
-        return 0;
+        return std::invoke(m_Fn, input);
     }
 };
 

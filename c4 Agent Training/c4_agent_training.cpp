@@ -12,9 +12,6 @@ void multi_agent_evolution_test()
 {
     random::init();
 
-    // using namespace ga_snn;
-    // using namespace ga_sm;
-
     [[maybe_unused]] constexpr auto AF_relu    = matrix_activation_functions::Identifiers::ReLU;
     [[maybe_unused]] constexpr auto AF_thresh  = matrix_activation_functions::Identifiers::Threshold;
     [[maybe_unused]] constexpr auto AF_sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
@@ -40,16 +37,11 @@ void multi_agent_evolution_test()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t     = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
-    constexpr auto fn = score_functions::score_functions<float, std::uint16_t>::
-        choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
-    using score_function_t = score_function_objects::score_function_object<decltype(fn), float, float, float>;
+    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using agent_t = evolution_agent::agent<brain_t>;
 
-    using agent_t = evolution_agent::agent<brain_t, score_function_t>;
-
-    using agent_input_type  = brain_t::value_type;
-    using agent_output_type = brain_t::value_type;
-
+    using agent_input_type            = brain_t::value_type;
+    using agent_output_type           = brain_t::value_type;
     constexpr int                  P  = 5;
     constexpr float                p0 = 0.00006f;
     constexpr std::array<float, P> mutation_probabilities{ p0, p0, p0, p0, p0 };
@@ -57,10 +49,8 @@ void multi_agent_evolution_test()
 
     for (int i = 0; i != P; ++i)
     {
-        for (int j = i; j != P; ++j)
-        {
-            cummulative_mutation_probabilities[j] += mutation_probabilities[i];
-        }
+        cummulative_mutation_probabilities[i] =
+            mutation_probabilities[i] + (i > 0 ? cummulative_mutation_probabilities[i - 1] : 0);
     }
     for (auto e : cummulative_mutation_probabilities)
     {
@@ -73,17 +63,21 @@ void multi_agent_evolution_test()
         {
             return f * F(0.9999);
         }
+        if (r >= cummulative_mutation_probabilities[4])
+        {
+            return f;
+        }
         if (r < cummulative_mutation_probabilities[0])
         {
             return random::randfloat();
         }
         if (r < cummulative_mutation_probabilities[1])
         {
-            return f * (T(1) + random::randnormal(0, 0.001));
+            return f * (F(1) + random::randnormal(0, 0.001f));
         }
         if (r < cummulative_mutation_probabilities[2])
         {
-            return F{};
+            return F();
         }
         if (r < cummulative_mutation_probabilities[3])
         {
@@ -97,85 +91,19 @@ void multi_agent_evolution_test()
     };
 
     constexpr std::size_t N = 20;
-    constexpr std::size_t M = 1000;
 
     std::array<std::array<agent_t, N>, 2> gen{};
 
-    std::vector<float> input(M), output(M), pred(M), best_pred(M);
-
-    for (std::size_t i = 0; i != M; ++i)
-    {
-        input[i]  = agent_input_type(i);
-        output[i] = static_cast<agent_output_type>(std::sin((float)i / 50.f));
-    }
-
     for (size_t i = 0; i != N; ++i)
     {
-        gen[0][i] = agent_t(brain_t(random::randnormal, 0, 0.01), score_function_t(fn));
-        gen[1][i] = agent_t(brain_t(random::randnormal, 0, 0.01), score_function_t(fn));
+        gen[0][i] = agent_t(brain_t(random::randnormal, 0, 0.001f));
+        gen[1][i] = agent_t(brain_t(random::randnormal, 0, 0.001f));
     }
 
     for (int i = 0; i != 100000; ++i)
     {
-        std::array<float, N> error{};
-        const int            gen_idx      = i % 2;
-        const int            next_gen_idx = (i + 1) % 2;
-
-        for (int jj = 0; jj != N; ++jj)
-        {
-            for (int ii = 0; ii != M; ++ii)
-            {
-                pred[ii] = gen[gen_idx][jj](input[ii]);
-                error[jj] += std::pow(pred[ii] - output[ii], 2.f);
-            }
-            if (jj == 0 || (jj > 0 && error[jj] < error[jj - 1]))
-            {
-                best_pred = pred;
-            }
-        }
-
-        auto temp = std::array(error);
-        std::ranges::sort(temp);
-
-        const auto idx0 = std::ranges::find(error, temp[0]) - error.begin();
-        const auto idx1 = std::ranges::find(error, temp[1]) - error.begin();
-        const auto idx2 = std::ranges::find(error, temp[2]) - error.begin();
-        const auto idx3 = std::ranges::find(error, temp[3]) - error.begin();
-        const auto idx4 = std::ranges::find(error, temp[4]) - error.begin();
-        const auto idx5 = std::ranges::find(error, temp[5]) - error.begin();
-
-        gen[next_gen_idx][0] = gen[gen_idx][idx0].clone();
-        gen[next_gen_idx][1] = gen[gen_idx][idx1].clone();
-        // agent_t::to_target_crossover(
-        //     gen[gen_idx][idx0], gen[gen_idx][idx1], gen[next_gen_idx][0], gen[next_gen_idx][1]
-        // );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx2], gen[next_gen_idx][2], gen[next_gen_idx][3]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx3], gen[next_gen_idx][4], gen[next_gen_idx][5]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx4], gen[next_gen_idx][6], gen[next_gen_idx][7]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx5], gen[next_gen_idx][8], gen[next_gen_idx][9]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx1], gen[gen_idx][idx2], gen[next_gen_idx][10], gen[next_gen_idx][11]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx1], gen[gen_idx][idx3], gen[next_gen_idx][12], gen[next_gen_idx][13]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx2], gen[gen_idx][idx3], gen[next_gen_idx][14], gen[next_gen_idx][15]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx3], gen[gen_idx][idx4], gen[next_gen_idx][16], gen[next_gen_idx][17]
-        );
-        agent_t::to_target_crossover(
-            gen[gen_idx][idx4], gen[gen_idx][idx5], gen[next_gen_idx][18], gen[next_gen_idx][19]
-        );
+        const int gen_idx      = i % 2;
+        const int next_gen_idx = (i + 1) % 2;
 
         for (auto& e : gen[next_gen_idx])
         {
@@ -183,10 +111,6 @@ void multi_agent_evolution_test()
             {
                 e.mutate(mutation_policy);
             }
-        }
-        if (i % 51 == 0)
-        {
-            std::cout << "Iteration: " << i << ". Min error: " << error[idx0] << std::endl;
         }
     }
 }

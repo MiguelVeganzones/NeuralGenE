@@ -1,4 +1,7 @@
+#include "activation_functions.hpp"
 #include "evolution_agent.hpp"
+#include "neural_model.hpp"
+#include "static_neural_net.hpp"
 // #include "matplotlibcpp.h"
 #include <array>
 #include <iostream>
@@ -269,7 +272,7 @@ void multi_agent_evolution_test()
     using agent_input_type  = brain_t::value_type;
     using agent_output_type = brain_t::value_type;
 
-    [[maybe_unused]] auto mutation_policy = []<std::floating_point F>(F f) -> F {
+    [[maybe_unused]] auto mutation_policy = []<std::floating_point F> [[nodiscard]] (F f) -> F {
         const auto r = random::randfloat();
         if (r >= 0.0009)
         {
@@ -317,7 +320,7 @@ void multi_agent_evolution_test()
         gen[1][i] = agent_t(brain_t(random::randnormal, 0, 0.01));
     }
 
-    for (int i = 0; i != 100000; ++i)
+    for (int i = 0; i != 10000; ++i)
     {
         std::array<float, N> error{};
         const int            gen_idx      = i % 2;
@@ -400,16 +403,6 @@ int main()
     // agent_construction();
     // simple_agent_evolution_test();
     multi_agent_evolution_test();
-
-    using namespace score_function_objects;
-
-    auto fn = [](int) -> float { return 0.f; };
-
-    using sf = score_function<float, decltype(fn), int>;
-
-    [[maybe_unused]] auto func = sf();
-
-    // std::cout << func(0) << std::endl;
 
     return EXIT_SUCCESS;
 }

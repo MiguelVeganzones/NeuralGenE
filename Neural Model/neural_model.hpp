@@ -3,23 +3,27 @@
 #ifndef NEURAL_MODEL
 #define NEURAL_MODEL
 
+#include "data_processor.hpp"
 #include <atomic>
 #include <concepts>
 #include <iostream>
 #include <memory>
 #include <type_traits>
 
-#include "data_processor.hpp"
-#include "static_neural_net.hpp"
-
 namespace ga_neural_model
 {
 
 template <typename NNet>
-concept neural_net_type = (
-    // More valid neural net types could be added here
-    ga_snn::static_neural_net_type<NNet>
-);
+concept neural_net_type = requires(NNet net) {
+                              net.print_net();
+                              net.print_address();
+                              net.forward_pass(std::declval<typename NNet::input_type>());
+                              net.mutate(std::declval<typename NNet::value_type (*)(typename NNet::value_type)>());
+                              net.mutate_set_layers(
+                                  std::declval<std::vector<std::size_t>>(),
+                                  std::declval<typename NNet::value_type (*)(typename NNet::value_type)>()
+                              );
+                          };
 
 template <
     neural_net_type                     NNet,
@@ -49,7 +53,7 @@ private:
     std::unique_ptr<NNet> m_Ptr_net;
 
 public:
-    brain() = default;
+    brain() noexcept = default;
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<nn_value_type, Fn, Args...>
@@ -87,7 +91,7 @@ public:
 
     brain& operator=(brain&& other) noexcept = default;
 
-    ~brain() = default;
+    ~brain() noexcept = default;
 
     /* Getters and setters */
 

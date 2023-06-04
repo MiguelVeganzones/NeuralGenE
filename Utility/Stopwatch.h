@@ -3,6 +3,7 @@
 #ifndef STOPWATCH
 #define STOPWATCH
 
+#include "Log.h"
 #include "Precision_totalizer.h"
 #include <chrono>
 #include <exception>
@@ -11,8 +12,6 @@
 #include <iostream>
 #include <map>
 #include <string>
-
-#include "Log.h"
 
 // imeplement stopwatch::timeUnit
 // https://github.com/martinus/nanobench/blob/master/src/include/nanobench.h
@@ -25,10 +24,10 @@ public:
     {
     }
 
-    stopwatch(stopwatch const&)           = delete;
-    stopwatch(stopwatch&&)                = delete;
-    stopwatch operator=(stopwatch const&) = delete;
-    stopwatch operator=(stopwatch&&)      = delete;
+    stopwatch(stopwatch const&)            = delete;
+    stopwatch(stopwatch&&)                 = default;
+    stopwatch& operator=(stopwatch const&) = delete;
+    stopwatch& operator=(stopwatch&&)      = default;
 
     ~stopwatch()
     {

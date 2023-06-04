@@ -246,7 +246,7 @@ int main()
 
     // layer_swap_test();
 
-    // flat_test();
+    flat_test();
 
     // activation_functions_test();
 

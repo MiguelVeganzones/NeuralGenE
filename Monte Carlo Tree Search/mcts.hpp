@@ -66,7 +66,7 @@ private:
 
 
 public:
-    mcts_search_engine(const game_state_type& game_state) :
+    mcts_search_engine(const game_state_type& game_state) noexcept :
         m_Initial_game_board(game_state),
         m_Monte_carlo_sampling{ mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } },
         m_Target_player{ m_Initial_game_board.current_player() }
@@ -75,11 +75,17 @@ public:
         std::cout << "Here!\n";
     }
 
-    mcts_search_engine() :
-        m_Initial_game_board{ game_state_type{} },
+    mcts_search_engine() noexcept :
         m_Monte_carlo_sampling{ mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } }
     {
     }
+
+    mcts_search_engine(const mcts_search_engine&) noexcept            = default;
+    mcts_search_engine(mcts_search_engine&&) noexcept                 = default;
+    mcts_search_engine& operator=(const mcts_search_engine&) noexcept = default;
+    mcts_search_engine& operator=(mcts_search_engine&&) noexcept      = default;
+    ~mcts_search_engine() noexcept                                    = default;
+
 
 public:
     /**
@@ -199,7 +205,7 @@ private:
 private:
     // FIXME: Remove public
 public:
-    game_state_type                m_Initial_game_board;
+    game_state_type                m_Initial_game_board{};
     sampling_states_container_type m_Monte_carlo_sampling;
     leaf_nodes_container_type      m_Leaf_nodes_idx{ 0 };
     player_type                    m_Target_player{};

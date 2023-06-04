@@ -37,13 +37,17 @@ public:
     using encode_type_equal       = typename game_board_type::encode_type_equal;
 
 public:
-    board(const game_board_type& board_type) :
+    board(const game_board_type& board_type) noexcept :
         m_Board_state{ board_type }
     {
         m_Valid_moves = calculate_valid_moves();
     }
 
-    board() = default;
+    board() noexcept                        = default;
+    board(const board&) noexcept            = default;
+    board(board&&) noexcept                 = default;
+    board& operator=(const board&) noexcept = default;
+    board& operator=(board&&) noexcept      = default;
 
     [[nodiscard]] auto get_valid_actions() const -> const valid_actions_container&
     {

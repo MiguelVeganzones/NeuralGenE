@@ -3,14 +3,26 @@
 
 #include "Random.h"
 #include "data_processor.hpp"
-#include "neural_model.hpp"
-#include "score_functions.hpp"
+#include <atomic>
 #include <iostream>
 
 namespace evolution_agent
 {
 
-template <ga_neural_model::brain_type Brain>
+template <typename T>
+concept brain_type = requires(T t) {
+                         typename T::brain_output_type;
+                         typename T::value_type;
+                         T();
+                         t.mutate(std::declval<typename T::value_type (*)(typename T::value_type)>());
+                         {
+                             brain_crossover(t, t)
+                             } -> std::convertible_to<std::pair<T, T>>;
+                         in_place_brain_crossover(t, t);
+                         to_target_brain_crossover(t, t, t, t);
+                     };
+
+template <brain_type Brain>
 class agent
 {
 public:

@@ -59,7 +59,9 @@ int flat_test()
 
     ptr_net2->print_net();
 
-    std::cout << "L1:" << L1_net_distance<double>(*ptr_net3.get(), *ptr_net2.get()) << std::endl;
+    std::cout << "L1:" << distance<float>(*ptr_net3.get(), *ptr_net2.get(), [](float a, float b) {
+        return std::abs(a - b);
+    }) << std::endl;
 
     for (size_t i = 0; const auto& e : in)
     {
@@ -252,6 +254,11 @@ int main()
 
     ga_sm::static_matrix<double, 6, 5> mat{};
     mat.fill(random::randnormal, 0, 10);
+
+    std::cout << mat << std::endl;
+    std::cout << ga_sm::reduce<1, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
+    std::cout << ga_sm::reduce<6, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
+    std::cout << ga_sm::reduce<1, 5>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
 
     auto af = matrix_activation_functions::
         activation_function<decltype(mat), matrix_activation_functions::Identifiers::Softmax>();

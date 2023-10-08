@@ -87,13 +87,13 @@ void agent_construction()
     using agent_t = evolution_agent::agent<brain_t>;
 
 
-    const auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
-    const auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
+    const auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) { return v; });
+    const auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) { return v; });
 
     agent_a.print();
     agent_b.print();
 
-    const auto [agent_c, agent_d] = agent_t::crossover(agent_a, agent_b);
+    const auto [agent_c, agent_d] = evolution_agent::crossover(agent_a, agent_b);
 
     agent_c.print();
     agent_d.print();
@@ -158,18 +158,6 @@ void simple_agent_evolution_test()
     using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
     using agent_t = evolution_agent::agent<brain_t>;
 
-    auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
-    auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)));
-
-    agent_a.print();
-    agent_b.print();
-
-    using agent_input_type = ga_sm::static_matrix<float, 3, 3>;
-
-    agent_input_type input{};
-    input.fill(random::randnormal, 0, 1);
-    constexpr float target = 0.75;
-
     auto mutation_policy = []<std::floating_point F>(F f) -> F {
         const auto r = random::randfloat();
         if (r >= 0.0009)
@@ -199,6 +187,17 @@ void simple_agent_evolution_test()
         return f;
     };
 
+    auto agent_a = agent_t(brain_t(random::randnormal, 0, 0.1), mutation_policy);
+    auto agent_b = agent_t(brain_t(random::randnormal, 0, 0.1), mutation_policy);
+
+    agent_a.print();
+    agent_b.print();
+
+    using agent_input_type = ga_sm::static_matrix<float, 3, 3>;
+
+    agent_input_type input{};
+    input.fill(random::randnormal, 0, 1);
+    constexpr float target = 0.75;
 
     for (int i = 0; i != 100000; ++i)
     {
@@ -213,7 +212,7 @@ void simple_agent_evolution_test()
             {
                 std::cout << "Pred a: " << pred_a << "  (Pred b: " << pred_b << ')' << std::endl;
             }
-            agent_b.mutate(mutation_policy);
+            agent_b.mutate();
         }
         else if (error_b < error_a)
         {
@@ -221,11 +220,11 @@ void simple_agent_evolution_test()
             {
                 std::cout << "Pred b: " << pred_b << "  (Pred a: " << pred_a << ')' << std::endl;
             }
-            agent_a.mutate(mutation_policy);
+            agent_a.mutate();
         }
         if (random::randfloat() < 0.0001)
         {
-            agent_t::in_place_crossover(agent_a, agent_b);
+            evolution_agent::in_place_crossover(agent_a, agent_b);
         }
         // if (i % 5000 == 0)
         // {
@@ -304,7 +303,11 @@ void multi_agent_evolution_test()
     constexpr std::size_t N = 20;
     constexpr std::size_t M = 1000;
 
-    std::array<std::array<agent_t, N>, 2> gen{};
+    std::vector<std::vector<agent_t>> gen(2);
+    for (auto& v : gen)
+    {
+        v.reserve(N);
+    }
 
     std::vector<float> input(M), output(M), pred(M), best_pred(M);
 
@@ -316,8 +319,8 @@ void multi_agent_evolution_test()
 
     for (size_t i = 0; i != N; ++i)
     {
-        gen[0][i] = agent_t(brain_t(random::randnormal, 0, 0.01));
-        gen[1][i] = agent_t(brain_t(random::randnormal, 0, 0.01));
+        gen[0].emplace_back(brain_t(random::randnormal, 0, 0.01), mutation_policy);
+        gen[1].emplace_back(brain_t(random::randnormal, 0, 0.01), mutation_policy);
     }
 
     for (int i = 0; i != 10000; ++i)
@@ -354,31 +357,31 @@ void multi_agent_evolution_test()
         // agent_t::to_target_crossover(
         //     gen[gen_idx][idx0], gen[gen_idx][idx1], gen[next_gen_idx][0], gen[next_gen_idx][1]
         // );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx0], gen[gen_idx][idx2], gen[next_gen_idx][2], gen[next_gen_idx][3]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx0], gen[gen_idx][idx3], gen[next_gen_idx][4], gen[next_gen_idx][5]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx0], gen[gen_idx][idx4], gen[next_gen_idx][6], gen[next_gen_idx][7]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx0], gen[gen_idx][idx5], gen[next_gen_idx][8], gen[next_gen_idx][9]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx1], gen[gen_idx][idx2], gen[next_gen_idx][10], gen[next_gen_idx][11]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx1], gen[gen_idx][idx3], gen[next_gen_idx][12], gen[next_gen_idx][13]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx2], gen[gen_idx][idx3], gen[next_gen_idx][14], gen[next_gen_idx][15]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx3], gen[gen_idx][idx4], gen[next_gen_idx][16], gen[next_gen_idx][17]
         );
-        agent_t::to_target_crossover(
+        evolution_agent::to_target_crossover(
             gen[gen_idx][idx4], gen[gen_idx][idx5], gen[next_gen_idx][18], gen[next_gen_idx][19]
         );
 
@@ -386,7 +389,7 @@ void multi_agent_evolution_test()
         {
             if (random::randfloat() < 0.6f)
             {
-                e.mutate(mutation_policy);
+                e.mutate();
             }
         }
         if (i % 51 == 0)

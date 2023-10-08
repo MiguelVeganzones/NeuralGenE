@@ -27,8 +27,8 @@ public:
 
     Fn m_Fn;
 
-    score_function(Fn fn) noexcept :
-        m_Fn(fn)
+    score_function(Fn&& fn) noexcept :
+        m_Fn(std::forward<Fn>(fn))
     {
     }
 
@@ -39,9 +39,12 @@ public:
     score_function& operator=(score_function&&) noexcept      = default;
     ~score_function() noexcept                                = default;
 
-    auto operator()(const input_type& input) noexcept -> output_type
+    template <typename Input_Type>
+        requires std::same_as<std::remove_cvref_t<input_type>, std::remove_cvref_t<Input_Type>> ||
+        std::is_same<std::decay_t<input_type>, std::decay_t<Input_Type>>
+    [[nodiscard]] auto operator()(Input_Type&& input) noexcept -> output_type
     {
-        return std::invoke(m_Fn, input);
+        return std::invoke(m_Fn, std::forward<decltype(input)>(input));
     }
 };
 

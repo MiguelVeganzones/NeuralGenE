@@ -3,6 +3,7 @@
 #include "Log.h"
 #include "Precision_totalizer.h"
 #include "Random.h"
+#include "Stopwatch.h"
 
 auto rng()
 {
@@ -12,8 +13,10 @@ auto rng()
 
 int main()
 {
-    auto   pt  = precision_totalizer{};
-    double sum = 0;
+    MEASURE_FUNCTION_EXECUTION_TIME();
+    stopwatch s("name");
+    auto      pt  = precision_totalizer{};
+    double    sum = 0;
 
     constexpr size_t n = 10'000'000;
 

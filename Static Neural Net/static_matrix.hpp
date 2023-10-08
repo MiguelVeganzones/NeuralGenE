@@ -307,13 +307,16 @@ public:
     using const_pointer   = const T*;
     using reference       = T&;
     using const_reference = const T&;
-    using iterator        = matrix_iterator<T, M * N>;
-    using const_iterator  = matrix_const_iterator<T, M * N>;
-    using row_matrix      = static_matrix<T, 1, N>;
-    using column_matrix   = static_matrix<T, M, 1>;
+    // using iterator        = pointer;
+    // using const_iterator  = const_pointer;
+    using iterator       = matrix_iterator<T, M * N>;
+    using const_iterator = matrix_const_iterator<T, M * N>;
+    using row_matrix     = static_matrix<T, 1, N>;
+    using column_matrix  = static_matrix<T, M, 1>;
 
     inline static constexpr auto Size_y = M;
     inline static constexpr auto Size_x = N;
+    inline static constexpr auto Size   = N * M;
 
     T m_Elems[M * N];
 
@@ -377,7 +380,7 @@ public:
     [[nodiscard]] static_matrix apply_fn(Fn&& fn) const noexcept(noexcept(fn))
     {
         static_matrix ret{};
-        std::transform(begin(), end(), ret.begin(), fn);
+        std::transform(begin(), end(), ret.begin(), std::forward<Fn>(fn));
         return ret;
     }
 
@@ -402,14 +405,27 @@ public:
         return const_iterator(m_Elems);
     }
 
+    [[nodiscard]] constexpr const_iterator cbegin() const noexcept
+    {
+        return const_iterator(m_Elems);
+    }
+
     [[nodiscard]] constexpr iterator end() noexcept
     {
         return iterator(m_Elems, M * N);
+        // return m_Elems + M * N;
     }
 
     [[nodiscard]] constexpr const_iterator end() const noexcept
     {
         return const_iterator(m_Elems, M * N);
+        // return m_Elems + M * N;
+    }
+
+    [[nodiscard]] constexpr const_iterator cend() const noexcept
+    {
+        return const_iterator(m_Elems, M * N);
+        // return m_Elems + M * N;
     }
 
     [[nodiscard]] inline constexpr reference operator[](const size_t j, const size_t i) noexcept
@@ -422,6 +438,20 @@ public:
     {
         assert(j < M and i < N);
         return m_Elems[j * N + i];
+    }
+
+    [[nodiscard]] inline constexpr reference operator[](const size_t j) noexcept
+        requires(M == 1 || N == 1)
+    {
+        assert(j < M * N);
+        return m_Elems[j];
+    }
+
+    [[nodiscard]] inline constexpr const_reference operator[](const size_t j) const noexcept
+        requires(M == 1 || N == 1)
+    {
+        assert(j < M * N);
+        return m_Elems[j];
     }
 
     [[nodiscard]] constexpr static_matrix operator+(static_matrix const& other) const
@@ -499,20 +529,20 @@ public:
     }
 
     /**
-     * \brief Rescales the L1 norm of the matrix to the input norm value by dividing every element by a constant
+     * \brief Rescales the L1 dist_op of the matrix to the input dist_op value by dividing every element by a constant
      * amount.
      *
-     * \param norm The resulting L1 norm of the matrix
+     * \param dist_op The resulting L1 dist_op of the matrix
      *
      * \note Only works for floating point matrix value types
      * \throws std::logic_error (or other, implementation dependent) when divsion by zero
      */
-    constexpr void rescale_L_1_1_norm(const T norm = T(1)) noexcept(false)
+    constexpr void rescale_L_1_1_norm(const T dist_op = T(1)) noexcept(false)
         requires std::is_floating_point_v<T>
     {
-        assert(norm != 0.f);
+        assert(dist_op != 0.f);
         const auto sum    = sum();
-        const auto factor = static_cast<T>(norm / sum);
+        const auto factor = static_cast<T>(dist_op / sum);
         for (auto& e : *this)
             e *= factor;
     }
@@ -574,42 +604,50 @@ concept static_matrix_type = requires { matrix_dummy(std::declval<T>()); };
 // -----------------------------------------------
 // -----------------------------------------------
 
-template <typename T2, typename T1, size_t M, size_t N>
-[[nodiscard]] constexpr static_matrix<T2, M, N> cast_to(static_matrix<T1, M, N> const& src) noexcept
+template <typename R, static_matrix_type Matrix>
+[[nodiscard]] constexpr auto cast_to(Matrix const& src) noexcept -> static_matrix<R, Matrix::Size_y, Matrix::Size_x>
 {
-    static_matrix<T2, M, N> ret{};
+    constexpr auto M = Matrix::Size_y;
+    constexpr auto N = Matrix::Size_x;
+
+    static_matrix<R, M, N> ret{};
     for (size_t j = 0; j != M; ++j)
     {
         for (size_t i = 0; i != N; ++i)
         {
-            ret(j, i) = static_cast<T2>(src[j, i]);
+            ret[j, i] = static_cast<R>(src[j, i]);
         }
     }
     return ret;
 }
 
-template <size_t Out_M, size_t Out_N, typename T, size_t M, size_t N>
-    requires(M* N == Out_M * Out_N)
-[[nodiscard]] constexpr static_matrix<T, Out_M, Out_N> cast_to_shape(static_matrix<T, M, N> const& src) noexcept
+template <size_t Out_M, size_t Out_N, static_matrix_type Matrix>
+    requires((Matrix::Size_y * Matrix::Size_x) == (Out_M * Out_N))
+[[nodiscard]] constexpr auto cast_to_shape(Matrix const& src) noexcept
+    -> static_matrix<typename Matrix::value_type, Out_M, Out_N>
 {
+    constexpr auto M = Matrix::Size_y;
+    constexpr auto N = Matrix::Size_x;
+    using T          = typename Matrix::value_type;
+
     static_matrix<T, Out_M, Out_N> ret{};
     std::memcpy(ret.m_Elems, src.m_Elems, N * M * sizeof(T));
     return ret;
 }
 
-template <typename T, size_t M, size_t N>
-std::ostream& operator<<(std::ostream& os, static_matrix<T, M, N> const& mat)
+template <static_matrix_type Matrix>
+std::ostream& operator<<(std::ostream& os, Matrix const& mat)
 {
-    if (!std::is_integral_v<T>)
+    if (!std::is_integral_v<typename Matrix::value_type>)
     {
         os << std::fixed;
         os << std::setprecision(4);
     }
     std::cout << "[";
-    for (size_t j = 0; j != M; ++j)
+    for (size_t j = 0; j != Matrix::Size_y; ++j)
     {
         std::cout << "\n [ ";
-        for (size_t i = 0; i != N; ++i)
+        for (size_t i = 0; i != Matrix::Size_x; ++i)
         {
             os << mat[j, i] << ' ';
         }
@@ -624,29 +662,29 @@ std::ostream& operator<<(std::ostream& os, static_matrix<T, M, N> const& mat)
  * \brief Returns exactly equals for integral types and nearly equals if else.
  *        Default tolerance used is 1e-4 for non integral types
  */
-template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr bool operator==(static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2)
+template <static_matrix_type Matrix>
+[[nodiscard]] constexpr auto operator==(Matrix const& mat1, Matrix const& mat2) -> bool
 {
-    if constexpr (std::is_floating_point_v<T>)
+    if constexpr (std::is_floating_point_v<typename Matrix::value_type>)
         return nearly_equals(mat1, mat2);
     else
         return exactly_equals(mat1, mat2);
 }
 
-template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr bool operator!=(static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2)
+template <static_matrix_type Matrix>
+[[nodiscard]] constexpr bool operator!=(Matrix const& mat1, Matrix const& mat2)
 {
     return !operator==(mat1, mat2);
 }
 
-template <typename T, size_t M, size_t N>
+template <static_matrix_type Matrix>
 [[nodiscard]] constexpr bool nearly_equals(
-    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2, const T epsilon = 1e-4
+    Matrix const& mat1, Matrix const& mat2, const typename Matrix::value_type epsilon = 1e-4
 ) noexcept
 {
-    for (size_t j = 0; j != M; ++j)
+    for (size_t j = 0; j != Matrix::Size_y; ++j)
     {
-        for (size_t i = 0; i != N; ++i)
+        for (size_t i = 0; i != Matrix::Size_x; ++i)
         {
             const auto d = mat1[j, i] - mat2[j, i];
             if (cx_helper_func::cx_abs(d) > epsilon)
@@ -656,14 +694,12 @@ template <typename T, size_t M, size_t N>
     return true;
 }
 
-template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr bool exactly_equals(
-    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2
-) noexcept
+template <static_matrix_type Matrix>
+[[nodiscard]] constexpr bool exactly_equals(Matrix const& mat1, Matrix const& mat2) noexcept
 {
-    for (size_t j = 0; j != M; ++j)
+    for (size_t j = 0; j != Matrix::M; ++j)
     {
-        for (size_t i = 0; i != N; ++i)
+        for (size_t i = 0; i != Matrix::N; ++i)
         {
             if (mat1[j, i] != mat2[j, i])
                 return false;
@@ -676,12 +712,15 @@ template <typename T, size_t M, size_t N>
 //------------ GA-Specific functionallity -------------------------------------
 //-----------------------------------------------------------------------------
 
-template <typename T, size_t M, size_t N>
-void in_place_x_crossover(static_matrix<T, M, N>& mat1, static_matrix<T, M, N>& mat2) noexcept
+template <static_matrix_type Matrix>
+void in_place_x_crossover(Matrix& mat1, Matrix& mat2) noexcept
 {
+    constexpr auto M = Matrix::Size_y;
+    constexpr auto N = Matrix::Size_x;
+
     // indices to slice. a: horizontal, b: vertical
-    const size_t a = static_cast<size_t>(random::randint(0, M));
-    const size_t b = static_cast<size_t>(random::randint(0, N));
+    const size_t a = random::randsize_t(0, M);
+    const size_t b = random::randsize_t(0, N);
 
     // return swapped original matrices to avoid irrelevant operations
     if ((a == 0 or a == M) and (b == 0 or b == N))
@@ -714,21 +753,16 @@ void in_place_x_crossover(static_matrix<T, M, N>& mat1, static_matrix<T, M, N>& 
     }
 }
 
-template <typename T, size_t M, size_t N>
-void to_target_x_crossover(
-    static_matrix<T, M, N> const& in_mat1,
-    static_matrix<T, M, N> const& in_mat2,
-    static_matrix<T, M, N>&       out_mat1,
-    static_matrix<T, M, N>&       out_mat2
-) noexcept
+template <static_matrix_type Matrix>
+void to_target_x_crossover(Matrix const& in_mat1, Matrix const& in_mat2, Matrix& out_mat1, Matrix& out_mat2) noexcept
 {
     // indices to slice. a: horizontal, b: vertical
-    const auto a = static_cast<size_t>(random::randint(0, M));
-    const auto b = static_cast<size_t>(random::randint(0, N));
+    const auto a = static_cast<size_t>(random::randint(0, Matrix::Size_y));
+    const auto b = static_cast<size_t>(random::randint(0, Matrix::Size_x));
 
-    for (size_t j = 0; j != M; ++j)
+    for (size_t j = 0; j != Matrix::Size_y; ++j)
     {
-        for (size_t i = 0; i != N; ++i)
+        for (size_t i = 0; i != Matrix::Size_x; ++i)
         {
             auto main_diagonal = (j < a) == (i < b);
             out_mat1[j, i]     = main_diagonal ? in_mat1[j, i] : in_mat2[j, i];
@@ -737,7 +771,7 @@ void to_target_x_crossover(
     }
 }
 
-template <typename Matrix>
+template <static_matrix_type Matrix>
 [[nodiscard]] std::pair<Matrix, Matrix> x_crossover(Matrix const& mat1, Matrix const& mat2) noexcept
 {
     // setup return matrices.
@@ -986,9 +1020,9 @@ template <typename T_In, typename T_Out, size_t N>
         // Find pivot element.
         for (size_t j = p + 1; j != N; ++j)
         {
-            if (cx_abs(out(r_idx[j], p)) > cx_abs(out(r_idx[p], p)))
+            if (cx_abs(out[r_idx[j], p]) > cx_abs(out[r_idx[p], p]))
             {
-                // Switch the index for the p pivot row if necessary.;
+                // Swap the index for the p pivot row if necessary.;
                 std::swap(r_idx[j], r_idx[p]);
                 det = -det;
                 // RIdx[p] now has the index of the row to consider the pth
@@ -1004,7 +1038,7 @@ template <typename T_In, typename T_Out, size_t N>
             );
         }
         // Multiply the diagonal elements.
-        det *= out(r_idx[p], p);
+        det *= out[r_idx[p], p];
 
         // Form multiplier.
         for (size_t j = p + 1; j != N; ++j)
@@ -1013,7 +1047,7 @@ template <typename T_In, typename T_Out, size_t N>
             // Eliminate [p].
             for (size_t i = p + 1; i != N; ++i)
             {
-                out(r_idx[j], i) -= out(r_idx[j], p) * out(r_idx[p], i);
+                out[r_idx[j], i] -= out[r_idx[j], p] * out[r_idx[p], i];
             }
         }
     }
@@ -1028,7 +1062,7 @@ template <typename T_In, typename T_Out, size_t N>
         {
             for (size_t i = 0; i != N; ++i)
             {
-                std::swap(out(j, i), out(r_idx[j], i));
+                std::swap(out[j, i], out[r_idx[j], i]);
             }
             std::swap(r_idx[j], r_idx[static_cast<size_t>(std::find(r_idx.begin(), r_idx.end(), j) - r_idx.begin())]);
         }
@@ -1072,20 +1106,20 @@ template <std::floating_point T, size_t M, size_t N>
     {
         for (size_t j = p + 1; j < M; ++j)
         {
-            if (cx_abs(scr(r_idx[p], p)) < cx_abs(scr(r_idx[j], p)))
+            if (cx_abs(scr[r_idx[p], p]) < cx_abs(scr[r_idx[j], p]))
             {
                 std::swap(r_idx[p], r_idx[j]);
             }
         }
 
-        if (scr(r_idx[p], p) == 0)
+        if (scr[r_idx[p], p] == 0)
             return false; // matrix is singular
 
         for (size_t i = p + 1; i < N; ++i)
         {
-            scr(r_idx[p], i) /= scr(r_idx[p], p);
+            scr[r_idx[p], i] /= scr[r_idx[p], p];
         }
-        scr(r_idx[p], p) = 1;
+        scr[r_idx[p], p] = 1;
 
         for (size_t j = 0; j != M; ++j)
         {
@@ -1107,7 +1141,7 @@ template <std::floating_point T, size_t M, size_t N>
         {
             for (size_t i = 0; i != N; ++i)
             {
-                std::swap(scr(j, i), scr(r_idx[j], i));
+                std::swap(scr[j, i], scr[r_idx[j], i]);
             }
             std::swap(r_idx[j], r_idx[static_cast<size_t>(std::find(r_idx.begin(), r_idx.end(), j) - r_idx.begin())]);
         }
@@ -1136,13 +1170,13 @@ template <typename T_In, std::floating_point T_Out = double, size_t N>
     {
         for (size_t i = 0; i != N; ++i)
         {
-            tmp(j, i) = static_cast<T_Out>(scr(j, i));
+            tmp[j, i] = static_cast<T_Out>(scr[j, i]);
         }
     }
     // I
     for (size_t j = 0; j != N; ++j)
     {
-        tmp(j, j + N) = 1;
+        tmp[j, j + N] = 1;
     }
     // tmp = ( I | M^-1 )
     const bool invertible = RREF(tmp);
@@ -1155,7 +1189,7 @@ template <typename T_In, std::floating_point T_Out = double, size_t N>
         {
             for (size_t i = 0; i != N; ++i)
             {
-                inverse(j, i) = tmp(j, i + N);
+                inverse[j, i] = tmp[j, i + N];
             }
         }
     }
@@ -1171,71 +1205,115 @@ template <typename T, size_t N>
     static_matrix<T, N, N> ret{};
     for (size_t i = 0; i != N; ++i)
     {
-        ret(i, i) = static_cast<T>(1);
+        ret[i, i] = static_cast<T>(1);
     }
     return ret;
 }
 
-template <typename T, size_t N>
-[[nodiscard]] constexpr static_matrix<T, N, N> transpose(static_matrix<T, N, N> const& scr)
-{
-    static_matrix<T, N, N> ret{ scr };
-    for (size_t j = 0; j != N - 1; ++j)
-    {
-        for (size_t i = j + 1; i != N; ++i)
-        {
-            std::swap(ret[j, i], ret[i, j]);
-        }
-    }
-    return ret;
-}
+// template <typename T, size_t N>
+// [[nodiscard]] constexpr static_matrix<T, N, N> transpose(static_matrix<T, N, N> const& scr)
+// {
+//     static_matrix<T, N, N> ret{ scr };
+//     for (size_t j = 0; j != N - 1; ++j)
+//     {
+//         for (size_t i = j + 1; i != N; ++i)
+//         {
+//             std::swap(ret[j, i], ret[i, j]);
+//         }
+//     }
+//     return ret;
+// }
 
 template <typename T, size_t M, size_t N>
 [[nodiscard]] constexpr static_matrix<T, N, M> transpose(static_matrix<T, M, N> const& scr)
 {
     static_matrix<T, N, M> ret{};
-    for (size_t j = 0; j != M; ++j)
+    if constexpr (M == N)
     {
-        for (size_t i = 0; i != N; ++i)
+        for (size_t j = 0; j != N - 1; ++j)
         {
-            ret[i, j] = scr[j, i];
+            for (size_t i = j + 1; i != N; ++i)
+            {
+                std::swap(ret[j, i], ret[i, j]);
+            }
+        }
+    }
+    else
+    {
+        for (size_t j = 0; j != M; ++j)
+        {
+            for (size_t i = 0; i != N; ++i)
+            {
+                ret[i, j] = scr[j, i];
+            }
         }
     }
     return ret;
 }
 
-template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr static_matrix<T, M, N> element_wise_mul(
-    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2
-)
+template <std::size_t Out_M, std::size_t Out_N, static_matrix_type Matrix, typename Fn>
+    requires((Out_M == 1 || Out_N == 1) &&
+             (Out_M == Matrix::Size_y || Out_N == Matrix::Size_x || Out_N == Out_M /* == 1*/) &&
+             std::is_invocable_r_v<
+                 typename Matrix::value_type,
+                 Fn,
+                 typename Matrix::value_type,
+                 typename Matrix::value_type>)
+[[nodiscard]] auto reduce(Matrix const& mat, Fn&& fn) -> static_matrix<typename Matrix::value_type, Out_M, Out_N>
 {
-    static_matrix<T, M, N> ret{ mat1 };
-    for (size_t j = 0; j != M; ++j)
+    using return_type     = static_matrix<typename Matrix::value_type, Out_M, Out_N>;
+    constexpr auto M      = Matrix::Size_y;
+    constexpr auto N      = Matrix::Size_x;
+    auto           ret    = return_type();
+    auto           cbegin = mat.cbegin();
+    for (std::size_t j = 0; j != M; ++j)
     {
-        for (size_t i = 0; i != N; ++i)
+        const auto out_j = Out_M == 1 ? 0 : j; // j % Out_M
+        for (std::size_t i = 0; i != N; ++i)
         {
-            ret(j, i) *= mat2[j, i];
+            const auto out_i  = Out_N == 1 ? 0 : i; // i % Out_N
+            ret[out_j, out_i] = fn(std::move(ret[out_j, out_i]), *(cbegin++));
         }
     }
     return ret;
 }
 
-// returns L1 distance divided by the number of elements
-template <std::floating_point R, typename T, size_t M, size_t N>
-[[nodiscard]] constexpr double normalized_L1_distance(
-    static_matrix<T, M, N> const& mat1, static_matrix<T, M, N> const& mat2
-)
+template <static_matrix_type Matrix>
+[[nodiscard]] constexpr Matrix element_wise_mul(Matrix const& mat1, Matrix const& mat2)
 {
-    using cx_helper_func::cx_abs;
-    R L1{};
-    for (size_t j = 0; j != M; ++j)
+    Matrix ret{ mat1 };
+    for (size_t j = 0; j != Matrix::M; ++j)
     {
-        for (size_t i = 0; i != N; ++i)
+        for (size_t i = 0; i != Matrix::N; ++i)
         {
-            L1 += static_cast<R>(cx_abs(mat1[j, i] - mat2[j, i]));
+            ret[j, i] *= mat2[j, i];
         }
     }
-    return L1 / static_cast<R>(M * N);
+    return ret;
+}
+
+/// @brief Accumulates dist_op(mat1_ij, mat2_ij) for all ij. If dist_op is the Ln dist_op, then this
+/// function returns the Ln dist_op between mat1 and mat2 to the power, i.e. Ln(mat1, mat2)^n
+/// @tparam Distance A Binary operation type (R, R) -> R
+/// @tparam R A floating point type
+/// @tparam Matrix A static matrix type
+/// @param mat1
+/// @param mat2
+/// @param dist_op Binary operation to accumulate over mat1 and mat2
+/// @return Distance between mat1 and mat2 defined by the Distance dist_op
+template <std::floating_point R, static_matrix_type Matrix, typename Distance>
+    requires std::is_invocable_r_v<R, Distance, typename Matrix::value_type, typename Matrix::value_type>
+[[nodiscard]] constexpr auto distance(Matrix const& mat1, Matrix const& mat2, Distance&& dist_op) -> R
+{
+    R distance{};
+    for (size_t j = 0; j != Matrix::Size_y; ++j)
+    {
+        for (size_t i = 0; i != Matrix::Size_x; ++i)
+        {
+            distance += std::invoke_r<R>(std::forward<Distance>(dist_op), mat1[j, i], mat2[j, i]);
+        }
+    }
+    return distance;
 }
 
 //-----------------------------------------------------------------------------
@@ -1246,8 +1324,8 @@ template <std::floating_point R, typename T, size_t M, size_t N>
 returns the element-wise type consistent average of a pack of matrices
 beware of overflow issues if matrices have large numbers or calculating the average over a big array
 */
-template <typename T, size_t M, size_t N>
-[[nodiscard]] constexpr static_matrix<T, M, N> matrix_average(std::same_as<static_matrix<T, M, N>> auto const&... mats)
+template <static_matrix_type Matrix>
+[[nodiscard]] constexpr Matrix matrix_average(std::same_as<Matrix> auto const&... mats)
 {
     return (mats + ...) / sizeof...(mats);
 }

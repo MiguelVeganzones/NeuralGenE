@@ -16,13 +16,13 @@ private:
 
     floating_point_type m_Stddev  = 0;
     floating_point_type m_Average = 0;
-    floating_point_type m_Min     = std::numeric_limits<floating_point_type>::infinity();
-    floating_point_type m_Max     = -std::numeric_limits<floating_point_type>::infinity();
+    floating_point_type m_Min     = std::numeric_limits<floating_point_type>::max();
+    floating_point_type m_Max     = std::numeric_limits<floating_point_type>::lowest();
     size_t              m_Samples = 0;
 
 public:
     template <std::floating_point Floating_Point_Value>
-    void add(Floating_Point_Value d)
+    void add(const Floating_Point_Value d)
     {
         ++m_Samples;
 
@@ -119,11 +119,12 @@ private:
                                                                 : added_value;
 
         // https://math.stackexchange.com/questions/775391/can-i-calculate-the-new-standard-deviation-when-adding-a-value-without-knowing-t
-        m_Stddev  = std::pow(static_cast<floating_point_type>(m_Samples - 1) /
-                                    static_cast<floating_point_type>(m_Samples) * m_Stddev * m_Stddev +
-                                (added_value - new_average) * (added_value - m_Average) /
-                                    static_cast<floating_point_type>(m_Samples),
-                            0.5);
+        m_Stddev = std::pow(
+            static_cast<floating_point_type>(m_Samples - 1) / static_cast<floating_point_type>(m_Samples) * m_Stddev *
+                    m_Stddev +
+                (added_value - new_average) * (added_value - m_Average) / static_cast<floating_point_type>(m_Samples),
+            0.5
+        );
         m_Average = new_average;
     }
 

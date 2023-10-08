@@ -7,6 +7,7 @@
 #include <cassert>
 #include <concepts>
 #include <ranges>
+#include <type_traits>
 
 namespace encoders
 {
@@ -68,11 +69,28 @@ struct c4_data_preprocessor
 
 // iterable concept
 template <typename T>
-concept iterable_type = requires(T& v) {
-                            v.begin();
-                            v.end();
+concept iterable_type = requires(T v) {
+                            typename T::iterator;
                             typename T::value_type;
-                            v.size();
+                            {
+                                v.begin()
+                                } -> std::same_as<typename T::iterator>;
+                            {
+                                v.end()
+                                } -> std::same_as<typename T::iterator>;
+                            {
+                                v.begin() != v.end()
+                                } -> std::same_as<bool>;
+                            // {
+                            //     std::declval<std::remove_cvref_t<std::decay_t<typename T::iterator>>>() + 1
+                            //     } -> std::same_as<typename T::iterator>;
+                            {
+                                std::remove_cvref_t<decltype(*v.begin())>()
+                                } -> std::same_as<typename T::value_type>;
+                            {
+                                v.size()
+                                } -> std::convertible_to<std::size_t>;
+                            std::is_copy_constructible_v<T>&& std::is_destructible_v<T>;
                         };
 
 struct iterable_converter
@@ -84,12 +102,19 @@ struct iterable_converter
         assert(ret.size() == input.size());
         auto it_out = ret.begin();
         auto it_in  = input.begin();
-        while (it_out != ret.end())
+        for (; it_out != ret.end();)
         {
             *(it_out++) = *(it_in++);
         }
         assert(it_in == input.end());
         return ret;
+    }
+
+    template <iterable_type Input_Iterable_Type, iterable_type Output_Iterable_Type>
+        requires std::is_same_v<Input_Iterable_Type, Output_Iterable_Type>
+    [[nodiscard]] static auto process(const Input_Iterable_Type& input) -> Output_Iterable_Type
+    {
+        return input;
     }
 };
 
@@ -106,7 +131,11 @@ struct iterable_indexer
     [[nodiscard]] static auto process(const Input_Type& input_range) -> Output_Type
     {
         assert(index < input_range.size());
-        return static_cast<Output_Type>(*(input_range.begin() + index));
+        auto p = input_range.begin();
+        for (std::size_t i = 0; i != Idx; ++i, ++p)
+        {
+        }
+        return static_cast<Output_Type>(*(p));
     }
 };
 
@@ -125,6 +154,7 @@ struct scalar_converter
     inline static constexpr int index = 0;
 
     template <typename Input_Type, typename Output_Type>
+        requires std::is_convertible_v<Input_Type, Output_Type>
     [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
     {
         return static_cast<Output_Type>(input_value);

@@ -35,6 +35,7 @@ struct random
 
     inline static int randint(const int min, const int max)
     {
+        assert(min <= max);
         std::uniform_int_distribution<int> u(min, max);
         return u(random::s_Random_engine);
     }
@@ -62,6 +63,7 @@ private:
     inline static std::mt19937 s_Random_engine;
 
     inline static auto s_Uniform_real = std::uniform_real_distribution<float>(0.f, 1.f);
+    // auto random = std::bind(s_Uniform_real, s_Random_engine);
 };
 
 // std::mutex mu_randint;

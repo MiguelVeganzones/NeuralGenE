@@ -1,5 +1,6 @@
 #include "Stopwatch.h"
 #include "minimax_search.hpp"
+#include "static_neural_net.hpp"
 #include <c4_board.hpp>
 #include <iostream>
 #include <limits>

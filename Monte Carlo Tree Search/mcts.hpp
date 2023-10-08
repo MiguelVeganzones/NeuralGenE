@@ -2,7 +2,7 @@
 #define MONTE_CARLO_TREE_SEARCH
 
 #include "Random.h"
-
+#include "error_handling.h"
 #include <cassert>
 #include <list>
 #include <map>
@@ -57,7 +57,7 @@ public:
 
 
 private:
-    enum game_result_type
+    enum struct game_result_type
     {
         win,
         loss,
@@ -196,9 +196,8 @@ private:
             return 0.001f;
         case game_result_type::loss:
             return 0;
-        default:
-            std::unreachable();
         }
+        assert_unreachable();
     }
 
 

@@ -17,19 +17,19 @@ Exception safety: https://www.boost.org/community/exception_safety.html
 class log
 {
 public:
-    static inline void add(const std::string s)
+    inline static void add(const std::string s)
     {
         s_log += s + '\n';
         ++s_logs;
     }
 
-    static inline void clear()
+    inline static void clear()
     {
         s_log  = s_Initial_message;
         s_logs = 0;
     }
 
-    static inline void flush_log()
+    inline static void flush_log()
     {
         if (!s_Initialized)
         {
@@ -48,12 +48,12 @@ public:
         std::cout << s_log << s_Final_message << '\n';
     }
 
-    [[nodiscard]] static inline std::string_view get()
+    [[nodiscard]] inline static std::string_view get()
     {
         return s_log.c_str();
     }
 
-    [[nodiscard]] static inline size_t get_num_logs()
+    [[nodiscard]] inline static size_t get_num_logs()
     {
         return s_logs;
     }
@@ -66,19 +66,19 @@ private:
         s_Initialized = true;
     }
 
-    static inline bool s_Initialized = false;
+    inline static bool s_Initialized = false;
 
-    static inline const std::time_t s_Compile_time = std::time(nullptr); // Current time
-    static inline const std::tm     s_tm           = *std::localtime(&s_Compile_time);
-    static inline std::stringstream s_Log_filename;
+    inline static const std::time_t s_Compile_time = std::time(nullptr); // Current time
+    inline static const std::tm     s_tm           = *std::localtime(&s_Compile_time);
+    inline static std::stringstream s_Log_filename;
 
-    static inline std::filesystem::path s_Logging_file_path = "../Logs";
+    inline static std::filesystem::path s_Logging_file_path = "../Logs";
 
-    static inline const std::string s_Initial_message = "<LOG>\n-----------------------------------------\n\n";
-    static inline const std::string s_Final_message   = "\n-----------------------------------------\n</LOG>";
+    inline static const std::string_view s_Initial_message = "<LOG>\n-----------------------------------------\n\n";
+    inline static const std::string_view s_Final_message   = "\n-----------------------------------------\n</LOG>";
 
-    static inline size_t      s_logs;
-    static inline std::string s_log = s_Initial_message;
+    inline static size_t      s_logs;
+    inline static std::string s_log = std::string(s_Initial_message);
 };
 
 #endif // !LOG_UTILITY

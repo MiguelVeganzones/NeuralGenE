@@ -5,45 +5,58 @@
 
 #include "Log.h"
 #include "Precision_totalizer.h"
+#include "error_handling.h"
 #include <chrono>
 #include <exception>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <source_location>
 #include <string>
 
 // imeplement stopwatch::timeUnit
 // https://github.com/martinus/nanobench/blob/master/src/include/nanobench.h
 
+#define USE_TIMER 1
+#if USE_TIMER
+#define MEASURE_FUNCTION_EXECUTION_TIME()                                                                              \
+    stopwatch _execution_time_stopwatch_(std::source_location::current().function_name())
+#else
+#define MEASURE_FUNCTION_EXECUTION_TIME()
+#endif
+
 class stopwatch
 {
+    using clock_type = std::chrono::steady_clock;
+
 public:
-    stopwatch() :
-        start{ std::chrono::steady_clock::now() }
+    stopwatch(const char* func = "Process") :
+        function_name{ func },
+        start{ clock_type::now() }
     {
     }
 
-    stopwatch(stopwatch const&)            = delete;
-    stopwatch(stopwatch&&)                 = default;
-    stopwatch& operator=(stopwatch const&) = delete;
-    stopwatch& operator=(stopwatch&&)      = default;
+    stopwatch(stopwatch const&)                    = delete;
+    stopwatch(stopwatch&&)                         = delete;
+    auto operator=(stopwatch const&) -> stopwatch& = delete;
+    auto operator=(stopwatch&&) -> stopwatch&      = delete;
 
     ~stopwatch()
     {
-        end                                    = std::chrono::steady_clock::now();
-        std::chrono::duration<double> duration = end - start;
+        const auto duration = clock_type::now() - start;
         std::cout << std::fixed << std::setprecision(4);
-        std::cout << "Process took " << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
-                  << "ms\t (" << std::chrono::duration_cast<std::chrono::microseconds>(duration).count() << "us)\t ("
+        std::cout << function_name << " took "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << "ms\t ("
+                  << std::chrono::duration_cast<std::chrono::microseconds>(duration).count() << "us)\t ("
                   << std::chrono::duration_cast<std::chrono::seconds>(duration).count() << " s)\t ("
                   << std::chrono::duration_cast<std::chrono::minutes>(duration).count() << " mins)\n"
                   << std::defaultfloat;
     }
 
 private:
-    std::chrono::time_point<std::chrono::steady_clock> start;
-    std::chrono::time_point<std::chrono::steady_clock> end;
+    const char*                  function_name{};
+    const clock_type::time_point start{};
 };
 
 /*
@@ -71,7 +84,7 @@ public:
     [[maybe_unused]] static measurement_units benchmark(Fn fn, Args&&... args)
     {
         const auto start = std::chrono::steady_clock::now();
-        std::invoke(fn, std::forward<Args>(args)...);
+        std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...);
         const auto end = std::chrono::steady_clock::now();
 
         return end - start;
@@ -85,7 +98,7 @@ public:
 
         while (n-- > 0)
         {
-            const measurement_units t_ns = benchmark(fn, std::forward<Args>(args)...);
+            const measurement_units t_ns = benchmark(std::forward<Fn>(fn), std::forward<Args>(args)...);
             totalizer.add(t_ns.count());
         }
 
@@ -148,8 +161,9 @@ private:
         return Nanoseconds;
     }
 
-    static size_t get_meaningful_ratio_values(TimeUnits units)
+    static constexpr size_t get_meaningful_ratio_values(TimeUnits units) noexcept
     {
+        static_assert(std::is_same_v<measurement_units, std::chrono::nanoseconds>);
         switch (units)
         {
         case Hours:
@@ -165,11 +179,7 @@ private:
         case Nanoseconds:
             return 1;
         }
-
-        using namespace std::string_literals;
-        const auto message = "Unidad de medida no reconocida o soportada: TimeUnits ("s + std::to_string(units) + ")."s;
-        log::add(message);
-        throw std::invalid_argument(message);
+        assert_unreachable();
     }
 };
 

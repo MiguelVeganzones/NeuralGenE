@@ -11,8 +11,7 @@
 namespace polystate
 {
 
-template <
-    size_t                 N,
+template <size_t                 N,
     std::unsigned_integral Interface_Type = unsigned int,
     std::unsigned_integral Repr_Type      = std::uint8_t,
     size_t                 Data_Unit_Bits = 2>
@@ -44,7 +43,6 @@ public:
         inline static constexpr std::size_t Size             = s_word_count;
         inline static constexpr int         data_packet_size = sizeof(result_type) / sizeof(value_type);
 
-        // TODO: Remove comments
         [[nodiscard]] auto operator()(const key& encoded_board) const noexcept -> result_type
         {
             result_type hash{};
@@ -52,12 +50,8 @@ public:
             {
                 auto value = static_cast<std::size_t>(encoded_board[i]);
                 auto offs  = (i % data_packet_size) * sizeof(value_type) * CHAR_BIT;
-                // std::cout << value << " ";
-                // std::cout << offs << std::endl;
-
                 hash ^= value << offs;
             }
-            // std::cout << "Hash: " << hash << std::endl;
             return hash;
         }
     };

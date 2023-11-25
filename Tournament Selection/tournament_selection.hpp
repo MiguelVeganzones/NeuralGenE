@@ -136,7 +136,8 @@ public:
 
 private:
     inline static auto L2_norm = []<std::floating_point R>(R a, R b) -> R {
-        return static_cast<R>(std::pow(a - b, 2));
+        const auto d = (a - b);
+        return static_cast<R>(d * d);
     };
 
     inline static auto L1_norm = []<std::floating_point R>(R a, R b) -> R { return static_cast<R>(std::abs(a - b)); };
@@ -187,7 +188,7 @@ public:
                 error[j] = 0;
                 for (std::size_t i = 0; i != M; ++i)
                 {
-                    error[j] += std::pow(m_Population[gen_idx][j](input[i]) - output[i], 2.f);
+                    error[j] += L2_norm(m_Population[gen_idx][j](input[i]), output[i]);
                 }
                 if (error[j] < error_threshold)
                 {
@@ -204,7 +205,7 @@ public:
             std::cout << min_error << " - " << max_error << std::endl;
 
 
-            std::array<float_normalized_type, s_Generation_size> agent_fitness{};
+            scores_container_type agent_fitness{};
             std::transform(error.cbegin(), error.cend(), agent_fitness.begin(), [max_error](float error_) {
                 return float_normalized_type(1 - error_ / max_error);
             });
@@ -282,7 +283,7 @@ private:
     template <typename Distance_Matrix>
         requires(Distance_Matrix::Size == s_Generation_size * s_Generation_size)
     [[nodiscard]] static auto calculate_diversity_scores(Distance_Matrix const& distance_matrix) noexcept
-        -> std::array<float_normalized_type, s_Generation_size>
+        -> scores_container_type
     {
         const auto cummulative_distance =
             reduce<1, s_Generation_size>(distance_matrix, [](auto a, auto b) { return a + b; });
@@ -296,11 +297,29 @@ private:
         return diversity_scores;
     }
 
+    // FIXME This is just a test
+    // TODO Rework heavily
     [[nodiscard]] static auto calculate_parent_fitness_scores(
-        float_normalized_array<s_Generation_size> const& fitness_scores,
-        float_normalized_array<s_Generation_size> const& diversity_scores
+        float_normalized_array<s_Generation_size> fitness_scores,
+        float_normalized_array<s_Generation_size> diversity_scores
     ) noexcept -> float_normalized_array<s_Generation_size>
     {
+        const auto min_fitness   = *std::ranges::min_element(fitness_scores);
+        const auto max_fitness   = *std::ranges::max_element(fitness_scores);
+        const auto min_diversity = *std::ranges::min_element(diversity_scores);
+        const auto max_diversity = *std::ranges::max_element(diversity_scores);
+
+        std::for_each(std::begin(fitness_scores), std::end(fitness_scores), [min_fitness, max_fitness](auto& e) {
+            return (e - min_fitness) / (max_fitness - min_fitness);
+        });
+
+        std::for_each(
+            std::begin(diversity_scores),
+            std::end(diversity_scores),
+            [min_diversity, max_diversity](auto& e) { return (e - min_diversity) / (max_diversity - min_diversity); }
+        );
+
+
         float_normalized_array<s_Generation_size> parent_fitness_scores{};
 
         std::transform(
@@ -309,7 +328,7 @@ private:
             diversity_scores.cbegin(),
             parent_fitness_scores.begin(),
             [](auto a, auto b) -> float_normalized_type {
-                return float_normalized_type((float)std::pow(a * a + b * b * 0.02, 0.5) / 1.41422f);
+                return float_normalized_type((float)std::sqrt(a * a + b * b * 0.2) / 1.41422f);
             }
         );
 
@@ -319,8 +338,7 @@ private:
     template <typename Distance_Matrix>
         requires(Distance_Matrix::Size == s_Generation_size * s_Generation_size)
     [[nodiscard]] auto select_parents(
-        Distance_Matrix const&                                      distance_matrix,
-        std::array<float_normalized_type, s_Generation_size> const& agent_fitness
+        Distance_Matrix const& distance_matrix, scores_container_type const& agent_fitness
     ) -> std::array<std::pair<std::size_t, std::size_t>, s_Generation_size / 2>
     {
         std::array<std::size_t, s_Generation_size> indexer{};
@@ -333,7 +351,8 @@ private:
             }
         );
 
-        const auto diversity_scores      = calculate_diversity_scores(distance_matrix);
+        const auto diversity_scores =
+            calculate_diversity_scores(distance_matrix); // TODO this should be an input parameter directly?
         const auto parent_fitness_scores = calculate_parent_fitness_scores(agent_fitness, diversity_scores);
 
         const auto total_fitness = std::accumulate(parent_fitness_scores.cbegin(), parent_fitness_scores.cend(), 0.f);
@@ -342,7 +361,7 @@ private:
         {
             e /= total_fitness;
         }
-        for (std::size_t i = 1; i != s_Generation_size; ++i)
+        for (std::size_t i = 1; i != s_Generation_size; ++i) // TODO rework as a function
         {
             cummulative_fitness[i] += cummulative_fitness[i - 1];
         }
@@ -374,12 +393,15 @@ private:
         if (random::randfloat() < 0.1)
         {
             std::cout << distance_matrix << '\n';
+            std::cout << "Agent fitness: \t";
             for (auto e : agent_fitness)
                 std::cout << (float)e << ' ';
             std::cout << '\n';
+            std::cout << "Diversity scores: \t";
             for (auto e : diversity_scores)
                 std::cout << (float)e << ' ';
             std::cout << '\n';
+            std::cout << "Parent fitness: \t";
             for (auto e : parent_fitness_scores)
                 std::cout << (float)e << ' ';
             std::cout << '\n';

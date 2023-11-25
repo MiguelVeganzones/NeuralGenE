@@ -21,11 +21,11 @@ int flat_test()
     for (float i = 0; auto& e : in)
         e = i++;
 
-    constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
-    constexpr auto ReLU     = matrix_activation_functions::Identifiers::ReLU;
-    constexpr auto PReLU    = matrix_activation_functions::Identifiers::PReLU;
-    constexpr auto Sigmoid  = matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto Swish    = matrix_activation_functions::Identifiers::Swish;
+    [[maybe_unused]] constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
+    [[maybe_unused]] constexpr auto ReLU     = matrix_activation_functions::Identifiers::ReLU;
+    [[maybe_unused]] constexpr auto PReLU    = matrix_activation_functions::Identifiers::PReLU;
+    [[maybe_unused]] constexpr auto Sigmoid  = matrix_activation_functions::Identifiers::Sigmoid;
+    [[maybe_unused]] constexpr auto Swish    = matrix_activation_functions::Identifiers::Swish;
 
     constexpr Layer_Signature a1{ 1, Identity };
     constexpr Layer_Signature a2{ 4, ReLU };
@@ -38,6 +38,7 @@ int flat_test()
 
     auto ptr_net  = std::make_unique<NET>();
     auto ptr_net2 = std::make_unique<NET2>();
+    auto ptr_net21 = std::make_unique<NET2>();
     auto ptr_net3 = std::make_unique<NET2>();
 
     ptr_net->init(random::randnormal, 0, 1);
@@ -54,26 +55,36 @@ int flat_test()
     std::cout << pred << std::endl;
 
     const std::string filename = "Flattened_test0.txt";
+    const std::string serialized_store_filename = "Serialization_test0.bin";
+    
+    std::cout << "Here1\n";
     ptr_net->store(filename);
     ptr_net2->load(filename);
 
-    ptr_net2->print_net();
+    std::cout << "Here2\n";
+    ptr_net->serialize_store(serialized_store_filename);
+    ptr_net21->deserialize_load(serialized_store_filename);
 
-    std::cout << "L1:" << distance<float>(*ptr_net3.get(), *ptr_net2.get(), [](float a, float b) {
+    ptr_net2->print_net();
+    ptr_net21->print_net();
+
+    std::cout << "L1:" << distance<float>(*ptr_net21.get(), *ptr_net2.get(), [](float a, float b) {
+        return std::abs(a - b);
+    }) << std::endl;
+    std::cout << "L1:" << distance<float>(*ptr_net.get(), *ptr_net2.get(), [](float a, float b) {
+        return std::abs(a - b);
+    }) << std::endl;
+    std::cout << "L1:" << distance<float>(*ptr_net.get(), *ptr_net21.get(), [](float a, float b) {
         return std::abs(a - b);
     }) << std::endl;
 
     for (size_t i = 0; const auto& e : in)
     {
         const auto res = ptr_net2->batch_forward_pass(static_matrix<float, 2, 1>{ e, e });
-        std::cout << res << std::endl;
+        //std::cout << res << std::endl;
         pred2[i, 0]   = res[0, 0];
         pred2[i++, 1] = res[1, 0];
     }
-
-    ptr_net3->init_from_ptr(ptr_net.get());
-
-    // std::cout << L1_net_distance(ptr_net3.get(), ptr_net2.get()) << std::endl;
 
     std::cout << pred << std::endl << pred2 << std::endl;
 
@@ -250,24 +261,24 @@ int main()
 
     flat_test();
 
-    // activation_functions_test();
+    // // activation_functions_test();
 
-    ga_sm::static_matrix<double, 6, 5> mat{};
-    mat.fill(random::randnormal, 0, 10);
+    // ga_sm::static_matrix<double, 6, 5> mat{};
+    // mat.fill(random::randnormal, 0, 10);
 
-    std::cout << mat << std::endl;
-    std::cout << ga_sm::reduce<1, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
-    std::cout << ga_sm::reduce<6, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
-    std::cout << ga_sm::reduce<1, 5>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
+    // std::cout << mat << std::endl;
+    // std::cout << ga_sm::reduce<1, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
+    // std::cout << ga_sm::reduce<6, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
+    // std::cout << ga_sm::reduce<1, 5>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
 
-    auto af = matrix_activation_functions::
-        activation_function<decltype(mat), matrix_activation_functions::Identifiers::Softmax>();
+    // auto af = matrix_activation_functions::
+    //     activation_function<decltype(mat), matrix_activation_functions::Identifiers::Softmax>();
 
-    std::cout << mat << std::endl;
+    // std::cout << mat << std::endl;
 
-    af(mat);
+    // af(mat);
 
-    std::cout << mat << std::endl;
+    // std::cout << mat << std::endl;
 
 
     return EXIT_SUCCESS;

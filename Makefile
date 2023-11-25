@@ -1,4 +1,4 @@
-CXX = 				g++-12
+CXX = 				g++
 
 DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
 					-fdiagnostics-show-template-tree \

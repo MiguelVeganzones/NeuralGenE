@@ -13,22 +13,25 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <type_traits>
 
 //--------------------------------------------------------------------------------------//
 
+// TODO Refactor this code a
 
 namespace matrix_activation_functions
 {
 template <typename T>
 struct default_activation_function_parameters
 {
+    using value_type = T;
     template <typename Fn>
     void mutate(Fn&&)
     {
     }
 
     template <typename Fn, typename... Args>
-        requires std::is_invocable_r_v<T, Fn, Args...>
+        requires std::is_invocable_r_v<value_type, Fn, Args...>
     constexpr void fill(Fn&&, Args&&...)
     {
     }
@@ -57,6 +60,177 @@ struct default_activation_function_parameters
 
     void load(std::ifstream&)
     {
+    }
+};
+
+template <typename T>
+struct Swish_parameters_type
+{
+    using value_type = T;
+    static constexpr value_type lower_range_bound = -2;
+    static constexpr value_type upper_range_bound = 2;
+
+    value_type beta;
+
+    [[nodiscard]] static constexpr size_t parameter_count()
+    {
+        return 1;
+    }
+
+    [[nodiscard]] constexpr auto repr() const -> std::string
+    {
+        return std::string("Beta: ") + std::to_string(beta);
+    }
+
+    template <typename Fn>
+    void mutate(Fn&& fn)
+    {
+        beta = restrict_value(fn(beta));
+    }
+
+    template <typename Fn, typename... Args>
+        requires std::is_invocable_r_v<value_type, Fn, Args...>
+    constexpr void fill(Fn&& fn, Args&&... args)
+    {
+        beta = restrict_value(std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...));
+    }
+
+    static value_type restrict_value(const value_type value)
+    {
+        return std::min(std::max(value, lower_range_bound), upper_range_bound);
+    }
+
+    template <typename R, typename Distance>
+        requires std::is_invocable_r_v<R, Distance, value_type, value_type>
+    [[nodiscard]] inline static constexpr auto distance(
+        const Swish_parameters_type& p1, const Swish_parameters_type& p2, Distance&& dist_op
+    ) -> R
+    {
+        return std::invoke_r<R>(std::forward<Distance>(dist_op), p1.beta, p2.beta);
+    }
+
+    void store(std::ofstream& out) const
+    {
+        out << beta << "\n\n";
+    }
+
+    void load(std::ifstream& in)
+    {
+        in >> beta;
+    }
+};
+
+template <typename T>
+struct PReLU_parameters_type
+{
+    using value_type = T;
+    static constexpr value_type lower_range_bound = -0.5;
+    static constexpr value_type upper_range_bound = 0.5;
+
+    value_type alpha;
+
+    [[nodiscard]] static constexpr size_t parameter_count()
+    {
+        return 1;
+    }
+
+    [[nodiscard]] constexpr auto repr() const -> std::string
+    {
+        return std::string("Alpha: ") + std::to_string(alpha);
+    }
+
+    template <typename Fn>
+    void mutate(Fn&& fn)
+    {
+        alpha = restrict_value(fn(alpha));
+    }
+
+    template <typename Fn, typename... Args>
+        requires std::is_invocable_r_v<value_type, Fn, Args...>
+    constexpr void fill(Fn&& fn, Args&&... args)
+    {
+        alpha = restrict_value(std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...));
+    }
+
+    [[nodiscard]] inline static value_type restrict_value(const value_type value)
+    {
+        return std::min(std::max(value, lower_range_bound), upper_range_bound);
+    }
+
+    template <typename R, typename Distance>
+        requires std::is_invocable_r_v<R, Distance, value_type, value_type>
+    [[nodiscard]] inline static constexpr auto distance(
+        const PReLU_parameters_type& p1, const PReLU_parameters_type& p2, Distance&& dist_op
+    ) -> R
+    {
+        return std::invoke_r<R>(std::forward<Distance>(dist_op), p1.alpha, p2.alpha);
+    }
+
+    void store(std::ofstream& out) const
+    {
+        out << alpha << "\n\n";
+    }
+
+    void load(std::ifstream& in)
+    {
+        in >> alpha;
+    }
+};
+
+template <typename T>
+struct threshold_parameters_type
+{
+    using value_type = T;
+    static constexpr value_type lower_threshold_bound = -10;
+    static constexpr value_type upper_threshold_bound = 10;
+
+    value_type threshold;
+
+    [[nodiscard]] static constexpr size_t parameter_count()
+    {
+        return 1;
+    }
+
+    [[nodiscard]] constexpr auto repr() const -> std::string
+    {
+        return std::string("Threshold: ") + std::to_string(threshold);
+    }
+
+    template <typename Fn>
+    void mutate(Fn&& fn)
+    {
+        threshold = restrict_value(fn(threshold));
+    }
+
+    template <typename Fn, typename... Args>
+        requires std::is_invocable_r_v<value_type, Fn, Args&&...>
+    constexpr void fill(Fn&& fn, Args&&... args)
+    {
+        threshold = restrict_value(std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...));
+    }
+
+    [[nodiscard]] inline static value_type restrict_value(const value_type value)
+    {
+        return std::min(std::max(value, lower_threshold_bound), upper_threshold_bound);
+    }
+
+    template <typename R, typename Distance>
+        requires std::is_invocable_r_v<R, Distance, value_type, value_type>
+    [[nodiscard]] inline static constexpr auto distance(
+        const threshold_parameters_type& p1, const threshold_parameters_type& p2, Distance&& dist_op
+    ) -> R
+    {
+        return std::invoke_r<R>(std::forward<Distance>(dist_op), p1.threshold, p2.threshold);
+    }
+
+    void store(std::ofstream& out) const
+    {
+        out << threshold << "\n\n";
+    }
+
+    void load(std::ifstream& in)
+    {
+        in >> threshold;
     }
 };
 
@@ -203,7 +377,7 @@ struct Softmax
             matrix_iterator start   = mat.begin() + j * N;
             matrix_iterator end     = start + N;
             const auto      row_max = *std::max_element(start, end);
-            T               row_sum = T();
+            auto               row_sum = T();
 
             for (auto p = start; p != end; ++p)
             {
@@ -228,61 +402,7 @@ template <typename Mat>
 struct Swish
 {
     using T = typename Mat::value_type;
-
-    struct parameters_type
-    {
-        static constexpr T lower_range_bound = -2;
-        static constexpr T upper_range_bound = 2;
-
-        T beta;
-
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 1;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> std::string
-        {
-            return std::string("Beta: ") + std::to_string(beta);
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-            beta = restrict_value(fn(beta));
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args&&... args)
-        {
-            beta = restrict_value(std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...));
-        }
-
-        static T restrict_value(const T value)
-        {
-            return std::min(std::max(value, lower_range_bound), upper_range_bound);
-        }
-
-        template <typename R, typename Distance>
-            requires std::is_invocable_r_v<R, Distance, T, T>
-        [[nodiscard]] inline static constexpr auto distance(
-            const parameters_type& p1, const parameters_type& p2, Distance&& dist_op
-        ) -> R
-        {
-            return std::invoke_r<R>(std::forward<Distance>(dist_op), p1.beta, p2.beta);
-        }
-
-        void store(std::ofstream& out) const
-        {
-            out << beta << "\n\n";
-        }
-
-        void load(std::ifstream& in)
-        {
-            in >> beta;
-        }
-    };
+    using parameters_type = Swish_parameters_type<T>;
 
     inline void operator()(Mat& mat, const parameters_type& params) const
     {
@@ -301,61 +421,7 @@ template <typename Mat>
 struct PReLU
 {
     using T = typename Mat::value_type;
-
-    struct parameters_type
-    {
-        static constexpr T lower_range_bound = -0.5;
-        static constexpr T upper_range_bound = 0.5;
-
-        T alpha;
-
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 1;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> std::string
-        {
-            return std::string("Alpha: ") + std::to_string(alpha);
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-            alpha = restrict_value(fn(alpha));
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args...>
-        constexpr void fill(Fn&& fn, Args&&... args)
-        {
-            alpha = restrict_value(std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...));
-        }
-
-        [[nodiscard]] inline static T restrict_value(const T value)
-        {
-            return std::min(std::max(value, lower_range_bound), upper_range_bound);
-        }
-
-        template <typename R, typename Distance>
-            requires std::is_invocable_r_v<R, Distance, T, T>
-        [[nodiscard]] inline static constexpr auto distance(
-            const parameters_type& p1, const parameters_type& p2, Distance&& dist_op
-        ) -> R
-        {
-            return std::invoke_r<R>(std::forward<Distance>(dist_op), p1.alpha, p2.alpha);
-        }
-
-        void store(std::ofstream& out) const
-        {
-            out << alpha << "\n\n";
-        }
-
-        void load(std::ifstream& in)
-        {
-            in >> alpha;
-        }
-    };
+    using parameters_type = PReLU_parameters_type<T>;
 
     inline void operator()(Mat& mat, const parameters_type& params) const
     {
@@ -376,61 +442,7 @@ template <typename Mat>
 struct Threshold
 {
     using T = typename Mat::value_type;
-
-    struct parameters_type
-    {
-        static constexpr T lower_threshold_bound = -10;
-        static constexpr T upper_threshold_bound = 10;
-
-        T threshold;
-
-        [[nodiscard]] static constexpr size_t parameter_count()
-        {
-            return 1;
-        }
-
-        [[nodiscard]] constexpr auto repr() const -> std::string
-        {
-            return std::string("Threshold: ") + std::to_string(threshold);
-        }
-
-        template <typename Fn>
-        void mutate(Fn&& fn)
-        {
-            threshold = restrict_value(fn(threshold));
-        }
-
-        template <typename Fn, typename... Args>
-            requires std::is_invocable_r_v<T, Fn, Args&&...>
-        constexpr void fill(Fn&& fn, Args&&... args)
-        {
-            threshold = restrict_value(std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...));
-        }
-
-        [[nodiscard]] inline static T restrict_value(const T value)
-        {
-            return std::min(std::max(value, lower_threshold_bound), upper_threshold_bound);
-        }
-
-        template <typename R, typename Distance>
-            requires std::is_invocable_r_v<R, Distance, T, T>
-        [[nodiscard]] inline static constexpr auto distance(
-            const parameters_type& p1, const parameters_type& p2, Distance&& dist_op
-        ) -> R
-        {
-            return std::invoke_r<R>(std::forward<Distance>(dist_op), p1.threshold, p2.threshold);
-        }
-
-        void store(std::ofstream& out) const
-        {
-            out << threshold << "\n\n";
-        }
-
-        void load(std::ifstream& in)
-        {
-            in >> threshold;
-        }
-    };
+    using parameters_type = threshold_parameters_type<T>;
 
     inline void operator()(Mat& mat, const parameters_type& params) const
     {
@@ -492,6 +504,7 @@ template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ F
 template <typename Mat, matrix_activation_functions::Identifiers::Identifiers_ Function_Identifier>
 struct activation_function
 {
+    inline static constexpr auto Identifier = Function_Identifier;
     inline static constexpr auto activation_function_impl = choose_func<Mat, Function_Identifier>();
 
     using activation_function_type = decltype(activation_function_impl);
@@ -555,11 +568,15 @@ concept activation_function_type = requires { activation_function_dummy(std::dec
 // -----------------------------------------------
 // -----------------------------------------------
 
-template <typename R, typename Activation_Function, typename Distance>
-[[nodiscard]] static auto distance(const Activation_Function& af1, const Activation_Function& af2, Distance&& dist_op)
+template <typename R, activation_function_type Activation_Function1, activation_function_type Activation_Function2, typename Distance>
+    // requires (
+    //         Activation_Function1::Identifier == Activation_Function2::Identifier &&
+    //         std::is_invocable_r_v<R, Distance, typename Activation_Function1::parameters_type::value_type, typename Activation_Function2::parameters_type::value_type>
+    //     )
+[[nodiscard]] static auto distance(const Activation_Function1& af1, const Activation_Function2& af2, Distance&& dist_op)
     -> R
 {
-    return Activation_Function::parameters_type::template distance<R>(
+    return Activation_Function1::parameters_type::template distance<R>(
         af1.params, af2.params, std::forward<Distance>(dist_op)
     );
 }

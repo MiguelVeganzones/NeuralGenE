@@ -20,7 +20,8 @@ namespace ga_snn
 
 struct Layer_Signature
 {
-    size_t                                                 Size;
+    using size_type = unsigned int;
+    size_type                                                 Size;
     matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
     constexpr bool operator==(const Layer_Signature&) const = default;
@@ -535,7 +536,7 @@ public:
         std::ofstream out(filename);
         if (!out.is_open())
         {
-            const auto message = "Could not create file: " + filename.string() + '\n';
+            const auto message = "Could not open file: " + filename.string() + '\n';
             std::cout << message;
             log::add(message);
             std::exit(EXIT_FAILURE);
@@ -546,15 +547,25 @@ public:
             out << layer_signature.Size << ' ';
         }
         out << "\n\n";
-        m_Layers.store(out); // Store layers recursively
-        out.close();
-        if (!out)
+        m_Layers.store(out);
+    }
+
+    auto serialize_store(const std::filesystem::path& filename) const -> void 
+        requires(std::is_trivial_v<static_neural_net> && std::is_standard_layout_v<static_neural_net>)
+    {
+        std::ofstream out(filename, std::ios::binary);
+        if (!out.is_open())
         {
-            const auto message = "Could not close file: " + filename.string() + '\n';
+            const auto message = "Could not open file: " + filename.string() + '\n';
             std::cout << message;
             log::add(message);
             std::exit(EXIT_FAILURE);
         }
+        for (const auto& layer_signature : s_Signatures)
+        {
+            out.write(reinterpret_cast<const char*>(&layer_signature.Size), sizeof(layer_signature.Size));
+        }
+        out.write(reinterpret_cast<const char*>(this), sizeof(*this));
     }
 
     // Overrides current net with one read from "filename"
@@ -569,7 +580,7 @@ public:
             log::add(message);
             std::exit(EXIT_FAILURE);
         }
-        size_t layer_size{}; // shape
+        typename Layer_Signature::size_type layer_size{};
         for (const auto& layer_signature : s_Signatures)
         {
             in >> layer_size;
@@ -581,13 +592,41 @@ public:
                 std::exit(EXIT_FAILURE);
             }
         }
-        m_Layers.load(in); // load layers recursively
-        in.close();
-        if (!in)
+        m_Layers.load(in);
+    }
+
+    // Overrides current net with one read from "filename"
+    // Shapes of both nets must be the same
+    auto deserialize_load(const std::filesystem::path& filename) -> void
+        requires(std::is_trivial_v<static_neural_net> && std::is_standard_layout_v<static_neural_net>)
+    {
+        std::ifstream in(filename, std::ios::binary);
+        if (!in.is_open())
         {
-            const auto message = "Could not close file after reading: " + filename.string() + '\n';
+            const std::string message = "Could not open file: " + filename.string() + '\n';
             std::cout << message;
             log::add(message);
+            std::exit(EXIT_FAILURE);
+        }
+        typename Layer_Signature::size_type layer_size{};
+        for (const auto& layer_signature : s_Signatures)
+        {
+            in.read(reinterpret_cast<char*>(&layer_size), sizeof(layer_size));
+            if (layer_size != layer_signature.Size)
+            {
+                std::cout << layer_size << "!=" << layer_signature.Size << '\n';
+                const auto message = "Cannot load this net here. Shapes must match.\n";
+                std::cout << message;
+                log::add(message);
+                std::exit(EXIT_FAILURE);
+            }
+        }
+        for(
+            auto* p = reinterpret_cast<char*>(this); 
+            p != reinterpret_cast<const char*>(this) + sizeof(*this); 
+            p+=sizeof(value_type))
+        {
+            in.read(p, sizeof(value_type));
         }
     }
 
@@ -617,6 +656,7 @@ public:
     }
 
     template <size_t Other_Batch_Size>
+    // TODO: add requires std is strivial and is standar layout
     auto init_from_ptr(const static_neural_net<T, Other_Batch_Size, Signatures...>* const src_ptr) -> void
     {
         std::memcpy(this, src_ptr, sizeof(static_neural_net));

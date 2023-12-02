@@ -228,10 +228,6 @@ void new_brain_test()
 
 int main()
 {
-    // training_test();
-    // score_function_object_test();
-    // in_place_x_crossover_test();
-
     new_brain_test();
 
     return EXIT_SUCCESS;

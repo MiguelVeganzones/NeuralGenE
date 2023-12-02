@@ -154,9 +154,7 @@ public:
             std::cout << min_error << " - " << max_error << std::endl;
 
             fitness_container_type agent_fitness{};
-            std::transform(error.cbegin(), error.cend(), agent_fitness.begin(), [max_error](float error_) {
-                return float_normalized_type(1 - error_ / max_error);
-            });
+            std::transform(error.cbegin(), error.cend(), agent_fitness.begin(), [](float error_) { return -error_; });
 
             /// -------------------------------------
 
@@ -169,16 +167,7 @@ public:
                 return { m_Population[gen_idx][0], error[0] };
             }
 
-            for (std::size_t i = 0; auto [parent_a, parent_b] : selected_parents)
-            {
-                to_target_crossover(
-                    m_Population[gen_idx][parent_a],
-                    m_Population[gen_idx][parent_b],
-                    m_Population[next_gen_idx][i],
-                    m_Population[next_gen_idx][i + 1]
-                );
-                i += 2;
-            }
+            m_Reproduction_policy.reproduce(m_Population[gen_idx], m_Population[next_gen_idx], selected_parents);
 
             for (auto& agent : m_Population[next_gen_idx])
             {

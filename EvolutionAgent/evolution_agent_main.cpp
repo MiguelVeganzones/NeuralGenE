@@ -89,11 +89,13 @@ void agent_construction()
 
     const auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) { return v; });
     const auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) { return v; });
+    const auto agent_c = agent_t(brain_t());
+    const auto agent_d = agent_t(brain_t());
 
     agent_a.print();
     agent_b.print();
 
-    const auto [agent_c, agent_d] = evolution_agent::crossover(agent_a, agent_b);
+    const auto [agent_c, agent_d] = evolution_agent::to_target_crossover(agent_a, agent_b, agent_c, );
 
     agent_c.print();
     agent_d.print();
@@ -124,113 +126,6 @@ void agent_construction()
     std::cout << agent_b(input3) << std::endl;
     std::cout << agent_c(input3) << std::endl;
     std::cout << agent_d(input3) << std::endl;
-}
-
-void simple_agent_evolution_test()
-{
-    random::init();
-
-    // using namespace ga_snn;
-    // using namespace ga_sm;
-
-    constexpr auto AF_relu    = matrix_activation_functions::Identifiers::GELU;
-    constexpr auto AF_sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto AF_Tanh    = matrix_activation_functions::Identifiers::Tanh;
-
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1, AF_sigmoid };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Tanh{ 1, AF_Tanh };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a9{ 9, AF_relu };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a25{ 25, AF_relu };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a42{ 42, AF_relu };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a16{ 16, AF_relu };
-
-    using NET = ga_snn::static_neural_net<float, 1, a9, a9, a25, a25, a9, a1_Sigmoid>;
-    // using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9, a9, a1_tanh>;
-
-    // std::cout << NET::parameter_count() << std::endl;
-    // std::cout << NET2::parameter_count() << std::endl;
-
-    using preprocessor  = data_processor::iterable_converter;
-    using postprocessor = data_processor::scalar_converter;
-    using return_type   = NET::value_type;
-
-    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
-    using agent_t = evolution_agent::agent<brain_t>;
-
-    auto mutation_policy = []<std::floating_point F>(F f) -> F {
-        const auto r = random::randfloat();
-        if (r >= 0.0009)
-        {
-            return f * F(0.9999);
-        }
-        if (r < 0.00006)
-        {
-            return random::randfloat();
-        }
-        if (r < 0.00012)
-        {
-            return f * random::randnormal();
-        }
-        if (r < 0.00018)
-        {
-            return F{};
-        }
-        if (r < 0.00024)
-        {
-            return f += random::randnormal(random::randnormal(), random::randfloat());
-        }
-        if (r < 0.00030)
-        {
-            return random::randnormal(f, F(0.01));
-        }
-        return f;
-    };
-
-    auto agent_a = agent_t(brain_t(random::randnormal, 0, 0.1), mutation_policy);
-    auto agent_b = agent_t(brain_t(random::randnormal, 0, 0.1), mutation_policy);
-
-    agent_a.print();
-    agent_b.print();
-
-    using agent_input_type = ga_sm::static_matrix<float, 3, 3>;
-
-    agent_input_type input{};
-    input.fill(random::randnormal, 0, 1);
-    constexpr float target = 0.75;
-
-    for (int i = 0; i != 100000; ++i)
-    {
-        const auto pred_a  = agent_a(input);
-        const auto pred_b  = agent_b(input);
-        const auto error_a = std::abs(pred_a - target);
-        const auto error_b = std::abs(pred_b - target);
-
-        if (error_a < error_b)
-        {
-            if (i % 1000 == 0)
-            {
-                std::cout << "Pred a: " << pred_a << "  (Pred b: " << pred_b << ')' << std::endl;
-            }
-            agent_b.mutate();
-        }
-        else if (error_b < error_a)
-        {
-            if (i % 1000 == 0)
-            {
-                std::cout << "Pred b: " << pred_b << "  (Pred a: " << pred_a << ')' << std::endl;
-            }
-            agent_a.mutate();
-        }
-        if (random::randfloat() < 0.0001)
-        {
-            evolution_agent::in_place_crossover(agent_a, agent_b);
-        }
-        // if (i % 5000 == 0)
-        // {
-        //     agent_a.print();
-        // }
-    }
 }
 
 void multi_agent_evolution_test()

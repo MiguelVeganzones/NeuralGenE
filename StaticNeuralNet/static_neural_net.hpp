@@ -62,7 +62,8 @@ private:
 public:
     // each neuron produces a column vector that splits into the input of the
     // neurons in the next layer
-    [[nodiscard]] constexpr output_vector_shape forward_pass(input_vector_shape const& Input) const
+    [[nodiscard]]
+    constexpr output_vector_shape forward_pass(input_vector_shape const& Input) const
     {
         auto out = matrix_vec_add(matrix_mul(Input, m_weights_mat), m_bias_vector);
         // std::cout << out << std::endl;
@@ -102,52 +103,62 @@ public:
         m_activation_function.load(in);
     }
 
-    [[nodiscard]] inline constexpr const weights_shape& get_weights_mat() const
+    [[nodiscard]]
+    inline constexpr const weights_shape& get_weights_mat() const
     {
         return m_weights_mat;
     }
 
-    [[nodiscard]] inline constexpr weights_shape& get_weights_mat()
+    [[nodiscard]]
+    inline constexpr weights_shape& get_weights_mat()
     {
         return m_weights_mat;
     }
 
-    [[nodiscard]] inline constexpr const bias_vector_shape& get_bias_vector() const
+    [[nodiscard]]
+    inline constexpr const bias_vector_shape& get_bias_vector() const
     {
         return m_bias_vector;
     }
 
-    [[nodiscard]] inline constexpr bias_vector_shape& get_bias_vector()
+    [[nodiscard]]
+    inline constexpr bias_vector_shape& get_bias_vector()
     {
         return m_bias_vector;
     }
 
-    [[nodiscard]] inline constexpr const activation_function& get_activation_function() const
+    [[nodiscard]]
+    inline constexpr const activation_function& get_activation_function() const
     {
         return m_activation_function;
     }
 
-    [[nodiscard]] inline constexpr activation_function& get_activation_function()
+    [[nodiscard]]
+    inline constexpr activation_function& get_activation_function()
     {
         return m_activation_function;
     }
 
-    [[nodiscard]] static inline constexpr size_t get_inputs()
+    [[nodiscard]]
+    static inline constexpr size_t get_inputs()
     {
         return s_Inputs;
     }
 
-    [[nodiscard]] static inline constexpr size_t get_outputs()
+    [[nodiscard]]
+    static inline constexpr size_t get_outputs()
     {
         return s_Outputs;
     }
 
-    [[nodiscard]] static inline constexpr size_t parameter_count()
+    [[nodiscard]]
+    static inline constexpr size_t parameter_count()
     {
         return s_Outputs * (s_Inputs + 1) + activation_function::parameter_count();
     }
 
-    [[nodiscard]] static inline constexpr size_t layer_size()
+    [[nodiscard]]
+    static inline constexpr size_t layer_size()
     {
         return sizeof(layer);
     }
@@ -198,7 +209,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
     current_layer_type m_Data; // one data member for this layer
 
     template <size_t Idx>
-    [[nodiscard]] constexpr auto get() -> current_layer_type&
+    [[nodiscard]]
+    constexpr auto get() -> current_layer_type&
     {
         if constexpr (Idx == 0)
         { // if its 0, return this layer
@@ -211,7 +223,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
     }
 
     template <size_t Idx>
-    [[nodiscard]] constexpr auto get() const -> current_layer_type const&
+    [[nodiscard]]
+    constexpr auto get() const -> current_layer_type const&
     {
         if constexpr (Idx == 0)
         { // if its 0, return this layer
@@ -257,12 +270,14 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
         m_Data.load(in);
     }
 
-    [[nodiscard]] auto forward_pass(ga_sm::static_matrix<T, Batch_Size, s_Inputs> const& input_data) const
+    [[nodiscard]]
+    auto forward_pass(ga_sm::static_matrix<T, Batch_Size, s_Inputs> const& input_data) const
     {
         return m_Data.forward_pass(input_data);
     }
 
-    [[nodiscard]] static size_t layer_size(const int idx_to_target_layer) noexcept
+    [[nodiscard]]
+    static size_t layer_size(const int idx_to_target_layer) noexcept
     {
         if (idx_to_target_layer == 0)
         {
@@ -272,7 +287,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
         // return idx_to_target_layer == 0 ? current_layer_type::layer_size() : std::unreachable();
     }
 
-    [[nodiscard]] static size_t parameter_count(const int idx_to_target_layer) noexcept
+    [[nodiscard]]
+    static size_t parameter_count(const int idx_to_target_layer) noexcept
     {
         if (idx_to_target_layer == 0)
         {
@@ -305,7 +321,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 
     // getter so that we can actually get a specific layer by index
     template <size_t Idx>
-    [[nodiscard]] constexpr auto& get() noexcept
+    [[nodiscard]]
+    constexpr auto& get() noexcept
     {
         if constexpr (Idx == 0)
         { // if its 0, return this layer
@@ -319,7 +336,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
     }
 
     template <size_t Idx>
-    [[nodiscard]] constexpr auto const& get() const noexcept
+    [[nodiscard]]
+    constexpr auto const& get() const noexcept
     {
         if constexpr (Idx == 0)
         { // if its 0, return this layer
@@ -371,12 +389,14 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
         m_Next.load(in);
     }
 
-    [[nodiscard]] auto forward_pass(ga_sm::static_matrix<T, Batch_Size, s_Inputs> const& input_data) const
+    [[nodiscard]]
+    auto forward_pass(ga_sm::static_matrix<T, Batch_Size, s_Inputs> const& input_data) const
     {
         return m_Next.forward_pass(m_Data.forward_pass(input_data));
     }
 
-    [[nodiscard]] static size_t layer_size(const int idx_to_target_layer)
+    [[nodiscard]]
+    static size_t layer_size(const int idx_to_target_layer)
     {
         if (idx_to_target_layer == 0)
         {
@@ -385,7 +405,8 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
         return next_data_type::layer_size(idx_to_target_layer - 1);
     }
 
-    [[nodiscard]] static size_t parameter_count(const int idx_to_target_layer)
+    [[nodiscard]]
+    static size_t parameter_count(const int idx_to_target_layer)
     {
         if (idx_to_target_layer == 0)
         {
@@ -418,7 +439,8 @@ public:
     using output_type = ga_sm::static_matrix<T, Batch_Size, s_Output_Size>;
 
 public:
-    [[nodiscard]] static constexpr size_t parameter_count(
+    [[nodiscard]]
+    static constexpr size_t parameter_count(
         unsigned int first_layer_idx = 0, const unsigned int last_layer_idx = s_Layers - 1
     )
     {
@@ -433,14 +455,16 @@ public:
         return p;
     }
 
-    [[nodiscard]] static constexpr size_t layer_parameter_count(const unsigned int layer_idx)
+    [[nodiscard]]
+    static constexpr size_t layer_parameter_count(const unsigned int layer_idx)
     {
         assert(layer_idx < s_Layers);
 
         return layers_type::parameter_count(layer_idx);
     }
 
-    [[nodiscard]] static constexpr size_t subnet_size(
+    [[nodiscard]]
+    static constexpr size_t subnet_size(
         unsigned int first_layer_idx = 0, const unsigned int last_layer_idx = s_Layers - 1
     )
     {
@@ -452,19 +476,22 @@ public:
         return p;
     }
 
-    [[nodiscard]] static constexpr size_t layer_size(const unsigned int layer_idx)
+    [[nodiscard]]
+    static constexpr size_t layer_size(const unsigned int layer_idx)
     {
         return layers_type::layer_size(layer_idx);
     }
 
     template <std::size_t Idx>
-    [[nodiscard]] auto layer() -> decltype(m_Layers.template get<Idx>())& // TODO: maybe try decltype(auto)
+    [[nodiscard]]
+    auto layer() -> decltype(m_Layers.template get<Idx>())& // TODO: maybe try decltype(auto)
     {
         return m_Layers.template get<Idx>();
     }
 
     template <std::size_t Idx>
-    [[nodiscard]] auto layer() const -> decltype(m_Layers.template get<Idx>()) const&
+    [[nodiscard]]
+    auto layer() const -> decltype(m_Layers.template get<Idx>()) const&
     {
         return m_Layers.template get<Idx>();
     }
@@ -628,26 +655,30 @@ public:
         }
     }
 
-    [[nodiscard]] auto batch_forward_pass(input_type const& input_data) const -> output_type
+    [[nodiscard]]
+    auto batch_forward_pass(input_type const& input_data) const -> output_type
     {
         return m_Layers.forward_pass(input_data);
     }
 
-    [[nodiscard]] auto forward_pass(input_type const& input_data) const -> output_type
+    [[nodiscard]]
+    auto forward_pass(input_type const& input_data) const -> output_type
     {
         return m_Layers.forward_pass(cast_to_shape<Batch_Size, s_Input_Size>(input_data));
     }
 
     template <size_t M_Out, size_t N_Out, size_t M_In, size_t N_In>
         requires((M_Out * N_Out == s_Output_Size) && (M_In * N_In == s_Input_Size) && Batch_Size == 1)
-    [[nodiscard]] auto forward_pass(ga_sm::static_matrix<T, M_In, N_In> const& input_data) const
+    [[nodiscard]]
+    auto forward_pass(ga_sm::static_matrix<T, M_In, N_In> const& input_data) const
         -> ga_sm::static_matrix<T, M_Out, N_Out>
     {
         const auto temp = cast_to_shape<1, s_Input_Size>(input_data);
         return cast_to_shape<M_Out, N_Out>(m_Layers.forward_pass(temp));
     }
 
-    [[nodiscard]] auto forward_pass(value_type input_value) const -> value_type
+    [[nodiscard]]
+    auto forward_pass(value_type input_value) const -> value_type
         requires((1 == s_Output_Size) && (1 == s_Input_Size) && Batch_Size == 1)
     {
         return m_Layers.forward_pass(ga_sm::static_matrix<value_type, 1, 1>{ input_value })(0, 0);
@@ -685,7 +716,8 @@ concept same_structure_net_concept = requires(T t, Ts... ts) { (t.s_Signatures =
 
 template <static_neural_net_type NNet, typename Fn, typename... Args>
     requires std::is_invocable_r_v<typename NNet::value_type, Fn, Args...>
-[[nodiscard]] auto static_neural_net_factory(Fn&& fn, Args&&... args) -> std::unique_ptr<NNet>
+[[nodiscard]]
+auto static_neural_net_factory(Fn&& fn, Args&&... args) -> std::unique_ptr<NNet>
 {
     auto ptr = std::make_unique<NNet>();
     ptr->init(std::forward<Fn>(fn), std::forward<Args>(args)...);
@@ -702,35 +734,6 @@ template <static_neural_net_type NNet>
 //--------------------------------------------------------------------------------------//
 // GA Utility
 // neural net x_crossover
-
-template <static_neural_net_type NNet>
-auto net_x_crossover(NNet const& net1, NNet const& net2) -> std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>>
-{
-    auto ptr_ret_net1 = std::make_unique<NNet>(net1);
-    auto ptr_ret_net2 = std::make_unique<NNet>(net2);
-
-    /*
-    Si *ptr_net hace una copia local dar� problemas de memoria. Por las pruebas
-    que he hecho concluyo que est� optimizado y no se hace. Sino habr�a que
-    utilizar esta versi�n que utiliza memcpy y por lo tanto no hace una copia
-    local
-    */
-    // auto ptr_ret_net1 = std::make_unique< static_neural_net<T, Shapes...>>();
-    // auto ptr_ret_net2 = std::make_unique< static_neural_net<T, Shapes...>>();
-    // ptr_ret_net1->init_from_ptr( ptr_net1 );
-    // ptr_ret_net2->init_from_ptr( ptr_net2 );
-
-    // Recursively crossover layers, starting with layer 0
-    in_place_net_x_crossover(*ptr_ret_net1.get(), *ptr_ret_net2.get());
-    return { std::move(ptr_ret_net1), std::move(ptr_ret_net2) };
-}
-
-template <static_layer_type Layer>
-inline auto in_place_layer_x_crossover(Layer& layer1, Layer& layer2) -> void
-{
-    in_place_x_crossover(layer1.get_weights_mat(), layer2.get_weights_mat());
-    in_place_x_crossover(layer1.get_bias_vector(), layer2.get_bias_vector());
-}
 
 template <static_layer_type Layer>
 inline auto to_target_layer_x_crossover(
@@ -750,16 +753,6 @@ inline auto to_target_layer_x_crossover(
         out_layer1.get_bias_vector(),
         out_layer2.get_bias_vector()
     );
-}
-
-template <static_neural_net_type NNet, size_t I = 0>
-    requires(I < NNet::s_Layers)
-inline auto in_place_net_x_crossover(NNet& net1, NNet& net2) -> void
-{
-    in_place_layer_x_crossover(net1.template layer<I>(), net2.template layer<I>());
-
-    if constexpr (I != NNet::s_Layers - 1)
-        in_place_net_x_crossover<NNet, I + 1>(net1, net2);
 }
 
 template <static_neural_net_type NNet, size_t I = 0>
@@ -861,9 +854,9 @@ std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> layer_swap(NNet const& n
  */
 template <std::floating_point R, size_t N, static_neural_net_type NNet, typename Distance>
     requires(N > 1)
-[[nodiscard]] auto population_variability(
-    std::array<std::reference_wrapper<const NNet>, N> const& net_ptr_arr, Distance&& dist_op
-) -> ga_sm::static_matrix<R, N, N>
+[[nodiscard]]
+auto population_variability(std::array<std::reference_wrapper<const NNet>, N> const& net_ptr_arr, Distance&& dist_op)
+    -> ga_sm::static_matrix<R, N, N>
 {
     ga_sm::static_matrix<double, N, N> distance_matrix{};
     for (size_t j = 0; j != N - 1; ++j)
@@ -893,7 +886,8 @@ template <std::floating_point R, static_layer_type Layer1, static_layer_type Lay
         (Layer1::s_Inputs == Layer2::s_Inputs) && (Layer1::s_Outputs == Layer2::s_Outputs) &&
         (Layer1::s_Activation == Layer2::s_Activation)
     )
-[[nodiscard]] auto distance(Layer1 const& layer1, Layer2 const& layer2, Distance&& dist_op) -> R
+[[nodiscard]]
+auto distance(Layer1 const& layer1, Layer2 const& layer2, Distance&& dist_op) -> R
 {
     return distance<R>(layer1.get_weights_mat(), layer2.get_weights_mat(), std::forward<Distance>(dist_op)) +
         distance<R>(layer1.get_bias_vector(), layer2.get_bias_vector(), std::forward<Distance>(dist_op)) +
@@ -920,7 +914,8 @@ template <
     typename Distance,
     size_t I = 0>
     requires(NNet1::s_Signatures == NNet2::s_Signatures)
-[[nodiscard]] auto distance(NNet1 const& net1, NNet2 const& net2, Distance&& dist_op) -> R
+[[nodiscard]]
+auto distance(NNet1 const& net1, NNet2 const& net2, Distance&& dist_op) -> R
 {
     const auto current_distance =
         distance<R>(net1.template layer<I>(), net2.template layer<I>(), std::forward<Distance>(dist_op));

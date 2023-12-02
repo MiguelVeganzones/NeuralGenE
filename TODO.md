@@ -17,3 +17,5 @@ The reproduction guide will contain a metric for the distamce between memebrs.
 
 ## Unit tests
 ## create a nullable type
+## Issues
+Remove all crossover operation s except to target? (which is the one actualli used)

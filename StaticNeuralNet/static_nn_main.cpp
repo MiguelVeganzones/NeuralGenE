@@ -101,6 +101,7 @@ void abench(int n)
     constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
 
     constexpr auto ls5  = Layer_Signature{ 5, AF };
+    constexpr auto ls5  = Layer_Signature{ 5, AF };
     constexpr auto ls10 = Layer_Signature{ 10, AF };
     constexpr auto ls25 = Layer_Signature{ 25, AF };
     constexpr auto ls50 = Layer_Signature{ 50, AF };

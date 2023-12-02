@@ -96,27 +96,32 @@ public:
 
     /* Getters and setters */
 
-    [[nodiscard]] const NNet& get_net() const
+    [[nodiscard]]
+    const NNet& get_net() const
     {
         return *get();
     }
 
-    [[nodiscard]] NNet& get_net()
+    [[nodiscard]]
+    NNet& get_net()
     {
         return *get_raw();
     }
 
-    [[nodiscard]] const NNet* get() const
+    [[nodiscard]]
+    const NNet* get() const
     {
         return m_Ptr_net.get();
     }
 
-    [[nodiscard]] NNet* get_raw()
+    [[nodiscard]]
+    NNet* get_raw()
     {
         return m_Ptr_net.get();
     }
 
-    [[nodiscard]] auto& get_unique()
+    [[nodiscard]]
+    auto& get_unique()
     {
         return m_Ptr_net;
     }
@@ -134,7 +139,9 @@ public:
         requires requires {
             preprocessor::template process<Brain_Input_Type, nn_input_type>(std::declval<Brain_Input_Type&>());
         }
-    [[nodiscard]] auto operator()(const Brain_Input_Type& in) const -> brain_output_type
+    [[nodiscard]]
+    auto
+    operator()(const Brain_Input_Type& in) const -> brain_output_type
     {
         return postprocessor::template process<nn_output_type, brain_output_type>(
             weigh(preprocessor::template process<Brain_Input_Type, nn_input_type>(in))
@@ -201,23 +208,10 @@ template <std::floating_point R, brain_type Brain, typename Distance>
             brain.get_net()
         } -> std::convertible_to<typename std::remove_cvref_t<Brain>::neural_net_type>;
     }
-[[nodiscard]] auto distance(Brain const& c4_brain_a, Brain const& c4_brain_b, Distance&& dist_op) -> R
+[[nodiscard]]
+auto distance(Brain const& c4_brain_a, Brain const& c4_brain_b, Distance&& dist_op) -> R
 {
     return distance<R>(c4_brain_a.get_net(), c4_brain_b.get_net(), std::forward<Distance>(dist_op));
-}
-
-template <brain_type Brain>
-[[nodiscard]] auto brain_crossover(const Brain& brain_a, const Brain& brain_b) -> std::pair<Brain, Brain>
-{
-    auto [ptr_net1, ptr_net2] = net_x_crossover(*brain_a.get(), *brain_b.get());
-    return { Brain{ std::move(ptr_net1) }, Brain{ std::move(ptr_net2) } };
-}
-
-// TODO Fix the get raw thing
-template <brain_type Brain>
-auto in_place_brain_crossover(Brain& brain_a, Brain& brain_b) -> void
-{
-    in_place_net_x_crossover(*brain_a.get_raw(), *brain_b.get_raw());
 }
 
 template <brain_type Brain>

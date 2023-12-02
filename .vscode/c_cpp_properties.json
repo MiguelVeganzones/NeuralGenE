@@ -2,7 +2,7 @@
     "env": {
         "myDefaultIncludePath": [],
         "clangCompilerPath": "/usr/bin/clang++",
-        "gccCompilerPath": "/usr/bin/gcc",
+        "gccCompilerPath": "/usr/bin/g++",
         "myCppStandard": "c++23"
     },
     "configurations": [
@@ -66,7 +66,6 @@
             ],
             "cStandard": "c17",
             "cppStandard": "c++23",
-            "compilerPath": "${clangCompilerPath}",
             "intelliSenseMode": "${default}"
         }
     ],

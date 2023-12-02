@@ -13,6 +13,7 @@ AllowAllArgumentsOnNextLine: true
 AlwaysBreakTemplateDeclarations: Yes
 BinPackParameters: false
 BinPackArguments: false 
+BreakAfterAttributes: Always
 BreakBeforeConceptDeclarations: Always
 BreakConstructorInitializers: AfterColon
 IndentCaseBlocks: true
@@ -23,6 +24,7 @@ PackConstructorInitializers: Never
 PenaltyBreakTemplateDeclaration: 0
 PointerAlignment: Left
 SeparateDefinitionBlocks: Always
+SortIncludes: true
 SpaceAfterTemplateKeyword: true
 SpacesInAngles: false
 

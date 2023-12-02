@@ -1,4 +1,4 @@
-#include "Random.h"
+#include "Random.hpp"
 #include "neural_model.hpp"
 #include "plotting_utility.h"
 #include "static_matrix.hpp"

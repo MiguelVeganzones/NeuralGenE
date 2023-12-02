@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "Log.h"
-#include "Precision_totalizer.h"
-#include "Random.h"
-#include "Stopwatch.h"
+#include "Log.hpp"
+#include "Precision_totalizer.hpp"
+#include "Random.hpp"
+#include "Stopwatch.hpp"
 
 auto rng()
 {

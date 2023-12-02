@@ -4,7 +4,8 @@ DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
 					-fdiagnostics-show-template-tree \
 					-fdiagnostics-path-format=inline-events \
 					-fdiagnostics-show-caret \
-					-g \
+					-ggdb3 \
+					-O0 \
 					-Wall \
 					-Wextra \
 					-Wshadow \
@@ -12,15 +13,31 @@ DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
 					-fsanitize=address \
 					-fsanitize=leak \
 					-fsanitize=undefined \
-					-pedantic \
 					-Werror \
+					-pedantic \
 					-mavx \
 					-fbounds-check \
 					-fconcepts-diagnostics-depth=3 \
 					-std=c++23
-#					-fmodules-ts
 
 RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
+					-fdiagnostics-show-template-tree \
+					-fdiagnostics-path-format=inline-events \
+					-fdiagnostics-show-caret \
+					-ggdb3 \
+					-O2 \
+					-Wall \
+					-Wextra \
+					-Wshadow \
+					-Wconversion \
+					-Werror \
+					-pedantic \
+					-mavx \
+					-fbounds-check \
+					-fconcepts-diagnostics-depth=3 \
+					-std=c++23
+					
+FULL_RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
 					-fdiagnostics-show-template-tree \
 					-fdiagnostics-path-format=inline-events \
 					-fdiagnostics-show-caret \
@@ -32,9 +49,9 @@ RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
 					-Werror \
 					-pedantic \
 					-mavx \
-					-fbounds-check \
 					-fconcepts-diagnostics-depth=3 \
-					-std=c++23 
+					-std=c++23 \
+					-fno-exceptions
 					
 					
 NO_WERROR_DEBUG_CXXFLAGS =  -fdiagnostics-color=always \
@@ -73,24 +90,26 @@ NO_WERROR_RELEASE_CXXFLAGS =-fdiagnostics-color=always \
 RELEASE ?= 0
 ifeq (${RELEASE}, 1)
     CXXFLAGS = ${RELEASE_CXXFLAGS}
-    NO_WERROR_CXXFLAGS = ${NO_WERROR_RELEASE_CXXFLAGS}
 	OUT_DIR = bin/release
+else ifeq (${RELEASE}, 2)
+    CXXFLAGS = ${FULL_RELEASE_CXXFLAGS}
+	OUT_DIR = bin/full_release
 else
     CXXFLAGS = ${DEBUG_CXXFLAGS}
-    NO_WERROR_CXXFLAGS = ${NO_WERROR_DEBUG_CXXFLAGS}
 	OUT_DIR = bin/debug
 endif
 
+
 UTILITY_DIR = Utility
-MCTS_DIR = Monte\ Carlo\ Tree\ Search
-C4_DIR = Connect\ Four
-SNN_DIR = Static\ Neural\ Net
+MCTS_DIR = MonteCarloTreeSearch
+C4_DIR = ConnectFour
+SNN_DIR = StaticNeuralNet
 PLT_DIR = Plotting
-NEURAL_MODEL_DIR = Neural\ Model
-MINIMAX_SEARCH_DIR = Minimax\ Tree\ Search
-EVOLUTION_AGENT_DIR = Evolution\ Agent
-C4_AGENT_TRAINING_DIR = c4\ Agent\ Training
-TOURNAMENT_DIR = Tournament\ Selection
+NEURAL_MODEL_DIR = NeuralModel
+MINIMAX_SEARCH_DIR = MinimaxTreeSearch
+EVOLUTION_AGENT_DIR = EvolutionAgent
+C4_AGENT_TRAINING_DIR = C4AgentTraining
+TOURNAMENT_DIR = TournamentSelection
 BENCHMARKING_DIR = Benchmarking
 
 UTILITY_INCL =		
@@ -123,29 +142,45 @@ BENCHMARKING_LIB =		-Lbenchmark/build/src -lbenchmark -lpthread
 
 all: mcts_main c4_main static_nn_main utility_main minimax_main neural_model_main evolution_agent_main
 
-mcts_main: 
-	@echo Building $@..."\n"
-	@mkdir -p $(MCTS_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(MCTS_INCL) $(MCTS_DIR)/$@.cpp -o $(MCTS_DIR)/${OUT_DIR}/$@
-	@echo Built $@ successfully."\n"
-
-c4_main:
-	@echo Building $@..."\n"
-	@mkdir -p $(C4_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(C4_INCL) $(C4_DIR)/$@.cpp -o $(C4_DIR)/${OUT_DIR}/$@
-	@echo Built $@ successfully."\n"
-
-static_nn_main:
-	@echo Building $@..."\n"
-	@mkdir -p $(SNN_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(SNN_INCL) $(SNN_DIR)/$@.cpp -o $(SNN_DIR)/${OUT_DIR}/$@
-	@echo Built $@ successfully."\n"
+#=================================================================================================
+mcts_main: $(MCTS_DIR)/$(OUT_DIR)/c4_main.o $(UTILITY_DIR)/${OUT_DIR}/utility_main.o
 	
-utility_main:
-	@echo Building $@..."\n"
+$(MCTS_DIR)/$(OUT_DIR)/c4_main.o: $(MCTS_DIR)/*.cpp $(MCTS_DIR)/*.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(MCTS_DIR)/${OUT_DIR}
+	$(CXX) $(CXXFLAGS) $(MCTS_INCL) $(MCTS_DIR)/mcts_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=================================================================================================
+
+#=================================================================================================
+c4_main: $(C4_DIR)/$(OUT_DIR)/c4_main.o $(UTILITY_DIR)/${OUT_DIR}/utility_main.o
+	
+$(C4_DIR)/$(OUT_DIR)/c4_main.o: $(C4_DIR)/*.cpp $(C4_DIR)/*.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(C4_DIR)/${OUT_DIR}
+	$(CXX) $(CXXFLAGS) $(C4_INCL) $(C4_DIR)/c4_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=================================================================================================
+
+#=================================================================================================
+static_nn_main: $(SNN_DIR)/$(OUT_DIR)/static_nn_main.o $(UTILITY_DIR)/${OUT_DIR}/utility_main.o
+	
+$(SNN_DIR)/$(OUT_DIR)/static_nn_main.o: $(SNN_DIR)/*.cpp $(SNN_DIR)/*.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(SNN_DIR)/${OUT_DIR}
+	$(CXX) $(CXXFLAGS) $(SNN_INCL) $(SNN_DIR)/static_nn_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=================================================================================================
+
+#=================================================================================================
+utility_main: $(UTILITY_DIR)/${OUT_DIR}/utility_main.o
+
+$(UTILITY_DIR)/${OUT_DIR}/utility_main.o: $(UTILITY_DIR)/*.cpp $(UTILITY_DIR)/*.hpp
+	@echo -e Building $@..."\n"
 	@mkdir -p $(UTILITY_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(UTILITY_INCL) $(UTILITY_DIR)/$@.cpp -o $(UTILITY_DIR)/${OUT_DIR}/$@
-	@echo Built $@ successfully."\n"
+	$(CXX) $(CXXFLAGS) $(UTILITY_INCL) $(UTILITY_DIR)/utility_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=================================================================================================
 
 minimax_main:
 	@echo Building $@..."\n"
@@ -176,13 +211,17 @@ c4_agent_training:
 	@mkdir -p $(C4_AGENT_TRAINING_DIR)/${OUT_DIR}
 	$(CXX) $(CXXFLAGS) $(C4_AGENT_TRAINING_INCL) $(C4_AGENT_TRAINING_LIB) $(C4_AGENT_TRAINING_DIR)/$@.cpp -o $(C4_AGENT_TRAINING_DIR)/${OUT_DIR}/$@
 	@echo Built $@ successfully."\n"
+
+#=================================================================================================
+tournament_selection_main: $(TOURNAMENT_DIR)/$(OUT_DIR)/tournament_selection_main.o $(UTILITY_DIR)/${OUT_DIR}/utility_main.o
 	
-tournament_selection_main:
-	@echo Building $@..."\n"
+$(TOURNAMENT_DIR)/$(OUT_DIR)/tournament_selection_main.o: $(TOURNAMENT_DIR)/*.cpp $(TOURNAMENT_DIR)/*.hpp
+	@echo -e Building $@..."\n"
 	@mkdir -p $(TOURNAMENT_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(TOURNAMENT_INCL) $(TOURNAMENT_DIR)/$@.cpp -o $(TOURNAMENT_DIR)/${OUT_DIR}/$@
-	@echo Built $@ successfully."\n"
-	
+	$(CXX) $(CXXFLAGS) $(TOURNAMENT_INCL) $(TOURNAMENT_DIR)/tournament_selection_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=================================================================================================
+
 benchmarking_main:
 	@echo Building $@..."\n"
 	@mkdir -p $(BENCHMARKING_DIR)/${OUT_DIR}

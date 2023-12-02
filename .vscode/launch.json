@@ -5,7 +5,7 @@
             "name": "(gdb) g++ Debug launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/bin/${fileBasenameNoExtension}",
+            "program": "${fileDirname}/bin/debug/${fileBasenameNoExtension}",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
@@ -24,28 +24,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "C/C++: g++ debug build active file"
-        },
-        {
-            "name": "(gdb) g++ Release launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${fileDirname}/bin/${fileBasenameNoExtension}",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-            ],
-            "preLaunchTask": "C/C++: g++ release build active file"
+            "preLaunchTask": "debug build"
         }
-    ],
-    "compounds": []
+    ]
 }

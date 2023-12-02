@@ -1,150 +1,47 @@
+// Makefile
+// ${workspaceRoot} the path of the folder opened in VS Code
+// ${file} the current opened file
+// ${fileBasename} the current opened file's basename
+// ${fileDirname} the current opened file's dirname
+// ${fileBasenameNoExtension} the current opened file's basename without extension
+// ${fileExtname} the current opened file's extension
+// ${cwd} the task runner's current working directory on startup
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ debug build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-fdiagnostics-color=always",
-                "-fdiagnostics-show-template-tree",
-                "-fdiagnostics-path-format=inline-events",
-                "-fdiagnostics-show-caret",
-                "-undefined",
-                "-g",
-                "-Wall",
-                "-Wextra",
-                "-Wshadow",
-                "-Wconversion",
-                "-fsanitize=address",
-                "-fsanitize=leak",
-                "-fsanitize=undefined",
-                //"-fno-omit-frame-pointer",
-                "-pedantic",
-                "-Werror",
-                "-mavx",
-                "-fbounds-check",
-                "-std=c++23",
-                "-I${workspaceFolder}/Utility",
-                "-I${workspaceFolder}/Connect Four",
-                "-I${workspaceFolder}/Static Neural Net",
-                "-I${workspaceFolder}/Neural Model",
-                "${file}",
-                "-o",
-                "${fileDirname}/bin/${fileBasenameNoExtension}",
-                //"-v"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "detail": "compiler: /usr/bin g++"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ release build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-fdiagnostics-color",
-                "-fdiagnostics-show-template-tree",
-                "-O3",
-                "-Wall",
-                "-Wextra",
-                "-Wshadow",
-                "-Wconversion",
-                "-Wpedantic",
-                "-Werror",
-                "-std=c++2b",
-                "${file}",
-                "-o",
-                "${fileDirname}/bin/${fileBasenameNoExtension}",
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "detail": "compiler: /usr/bin g++"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: clang++ debug build active file",
-            "command": "/usr/bin/clang++",
-            "args": [
-                "-fcolor-diagnostics",
-                "-fansi-escape-codes",
-                "-fdiagnostics-show-template-tree",
-                "-fsanitize=memory",
-                "-fsanitize=undefined",
-                "-fsanitize-stats",
-                "-g",
-                "-Wall",
-                "-Wextra",
-                "-Wshadow",
-                "-Wconversion",
-                "-Wpedantic",
-                "-Werror",
-                "-std=c++2b",
-                "-I ${workspaceFolder}/Utility",
-                "${file}",
-                "-o",
-                "${fileDirname}/bin/${fileBasenameNoExtension}",
-                "-v"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "detail": "compiler: /usr/bin/clang++"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: clang++ release build active file",
-            "command": "/usr/bin/clang++",
-            "args": [
-                "-fcolor-diagnostics",
-                "-fansi-escape-codes",
-                "-fdiagnostics-show-template-tree",
-                "-O3",
-                "-Wall",
-                "-Wextra",
-                "-Wshadow",
-                "-Wconversion",
-                "-Wpedantic",
-                "-Werror",
-                "-std=c++2b",
-                "${file}",
-                "-o",
-                "${fileDirname}/bin/${fileBasenameNoExtension}",
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "detail": "compiler: /usr/bin/clang++"
-        }
-    ]
+  "version": "2.0.0",
+  "command": "bash",
+  "options": {
+      "cwd": "${workspaceRoot}"
+  },
+  "tasks": [
+    {
+      "label": "debug build",
+      "type": "shell",
+      "command": "make -j4 ${fileBasenameNoExtension}.o RELEASE=0",
+      "group": {
+          "kind": "build",
+          "isDefault": true
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "release build",
+      "type": "shell",
+      "command": "make -j4 ${fileBasenameNoExtension} RELEASE=1",
+      "group": {
+          "kind": "build",
+          "isDefault": true
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "deploy build",
+      "type": "shell",
+      "command": "make -j4 ${fileBasenameNoExtension} RELEASE=2",
+      "group": {
+          "kind": "build",
+          "isDefault": true
+      },
+      "problemMatcher": "$gcc"
+    }
+  ]
 }

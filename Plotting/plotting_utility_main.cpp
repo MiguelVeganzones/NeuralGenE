@@ -51,8 +51,8 @@ void training_test()
 {
     random::init();
 
-    constexpr size_t N = 20;
-    constexpr size_t M = 1500;
+    constexpr std::size_t N = 20;
+    constexpr std::size_t M = 1500;
 
     using namespace ga_snn;
     using namespace ga_sm;
@@ -73,7 +73,8 @@ void training_test()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using brain_t =
+        ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
 
     std::array<std::array<brain_t, N>, 2> gen{};
 
@@ -86,7 +87,9 @@ void training_test()
     std::vector<float> in(M), out(M), pred(M), best_pred(M);
     //, best_pred{};
     std::iota(in.begin(), in.end(), 0.f);
-    std::ranges::transform(in, out.begin(), [](float i) { return std::sin(i / 100); });
+    std::ranges::transform(in, out.begin(), [](float i) {
+        return std::sin(i / 100);
+    });
 
     for (size_t iter = 0; iter != 100000; ++iter)
     {
@@ -121,34 +124,64 @@ void training_test()
         const auto idx5 = std::ranges::find(error, temp[5]) - error.begin();
 
         to_target_brain_x_crossover(
-            gen[iter % 2][idx0], gen[iter % 2][idx1], gen[(iter + 1) % 2][0], gen[(iter + 1) % 2][1]
+            gen[iter % 2][idx0],
+            gen[iter % 2][idx1],
+            gen[(iter + 1) % 2][0],
+            gen[(iter + 1) % 2][1]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx0], gen[iter % 2][idx2], gen[(iter + 1) % 2][2], gen[(iter + 1) % 2][3]
+            gen[iter % 2][idx0],
+            gen[iter % 2][idx2],
+            gen[(iter + 1) % 2][2],
+            gen[(iter + 1) % 2][3]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx0], gen[iter % 2][idx3], gen[(iter + 1) % 2][4], gen[(iter + 1) % 2][5]
+            gen[iter % 2][idx0],
+            gen[iter % 2][idx3],
+            gen[(iter + 1) % 2][4],
+            gen[(iter + 1) % 2][5]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx0], gen[iter % 2][idx4], gen[(iter + 1) % 2][6], gen[(iter + 1) % 2][7]
+            gen[iter % 2][idx0],
+            gen[iter % 2][idx4],
+            gen[(iter + 1) % 2][6],
+            gen[(iter + 1) % 2][7]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx0], gen[iter % 2][idx5], gen[(iter + 1) % 2][8], gen[(iter + 1) % 2][9]
+            gen[iter % 2][idx0],
+            gen[iter % 2][idx5],
+            gen[(iter + 1) % 2][8],
+            gen[(iter + 1) % 2][9]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx1], gen[iter % 2][idx2], gen[(iter + 1) % 2][10], gen[(iter + 1) % 2][11]
+            gen[iter % 2][idx1],
+            gen[iter % 2][idx2],
+            gen[(iter + 1) % 2][10],
+            gen[(iter + 1) % 2][11]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx1], gen[iter % 2][idx3], gen[(iter + 1) % 2][12], gen[(iter + 1) % 2][13]
+            gen[iter % 2][idx1],
+            gen[iter % 2][idx3],
+            gen[(iter + 1) % 2][12],
+            gen[(iter + 1) % 2][13]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx1], gen[iter % 2][idx4], gen[(iter + 1) % 2][14], gen[(iter + 1) % 2][15]
+            gen[iter % 2][idx1],
+            gen[iter % 2][idx4],
+            gen[(iter + 1) % 2][14],
+            gen[(iter + 1) % 2][15]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx2], gen[iter % 2][idx3], gen[(iter + 1) % 2][16], gen[(iter + 1) % 2][17]
+            gen[iter % 2][idx2],
+            gen[iter % 2][idx3],
+            gen[(iter + 1) % 2][16],
+            gen[(iter + 1) % 2][17]
         );
         to_target_brain_x_crossover(
-            gen[iter % 2][idx2], gen[iter % 2][idx4], gen[(iter + 1) % 2][18], gen[(iter + 1) % 2][19]
+            gen[iter % 2][idx2],
+            gen[iter % 2][idx4],
+            gen[(iter + 1) % 2][18],
+            gen[(iter + 1) % 2][19]
         );
 
         for (auto& e : gen[(iter + 1) % 2])
@@ -171,7 +204,9 @@ void training_test()
                     }
                     if (r < 0.0024f)
                     {
-                        return f += random::randnormal(random::randnormal(), random::randfloat());
+                        return f += random::randnormal(
+                                   random::randnormal(), random::randfloat()
+                               );
                     }
                     if (r < 0.0030f)
                     {
@@ -184,7 +219,8 @@ void training_test()
 
         if (iter % 51 == 0)
         {
-            std::cout << iter << " " << *std::ranges::min_element(error) << '\n';
+            std::cout << iter << " " << *std::ranges::min_element(error)
+                      << '\n';
             plotting_utility::plot(best_pred);
         }
     }

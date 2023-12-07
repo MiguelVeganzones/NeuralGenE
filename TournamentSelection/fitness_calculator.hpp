@@ -27,7 +27,7 @@ struct fitness_calculator
     //     reproduction_probabilities_container_type();
     // }
 
-    template <std::floating_point R, size_t N>
+    template <std::floating_point R, std::size_t N>
         requires(N > 1)
     [[nodiscard]]
     static auto generation_variability(std::array<agent_type, N> const& agents)

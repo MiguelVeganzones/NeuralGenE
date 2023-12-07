@@ -44,7 +44,7 @@ struct default_activation_function_parameters
     }
 
     [[nodiscard]]
-    static constexpr size_t parameter_count()
+    static constexpr std::size_t parameter_count()
     {
         return 0;
     }
@@ -77,7 +77,7 @@ struct Swish_parameters_type
     value_type beta;
 
     [[nodiscard]]
-    static constexpr size_t parameter_count()
+    static constexpr std::size_t parameter_count()
     {
         return 1;
     }
@@ -143,7 +143,7 @@ struct PReLU_parameters_type
     value_type alpha;
 
     [[nodiscard]]
-    static constexpr size_t parameter_count()
+    static constexpr std::size_t parameter_count()
     {
         return 1;
     }
@@ -210,7 +210,7 @@ struct threshold_parameters_type
     value_type threshold;
 
     [[nodiscard]]
-    static constexpr size_t parameter_count()
+    static constexpr std::size_t parameter_count()
     {
         return 1;
     }
@@ -588,7 +588,7 @@ struct activation_function
         params.fill(std::forward<Fn>(fn), std::forward<Args>(args)...);
     }
 
-    static constexpr size_t parameter_count()
+    static constexpr std::size_t parameter_count()
     {
         return parameters_type::parameter_count();
     }

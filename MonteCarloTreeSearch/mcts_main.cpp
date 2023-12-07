@@ -6,9 +6,9 @@ int main()
 {
     random::init();
 
-    constexpr size_t M = 4;
-    constexpr size_t N = 4;
-    constexpr size_t K = 2;
+    constexpr std::size_t M = 4;
+    constexpr std::size_t N = 4;
+    constexpr std::size_t K = 2;
 
     std::cout << "MCTS main\n\n";
 
@@ -38,7 +38,8 @@ int main()
         auto       playout_state = initial_state.expansion(selected);
         const auto result        = initial_state.simulation(playout_state);
         initial_state.backpropagation(playout_state, result);
-        std::cout << initial_state.m_Monte_carlo_sampling[0].results.samples << std::endl;
+        std::cout << initial_state.m_Monte_carlo_sampling[0].results.samples
+                  << std::endl;
     }
 
     for (int i = 0; i < 10; ++i)
@@ -47,7 +48,9 @@ int main()
 
         std::cout << "Board: " << i << std::endl;
 
-        std::cout << decltype(initial_state)::game_state_type::decode(e2.encoded_game_state).board_state();
+        std::cout << decltype(initial_state
+        )::game_state_type::decode(e2.encoded_game_state)
+                         .board_state();
 
         std::cout << e2.results.points << '/' << e2.results.samples << "\n";
     }

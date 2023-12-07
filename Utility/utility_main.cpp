@@ -18,7 +18,7 @@ int main()
     auto      pt  = precision_totalizer{};
     double    sum = 0;
 
-    constexpr size_t n = 10'000'000;
+    constexpr std::size_t n = 10'000'000;
 
     random::init();
 

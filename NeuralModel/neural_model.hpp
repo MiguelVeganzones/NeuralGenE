@@ -18,7 +18,9 @@ concept neural_net_concept = requires(NNet net) {
     net.print_net();
     net.print_address();
     net.forward_pass(std::declval<typename NNet::input_type&>());
-    net.mutate(std::declval<typename NNet::value_type (*)(typename NNet::value_type)>());
+    net.mutate(
+        std::declval<typename NNet::value_type (*)(typename NNet::value_type)>()
+    );
     net.mutate_set_layers(
         std::declval<std::vector<std::size_t>&>(),
         std::declval<typename NNet::value_type (*)(typename NNet::value_type)>()
@@ -31,9 +33,9 @@ template <
     data_processor::data_processor_type Data_Postprocessor,
     typename Brain_Output_Type>
     requires requires {
-        Data_Postprocessor::template process<typename NNet::output_type, Brain_Output_Type>(
-            std::declval<typename NNet::output_type&>()
-        );
+        Data_Postprocessor::template process<
+            typename NNet::output_type,
+            Brain_Output_Type>(std::declval<typename NNet::output_type&>());
     }
 class brain
 {
@@ -47,7 +49,7 @@ public:
     using brain_output_type = Brain_Output_Type;
     using value_type        = nn_value_type;
 
-    inline static constexpr size_t s_Brain_layers = NNet::s_Layers;
+    inline static constexpr std::size_t s_Brain_layers = NNet::s_Layers;
 
 
 private:
@@ -137,15 +139,19 @@ public:
 
     template <typename Brain_Input_Type>
         requires requires {
-            preprocessor::template process<Brain_Input_Type, nn_input_type>(std::declval<Brain_Input_Type&>());
+            preprocessor::template process<Brain_Input_Type, nn_input_type>(
+                std::declval<Brain_Input_Type&>()
+            );
         }
     [[nodiscard]]
     auto
     operator()(const Brain_Input_Type& in) const -> brain_output_type
     {
-        return postprocessor::template process<nn_output_type, brain_output_type>(
-            weigh(preprocessor::template process<Brain_Input_Type, nn_input_type>(in))
-        );
+        return postprocessor::template process<
+            nn_output_type,
+            brain_output_type>(weigh(
+            preprocessor::template process<Brain_Input_Type, nn_input_type>(in)
+        ));
     }
 
     nn_output_type weigh(const nn_input_type& in) const
@@ -191,12 +197,17 @@ template <
     data_processor::data_processor_type Data_Preprocessor,
     data_processor::data_processor_type Data_Postprocessor,
     typename Brain_Output_Type>
-void brain_dummy(brain<NNet, Data_Preprocessor, Data_Postprocessor, Brain_Output_Type>)
+void brain_dummy(brain<
+                 NNet,
+                 Data_Preprocessor,
+                 Data_Postprocessor,
+                 Brain_Output_Type>)
 {
 }
 
 template <typename T>
-concept brain_type = requires(T&& t) { brain_dummy(std::declval<std::remove_cvref_t<T>&>()); };
+concept brain_type =
+    requires(T&& t) { brain_dummy(std::declval<std::remove_cvref_t<T>&>()); };
 
 //--------------------------------------------------------------------------------------//
 //  Utility
@@ -206,18 +217,34 @@ template <std::floating_point R, brain_type Brain, typename Distance>
     requires requires(Brain brain) {
         {
             brain.get_net()
-        } -> std::convertible_to<typename std::remove_cvref_t<Brain>::neural_net_type>;
+        } -> std::convertible_to<
+            typename std::remove_cvref_t<Brain>::neural_net_type>;
     }
 [[nodiscard]]
-auto distance(Brain const& c4_brain_a, Brain const& c4_brain_b, Distance&& dist_op) -> R
+auto distance(
+    Brain const& c4_brain_a,
+    Brain const& c4_brain_b,
+    Distance&&   dist_op
+) -> R
 {
-    return distance<R>(c4_brain_a.get_net(), c4_brain_b.get_net(), std::forward<Distance>(dist_op));
+    return distance<R>(
+        c4_brain_a.get_net(),
+        c4_brain_b.get_net(),
+        std::forward<Distance>(dist_op)
+    );
 }
 
 template <brain_type Brain>
-auto to_target_brain_crossover(const Brain& parent_a, const Brain& parent_b, Brain& child_a, Brain& child_b) -> void
+auto to_target_brain_crossover(
+    const Brain& parent_a,
+    const Brain& parent_b,
+    Brain&       child_a,
+    Brain&       child_b
+) -> void
 {
-    to_target_net_x_crossover(*parent_a.get(), *parent_b.get(), *child_a.get_raw(), *child_b.get_raw());
+    to_target_net_x_crossover(
+        *parent_a.get(), *parent_b.get(), *child_a.get_raw(), *child_b.get_raw()
+    );
 }
 
 } // namespace ga_neural_model

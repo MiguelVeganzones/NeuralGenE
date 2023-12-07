@@ -20,8 +20,8 @@ namespace ga_snn
 
 struct Layer_Signature
 {
-    using size_type = unsigned int;
-    size_type                                              Size;
+    using std::size_type = unsigned int;
+    std::size_type                                         Size;
     matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
     constexpr bool operator==(const Layer_Signature&) const = default;
@@ -29,8 +29,8 @@ struct Layer_Signature
 
 struct Layer_Structure
 {
-    size_t                                                 Inputs;
-    size_t                                                 Outputs;
+    std::size_t                                            Inputs;
+    std::size_t                                            Outputs;
     matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
     constexpr bool operator==(const Layer_Structure&) const = default;
@@ -38,14 +38,17 @@ struct Layer_Structure
 
 //--------------------------------------------------------------------------------------//
 
-template <std::floating_point T, size_t Batch_Size, Layer_Structure Structure>
+template <
+    std::floating_point T,
+    std::size_t         Batch_Size,
+    Layer_Structure     Structure>
     requires(Batch_Size > 0)
 class layer
 {
 public:
-    static constexpr size_t s_Inputs     = Structure.Inputs;
-    static constexpr size_t s_Outputs    = Structure.Outputs;
-    static constexpr auto   s_Activation = Structure.Activation;
+    static constexpr std::size_t s_Inputs     = Structure.Inputs;
+    static constexpr std::size_t s_Outputs    = Structure.Outputs;
+    static constexpr auto        s_Activation = Structure.Activation;
 
     using weights_shape       = ga_sm::static_matrix<T, s_Inputs, s_Outputs>;
     using output_vector_shape = ga_sm::static_matrix<T, Batch_Size, s_Outputs>;
@@ -144,26 +147,26 @@ public:
     }
 
     [[nodiscard]]
-    static inline constexpr size_t get_inputs()
+    static inline constexpr std::size_t get_inputs()
     {
         return s_Inputs;
     }
 
     [[nodiscard]]
-    static inline constexpr size_t get_outputs()
+    static inline constexpr std::size_t get_outputs()
     {
         return s_Outputs;
     }
 
     [[nodiscard]]
-    static inline constexpr size_t parameter_count()
+    static inline constexpr std::size_t parameter_count()
     {
         return s_Outputs * (s_Inputs + 1) +
             activation_function::parameter_count();
     }
 
     [[nodiscard]]
-    static inline constexpr size_t layer_size()
+    static inline constexpr std::size_t layer_size()
     {
         return sizeof(layer);
     }
@@ -173,7 +176,7 @@ public:
 // Static layer concept
 // -----------------------------------------------
 
-template <typename T, size_t Batch_Size, Layer_Structure Structure>
+template <typename T, std::size_t Batch_Size, Layer_Structure Structure>
 void layer_dummy(layer<T, Batch_Size, Structure>)
 {
 }
@@ -198,21 +201,25 @@ std::ostream& operator<<(std::ostream& os, const Layer& layer)
 //-------------------------------------------------------------------------------
 
 // base template
-template <typename T, size_t Inputs, size_t Batch_Size, Layer_Signature...>
+template <
+    typename T,
+    std::size_t Inputs,
+    std::size_t Batch_Size,
+    Layer_Signature...>
     requires(Batch_Size > 0)
 struct layer_unroll;
 
 // specialization for last layer
 template <
     typename T,
-    size_t          Inputs,
-    size_t          Batch_Size,
+    std::size_t     Inputs,
+    std::size_t     Batch_Size,
     Layer_Signature Current_Signature>
     requires(Batch_Size > 0)
 struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
 {
-    static constexpr size_t s_Inputs{ Inputs };
-    static constexpr size_t s_Outputs{ Current_Signature.Size };
+    static constexpr std::size_t s_Inputs{ Inputs };
+    static constexpr std::size_t s_Outputs{ Current_Signature.Size };
 
     using current_layer_type = layer<
         T,
@@ -297,7 +304,7 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
     }
 
     [[nodiscard]]
-    static size_t layer_size(const int idx_to_target_layer) noexcept
+    static std::size_t layer_size(const int idx_to_target_layer) noexcept
     {
         if (idx_to_target_layer == 0)
         {
@@ -309,7 +316,7 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
     }
 
     [[nodiscard]]
-    static size_t parameter_count(const int idx_to_target_layer) noexcept
+    static std::size_t parameter_count(const int idx_to_target_layer) noexcept
     {
         if (idx_to_target_layer == 0)
         {
@@ -324,15 +331,15 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature>
 // general specialization
 template <
     typename T,
-    size_t          Inputs,
-    size_t          Batch_Size,
+    std::size_t     Inputs,
+    std::size_t     Batch_Size,
     Layer_Signature Current_Signature,
     Layer_Signature... Signatures>
     requires(Batch_Size > 0)
 struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 {
-    static constexpr size_t s_Inputs{ Inputs };
-    static constexpr size_t s_Outputs{ Current_Signature.Size };
+    static constexpr std::size_t s_Inputs{ Inputs };
+    static constexpr std::size_t s_Outputs{ Current_Signature.Size };
 
     using current_layer_type = layer<
         T,
@@ -426,7 +433,7 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
     }
 
     [[nodiscard]]
-    static size_t layer_size(const int idx_to_target_layer)
+    static std::size_t layer_size(const int idx_to_target_layer)
     {
         if (idx_to_target_layer == 0)
         {
@@ -436,7 +443,7 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
     }
 
     [[nodiscard]]
-    static size_t parameter_count(const int idx_to_target_layer)
+    static std::size_t parameter_count(const int idx_to_target_layer)
     {
         if (idx_to_target_layer == 0)
         {
@@ -450,18 +457,19 @@ struct layer_unroll<T, Inputs, Batch_Size, Current_Signature, Signatures...>
 
 template <
     std::floating_point T,
-    size_t              Batch_Size,
+    std::size_t         Batch_Size,
     Layer_Signature... Signatures>
     requires((sizeof...(Signatures) >= 3) && Batch_Size > 0)
 class static_neural_net
 {
 public:
-    static constexpr size_t s_Layers{ sizeof...(Signatures) };
+    static constexpr std::size_t s_Layers{ sizeof...(Signatures) };
     static constexpr std::array<Layer_Signature, s_Layers> s_Signatures{
         Signatures...
     };
-    static constexpr size_t s_Output_Size = s_Signatures[s_Layers - 1].Size;
-    static constexpr size_t s_Input_Size  = s_Signatures[0].Size;
+    static constexpr std::size_t s_Output_Size =
+        s_Signatures[s_Layers - 1].Size;
+    static constexpr std::size_t s_Input_Size = s_Signatures[0].Size;
 
 private:
     using layers_type =
@@ -476,7 +484,7 @@ public:
 
 public:
     [[nodiscard]]
-    static constexpr size_t parameter_count(
+    static constexpr std::size_t parameter_count(
         unsigned int       first_layer_idx = 0,
         const unsigned int last_layer_idx  = s_Layers - 1
     )
@@ -484,7 +492,7 @@ public:
         assert(last_layer_idx < s_Layers);
         assert(first_layer_idx <= s_Layers);
 
-        size_t p{};
+        std::size_t p{};
         for (; first_layer_idx != last_layer_idx + 1; ++first_layer_idx)
         {
             p += layer_parameter_count(first_layer_idx);
@@ -493,7 +501,9 @@ public:
     }
 
     [[nodiscard]]
-    static constexpr size_t layer_parameter_count(const unsigned int layer_idx)
+    static constexpr std::size_t layer_parameter_count(
+        const unsigned int layer_idx
+    )
     {
         assert(layer_idx < s_Layers);
 
@@ -501,12 +511,12 @@ public:
     }
 
     [[nodiscard]]
-    static constexpr size_t subnet_size(
+    static constexpr std::size_t subnet_size(
         unsigned int       first_layer_idx = 0,
         const unsigned int last_layer_idx  = s_Layers - 1
     )
     {
-        size_t p{};
+        std::size_t p{};
         for (; first_layer_idx != last_layer_idx + 1; ++first_layer_idx)
         {
             p += layer_size(first_layer_idx);
@@ -515,7 +525,7 @@ public:
     }
 
     [[nodiscard]]
-    static constexpr size_t layer_size(const unsigned int layer_idx)
+    static constexpr std::size_t layer_size(const unsigned int layer_idx)
     {
         return layers_type::layer_size(layer_idx);
     }
@@ -722,7 +732,11 @@ public:
         );
     }
 
-    template <size_t M_Out, size_t N_Out, size_t M_In, size_t N_In>
+    template <
+        size_t      M_Out,
+        std::size_t N_Out,
+        std::size_t M_In,
+        std::size_t N_In>
         requires(
             (M_Out * N_Out == s_Output_Size) && (M_In * N_In == s_Input_Size) &&
             Batch_Size == 1
@@ -758,7 +772,7 @@ public:
 //  Neural net concept
 //--------------------------------------------------------------------------------------//
 
-template <typename T, size_t Batch_Size, Layer_Signature... Signatures>
+template <typename T, std::size_t Batch_Size, Layer_Signature... Signatures>
 auto nnet_dummy(static_neural_net<T, Batch_Size, Signatures...>) -> void
 {
 }
@@ -822,10 +836,13 @@ inline auto to_target_layer_x_crossover(
     );
 }
 
-template <static_neural_net_type NNet, size_t I = 0>
+template <static_neural_net_type NNet, std::size_t I = 0>
     requires(I < NNet::s_Layers)
 inline auto to_target_net_x_crossover(
-    const NNet& in_net1, const NNet& in_net2, NNet& out_net1, NNet& out_net2
+    const NNet& in_net1,
+    const NNet& in_net2,
+    NNet&       out_net1,
+    NNet&       out_net2
 ) -> void
 {
     to_target_layer_x_crossover(
@@ -849,7 +866,10 @@ inline auto to_target_net_x_crossover(
 template <static_neural_net_type NNet>
     requires(std::is_standard_layout_v<std::remove_reference<NNet>> && std::is_trivial_v<std::remove_reference<NNet>>)
 inline auto to_target_layer_swap(
-    const NNet& in_net1, const NNet& in_net2, NNet& out_net1, NNet& out_net2
+    const NNet& in_net1,
+    const NNet& in_net2,
+    NNet&       out_net1,
+    NNet&       out_net2
 ) -> void
 {
     using value_type = typename NNet::value_type;
@@ -892,7 +912,8 @@ inline auto to_target_layer_swap(
 template <static_neural_net_type NNet>
     requires(std::is_standard_layout_v<std::remove_reference<NNet>> && std::is_trivial_v<std::remove_reference<NNet>>)
 inline auto in_place_layer_swap(
-    [[maybe_unused]] NNet& net1, [[maybe_unused]] NNet& net2
+    [[maybe_unused]] NNet& net1,
+    [[maybe_unused]] NNet& net2
 ) -> void
 {
     const auto layers = NNet::s_Layers;
@@ -921,7 +942,8 @@ inline auto in_place_layer_swap(
 
 template <static_neural_net_type NNet>
 std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> layer_swap(
-    NNet const& net1, NNet const& net2
+    NNet const& net1,
+    NNet const& net2
 )
 {
     auto ptr_ret_net1 = std::make_unique<NNet>(net1);
@@ -943,7 +965,7 @@ std::pair<std::unique_ptr<NNet>, std::unique_ptr<NNet>> layer_swap(
  */
 template <
     std::floating_point    R,
-    size_t                 N,
+    std::size_t            N,
     static_neural_net_type NNet,
     typename Distance>
     requires(N > 1)
@@ -988,7 +1010,9 @@ template <
     )
 [[nodiscard]]
 auto layer_distance(
-    Layer1 const& layer1, Layer2 const& layer2, Distance&& dist_op
+    Layer1 const& layer1,
+    Layer2 const& layer2,
+    Distance&&    dist_op
 ) -> R
 {
     return matrix_distance<R>(
@@ -1024,11 +1048,13 @@ template <
     static_neural_net_type NNet1,
     static_neural_net_type NNet2,
     typename Distance,
-    size_t I = 0>
+    std::size_t I = 0>
     requires(NNet1::s_Signatures == NNet2::s_Signatures)
 [[nodiscard]]
 auto neural_net_distance(
-    NNet1 const& net1, NNet2 const& net2, Distance&& dist_op
+    NNet1 const& net1,
+    NNet2 const& net2,
+    Distance&&   dist_op
 ) -> R
 {
     const auto current_distance = layer_distance<R>(

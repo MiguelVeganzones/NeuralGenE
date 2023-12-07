@@ -12,7 +12,7 @@ int flat_test()
     using namespace ga_snn;
     using namespace ga_sm;
 
-    constexpr size_t N1 = 50;
+    constexpr std::size_t N1 = 50;
 
     ga_sm::static_matrix<float, N1, 1> in{}, pred{};
     ga_sm::static_matrix<float, N1, 2> pred2{};
@@ -117,7 +117,7 @@ void abench(int n)
     using namespace ga_snn;
     using T = float;
 
-    constexpr size_t N = 8;
+    constexpr std::size_t N = 8;
 
     constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
 
@@ -156,7 +156,7 @@ void get_layer()
     using namespace ga_snn;
     using T = float;
 
-    constexpr size_t N = 8;
+    constexpr std::size_t N = 8;
 
     constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
 
@@ -190,7 +190,7 @@ void layer_swap_test()
     using namespace ga_snn;
     using T = float;
 
-    constexpr size_t N = 8;
+    constexpr std::size_t N = 8;
 
     constexpr auto AF    = matrix_activation_functions::Identifiers::Sigmoid;
     constexpr auto Swish = matrix_activation_functions::Identifiers::Swish;

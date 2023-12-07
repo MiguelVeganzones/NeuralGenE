@@ -10,9 +10,9 @@
 namespace c4_board
 {
 template <
-    size_t       Size_Y,
-    size_t       Size_X,
-    size_t       Target_Count,
+    std::size_t  Size_Y,
+    std::size_t  Size_X,
+    std::size_t  Target_Count,
     std::uint8_t Player_Count>
     requires(Target_Count > 1) && (Size_X >= Target_Count) &&
     (Size_Y >= Target_Count) && (Player_Count > 1)
@@ -405,7 +405,7 @@ private:
 
     void calculate_current_player()
     {
-        size_t moves_count = 0;
+        std::size_t moves_count = 0;
         for (auto& e : m_Valid_moves)
         {
             moves_count += Size_y - e.y - 1;
@@ -431,9 +431,9 @@ public:
 //--------------------------------------------------------------------------------------//
 
 template <
-    size_t       Size_Y,
-    size_t       Size_X,
-    size_t       Target_Count,
+    std::size_t  Size_Y,
+    std::size_t  Size_X,
+    std::size_t  Target_Count,
     std::uint8_t Player_Count>
 void c4_board_dummy(board<Size_Y, Size_X, Target_Count, Player_Count>)
 {

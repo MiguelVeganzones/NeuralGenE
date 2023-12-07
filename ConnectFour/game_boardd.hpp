@@ -36,29 +36,35 @@ inline std::ostream& operator<<(std::ostream& os, const board_2D_position& pos)
 }
 
 template <
-    size_t                 Size_Y,
-    size_t                 Size_X,
-    size_t                 Valid_States,
+    std::size_t            Size_Y,
+    std::size_t            Size_X,
+    std::size_t            Valid_States,
     std::unsigned_integral Repr_Type,
     Repr_Type              Empty_State = Repr_Type{}>
-    requires(cx_helper_func::cx_pow(2, sizeof(Repr_Type) * CHAR_BIT) >= Valid_States) &&
-    (Size_X < std::numeric_limits<int>::max()) && (Size_Y < std::numeric_limits<int>::max())
+    requires(cx_helper_func::cx_pow(2, sizeof(Repr_Type) * CHAR_BIT) >=
+             Valid_States) &&
+    (Size_X < std::numeric_limits<int>::max()) &&
+    (Size_Y < std::numeric_limits<int>::max())
 class board_2D
 {
 public:
     using repr_type      = Repr_Type;
     using interface_type = Repr_Type;
 
-    inline static constexpr repr_type  s_Empty_state_value = Empty_State;
-    inline static constexpr size_t     s_Bits_per_state    = cx_helper_func::cx_pow2_bits_required(Valid_States);
-    inline static constexpr size_t     s_Size              = Size_X * Size_Y;
-    inline static constexpr size_t     Size_x              = Size_X;
-    inline static constexpr size_t     Size_y              = Size_Y;
-    inline static constexpr size_t     s_Valid_states      = Valid_States;
-    inline static constexpr std::array s_Char_state_repr   = { ' ', 'x', 'o', '1', '2', '3', '4', '5', '6',
-                                                               '7', '8', '9', '0', '#', '+', '*', '?', '&' };
+    inline static constexpr repr_type   s_Empty_state_value = Empty_State;
+    inline static constexpr std::size_t s_Bits_per_state =
+        cx_helper_func::cx_pow2_bits_required(Valid_States);
+    inline static constexpr std::size_t s_Size            = Size_X * Size_Y;
+    inline static constexpr std::size_t Size_x            = Size_X;
+    inline static constexpr std::size_t Size_y            = Size_Y;
+    inline static constexpr std::size_t s_Valid_states    = Valid_States;
+    inline static constexpr std::array  s_Char_state_repr = {
+        ' ', 'x', 'o', '1', '2', '3', '4', '5', '6',
+        '7', '8', '9', '0', '#', '+', '*', '?', '&'
+    };
 
-    using board_state_type   = polystate::polystate_set<s_Size, interface_type, repr_type, s_Bits_per_state>;
+    using board_state_type = polystate::
+        polystate_set<s_Size, interface_type, repr_type, s_Bits_per_state>;
     using encode_type        = board_state_type::encode_type;
     using encode_type_hasher = board_state_type::encode_type_hasher;
     using encode_type_equal  = board_state_type::encode_type_equal;
@@ -72,23 +78,26 @@ public:
         }
     }
 
-    auto set_position(const board_2D_position pos, const interface_type value) -> void
+    auto set_position(const board_2D_position pos, const interface_type value)
+        -> void
     {
         assert(value < s_Valid_states);
         m_State[position(pos)] = value;
     }
 
-    [[nodiscard]] constexpr auto at(const board_2D_position pos) const -> repr_type
+    [[nodiscard]]
+    constexpr auto at(const board_2D_position pos) const -> repr_type
     {
         return m_State[position(pos)];
     }
 
-    [[nodiscard]] constexpr bool is_empty(const board_2D_position pos) const
+    [[nodiscard]]
+    constexpr bool is_empty(const board_2D_position pos) const
     {
         return at(pos) == s_Empty_state_value;
     }
 
-    inline static constexpr size_t position(const board_2D_position pos)
+    inline static constexpr std::size_t position(const board_2D_position pos)
     {
         assert(pos.x >= 0);
         assert(pos.y >= 0);
@@ -101,7 +110,8 @@ public:
         return s_Char_state_repr[value];
     }
 
-    [[nodiscard]] encode_type encode() const
+    [[nodiscard]]
+    encode_type encode() const
     {
         return m_State.encode();
     }
@@ -111,12 +121,14 @@ public:
         return board_2D{ board_state_type::decode(encoded_board2D) };
     }
 
-    [[nodiscard]] static board_2D_position up(const board_2D_position pos)
+    [[nodiscard]]
+    static board_2D_position up(const board_2D_position pos)
     {
         return board_2D_position{ pos.y - 1, pos.x };
     }
 
-    [[nodiscard]] static board_2D_position down(const board_2D_position pos)
+    [[nodiscard]]
+    static board_2D_position down(const board_2D_position pos)
     {
         return board_2D_position{ pos.y + 1, pos.x };
     }
@@ -125,8 +137,18 @@ public:
     board_state_type m_State;
 };
 
-template <size_t Size_Y, size_t Size_X, size_t Valid_States, std::unsigned_integral Repr_Type, Repr_Type Empty_State>
-void game_board_2D_dummy(board_2D<Size_Y, Size_X, Valid_States, Repr_Type, Empty_State>)
+template <
+    size_t                 Size_Y,
+    std::size_t            Size_X,
+    std::size_t            Valid_States,
+    std::unsigned_integral Repr_Type,
+    Repr_Type              Empty_State>
+void game_board_2D_dummy(board_2D<
+                         Size_Y,
+                         Size_X,
+                         Valid_States,
+                         Repr_Type,
+                         Empty_State>)
 {
 }
 

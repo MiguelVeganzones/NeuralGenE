@@ -51,7 +51,7 @@ public:
     using flat_tree_node = mcts_flat_tree_node<encode_type>;
     using flat_tree_idx  = typename flat_tree_node::flat_tree_idx;
     using points_type    = typename flat_tree_node::result_type::points_type;
-    using leaf_node_idx  = size_t;
+    using leaf_node_idx  = std::size_t;
     using player_type    = typename Game_Board::player_repr_type;
     using sampling_states_container_type = std::vector<flat_tree_node>;
     using leaf_nodes_container_type      = std::vector<flat_tree_idx>;
@@ -118,8 +118,8 @@ public:
         flat_tree_idx next_leaf_idx = m_Monte_carlo_sampling.size();
         const auto    valid_moves   = parent_game_state.get_valid_moves();
 
-        const auto leaf_nodes_initial_size = m_Leaf_nodes_idx.size();
-        size_t     added_leaves            = 0;
+        const auto  leaf_nodes_initial_size = m_Leaf_nodes_idx.size();
+        std::size_t added_leaves            = 0;
 
         for (auto move : valid_moves)
         {

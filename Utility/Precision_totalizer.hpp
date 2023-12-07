@@ -16,9 +16,10 @@ private:
 
     floating_point_type m_Stddev  = 0;
     floating_point_type m_Average = 0;
-    floating_point_type m_Min     = std::numeric_limits<floating_point_type>::max();
-    floating_point_type m_Max     = std::numeric_limits<floating_point_type>::lowest();
-    size_t              m_Samples = 0;
+    floating_point_type m_Min = std::numeric_limits<floating_point_type>::max();
+    floating_point_type m_Max =
+        std::numeric_limits<floating_point_type>::lowest();
+    std::size_t m_Samples = 0;
 
 public:
     template <std::floating_point Floating_Point_Value>
@@ -52,47 +53,56 @@ public:
         update_metrics(floating_point_value);
     }
 
-    [[nodiscard]] auto samples() const
+    [[nodiscard]]
+    auto samples() const
     {
         return m_Samples;
     }
 
-    [[nodiscard]] auto get_floating_point_value() const
+    [[nodiscard]]
+    auto get_floating_point_value() const
     {
         return m_Fractional_accumulated_sum;
     }
 
-    [[nodiscard]] auto get_integral_value() const
+    [[nodiscard]]
+    auto get_integral_value() const
     {
         return m_Integral_accumulated_sum;
     }
 
-    [[nodiscard]] auto get_value() const
+    [[nodiscard]]
+    auto get_value() const
     {
         return m_Integral_accumulated_sum + m_Fractional_accumulated_sum;
     }
 
-    [[nodiscard]] auto get_stddev() const
+    [[nodiscard]]
+    auto get_stddev() const
     {
         return m_Stddev;
     }
 
-    [[nodiscard]] auto get_average() const
+    [[nodiscard]]
+    auto get_average() const
     {
         return m_Average;
     }
 
-    [[nodiscard]] auto get_min() const
+    [[nodiscard]]
+    auto get_min() const
     {
         return m_Min;
     }
 
-    [[nodiscard]] auto get_max() const
+    [[nodiscard]]
+    auto get_max() const
     {
         return m_Max;
     }
 
-    [[nodiscard]] auto get_num_samples() const
+    [[nodiscard]]
+    auto get_num_samples() const
     {
         return m_Samples;
     }
@@ -101,8 +111,10 @@ public:
     {
         std::cout << "\n_____Totalizer Summary_____";
         std::cout << "\nTotal samples:\t" << this->get_num_samples();
-        std::cout << "\nTotal integral value:\t\t" << this->get_integral_value();
-        std::cout << "\nRemainder fractional value:\t" << this->get_floating_point_value();
+        std::cout << "\nTotal integral value:\t\t"
+                  << this->get_integral_value();
+        std::cout << "\nRemainder fractional value:\t"
+                  << this->get_floating_point_value();
         std::cout << "\nMinimum value:\t\t" << this->get_min();
         std::cout << "\nMaximum value:\t\t" << this->get_max();
         std::cout << "\nAverage value:\t\t" << this->get_average();
@@ -113,16 +125,19 @@ public:
 private:
     void update_metrics(const floating_point_type added_value)
     {
-        const floating_point_type new_average = (m_Samples > 1) ? static_cast<floating_point_type>(m_Samples - 1) /
+        const floating_point_type new_average = (m_Samples > 1)
+            ? static_cast<floating_point_type>(m_Samples - 1) /
                     static_cast<floating_point_type>(m_Samples) * m_Average +
                 added_value / static_cast<floating_point_type>(m_Samples)
-                                                                : added_value;
+            : added_value;
 
         // https://math.stackexchange.com/questions/775391/can-i-calculate-the-new-standard-deviation-when-adding-a-value-without-knowing-t
         m_Stddev = std::pow(
-            static_cast<floating_point_type>(m_Samples - 1) / static_cast<floating_point_type>(m_Samples) * m_Stddev *
+            static_cast<floating_point_type>(m_Samples - 1) /
+                    static_cast<floating_point_type>(m_Samples) * m_Stddev *
                     m_Stddev +
-                (added_value - new_average) * (added_value - m_Average) / static_cast<floating_point_type>(m_Samples),
+                (added_value - new_average) * (added_value - m_Average) /
+                    static_cast<floating_point_type>(m_Samples),
             0.5
         );
         m_Average = new_average;

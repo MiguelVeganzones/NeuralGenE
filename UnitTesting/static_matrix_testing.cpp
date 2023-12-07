@@ -23,7 +23,7 @@ TEST_CLASS(unittesting_static_matrix)
 public:
     TEST_METHOD(assert_static_mat_mat_mul)
     {
-        constexpr size_t N = 20;
+        constexpr std::size_t N = 20;
 
         ga_sm::static_matrix<double, N, N> m1{};
 
@@ -41,8 +41,8 @@ public:
 
     TEST_METHOD(assert_static_mat_mat_mul_identity)
     {
-        constexpr size_t N = 20;
-        using T            = double;
+        constexpr std::size_t N = 20;
+        using T                 = double;
 
         ga_sm::static_matrix<T, N, N> m{};
 
@@ -56,61 +56,77 @@ public:
 
     TEST_METHOD(assert_static_mat_vec_mul_float)
     {
-        constexpr size_t N = 4;
+        constexpr std::size_t N = 4;
 
-        constexpr ga_sm::static_matrix<float, N, N> m{ 1.1f, 2.2f, 3.3f, 4.4f, 5.5f, 6.6f,  7.7f,  8.8f,
-                                                       9.9f, 3.3f, 4.4f, 2.2f, 3.3f, 14.1f, 15.5f, 0.f };
+        constexpr ga_sm::static_matrix<float, N, N> m{
+            1.1f, 2.2f, 3.3f, 4.4f, 5.5f, 6.6f,  7.7f,  8.8f,
+            9.9f, 3.3f, 4.4f, 2.2f, 3.3f, 14.1f, 15.5f, 0.f
+        };
         constexpr ga_sm::static_matrix<float, N, 1> v{ 3.3f, 4.4f, 2.2f, 2.2f },
             ground_truth{ 30.25f, 83.49f, 61.71f, 107.03f };
 
         const auto res = ga_sm::matrix_mul(m, v);
 
-        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
+        Assert::IsTrue(
+            normalized_L1_distance<double>(res, ground_truth) < epsilon
+        );
     }
 
     TEST_METHOD(assert_static_mat_vec_mul_int)
     {
-        constexpr size_t N = 4;
+        constexpr std::size_t N = 4;
 
-        constexpr ga_sm::static_matrix<int, N, N> m{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 4, 2, 3, 14, 15, 0 };
-        constexpr ga_sm::static_matrix<int, N, 1> v{ 3, 4, 2, 2 }, ground_truth{ 25, 69, 51, 95 };
+        constexpr ga_sm::static_matrix<int, N, N> m{ 1, 2, 3, 4, 5, 6,  7,  8,
+                                                     9, 3, 4, 2, 3, 14, 15, 0 };
+        constexpr ga_sm::static_matrix<int, N, 1> v{ 3, 4, 2, 2 },
+            ground_truth{ 25, 69, 51, 95 };
 
         const auto res = matrix_mul(m, v);
 
-        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
+        Assert::IsTrue(
+            normalized_L1_distance<double>(res, ground_truth) < epsilon
+        );
     }
 
     TEST_METHOD(assert_static_mat_vec_mul_double)
     {
-        constexpr size_t N = 4;
+        constexpr std::size_t N = 4;
 
-        constexpr ga_sm::static_matrix<double, N, N> m{ 1.1, 2.2, 3.3, 4.4, 5.5, 6.6,  7.7,  8.8,
-                                                        9.9, 3.3, 4.4, 2.2, 3.3, 14.1, 15.5, 0. };
+        constexpr ga_sm::static_matrix<double, N, N> m{ 1.1, 2.2,  3.3,  4.4,
+                                                        5.5, 6.6,  7.7,  8.8,
+                                                        9.9, 3.3,  4.4,  2.2,
+                                                        3.3, 14.1, 15.5, 0. };
         constexpr ga_sm::static_matrix<double, N, 1> v{ 3.3, 4.4, 2.2, 2.2 },
             ground_truth{ 30.25, 83.49, 61.71, 107.03 };
 
         const auto res = matrix_mul(m, v);
 
-        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
+        Assert::IsTrue(
+            normalized_L1_distance<double>(res, ground_truth) < epsilon
+        );
     }
 
     TEST_METHOD(assert_static_mat_vec_mul_avx)
     {
-        constexpr size_t N = 4;
+        constexpr std::size_t N = 4;
 
-        constexpr ga_sm::static_matrix<float, N, N> m{ 1.1f, 2.2f, 3.3f, 4.4f, 5.5f, 6.6f,  7.7f,  8.8f,
-                                                       9.9f, 3.3f, 4.4f, 2.2f, 3.3f, 14.1f, 15.5f, 0.f };
+        constexpr ga_sm::static_matrix<float, N, N> m{
+            1.1f, 2.2f, 3.3f, 4.4f, 5.5f, 6.6f,  7.7f,  8.8f,
+            9.9f, 3.3f, 4.4f, 2.2f, 3.3f, 14.1f, 15.5f, 0.f
+        };
         constexpr ga_sm::static_matrix<float, N, 1> v{ 3.3f, 4.4f, 2.2f, 2.2f },
             ground_truth{ 30.25f, 83.49f, 61.71f, 107.03f };
 
         const auto res = matrix_vector_mul_float_avx(m, v);
 
-        Assert::IsTrue(normalized_L1_distance<double>(res, ground_truth) < epsilon);
+        Assert::IsTrue(
+            normalized_L1_distance<double>(res, ground_truth) < epsilon
+        );
     }
 
     TEST_METHOD(assert_static_mat_vec_and_mat_vec_mul_avx)
     {
-        constexpr size_t N = 50;
+        constexpr std::size_t N = 50;
 
         ga_sm::static_matrix<float, N, N> m{};
         ga_sm::static_matrix<float, N, 1> v{};
@@ -123,7 +139,9 @@ public:
             const auto res_a = matrix_mul(m, v);
             const auto res_b = matrix_vector_mul_float_avx(m, v);
 
-            Assert::IsTrue(normalized_L1_distance<double>(res_a, res_b) < epsilon);
+            Assert::IsTrue(
+                normalized_L1_distance<double>(res_a, res_b) < epsilon
+            );
         }
     }
 
@@ -155,11 +173,13 @@ public:
 
             Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
 
-            if ((mat1(0, 0) == mat12(0, 0) && mat1(n, n) == mat12(n, n) && mat1(0, n) == mat21(0, n) &&
-                 mat1(n, 0) == mat21(n, 0) && mat2(0, 0) == mat21(0, 0) && mat2(n, n) == mat21(n, n) &&
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(n, n) == mat12(n, n) &&
+                 mat1(0, n) == mat21(0, n) && mat1(n, 0) == mat21(n, 0) &&
+                 mat2(0, 0) == mat21(0, 0) && mat2(n, n) == mat21(n, n) &&
                  mat2(0, n) == mat12(0, n) && mat2(n, 0) == mat12(n, 0)) ||
-                (mat2(0, 0) == mat12(0, 0) && mat2(n, n) == mat12(n, n) && mat2(0, n) == mat21(0, n) &&
-                 mat2(n, 0) == mat21(n, 0) && mat1(0, 0) == mat21(0, 0) && mat1(n, n) == mat21(n, n) &&
+                (mat2(0, 0) == mat12(0, 0) && mat2(n, n) == mat12(n, n) &&
+                 mat2(0, n) == mat21(0, n) && mat2(n, 0) == mat21(n, 0) &&
+                 mat1(0, 0) == mat21(0, 0) && mat1(n, n) == mat21(n, n) &&
                  mat1(0, n) == mat12(0, n) && mat1(n, 0) == mat12(n, 0)))
             {
                 ++count;
@@ -199,11 +219,13 @@ public:
 
             Assert::IsTrue(mat1 + mat2 == mat12 + mat21);
 
-            if ((mat1(0, 0) == mat12(0, 0) && mat1(m, n) == mat12(m, n) && mat1(0, n) == mat21(0, n) &&
-                 mat1(m, 0) == mat21(m, 0) && mat2(0, 0) == mat21(0, 0) && mat2(m, n) == mat21(m, n) &&
+            if ((mat1(0, 0) == mat12(0, 0) && mat1(m, n) == mat12(m, n) &&
+                 mat1(0, n) == mat21(0, n) && mat1(m, 0) == mat21(m, 0) &&
+                 mat2(0, 0) == mat21(0, 0) && mat2(m, n) == mat21(m, n) &&
                  mat2(0, n) == mat12(0, n) && mat2(m, 0) == mat12(m, 0)) ||
-                (mat2(0, 0) == mat12(0, 0) && mat2(m, n) == mat12(m, n) && mat2(0, n) == mat21(0, n) &&
-                 mat2(m, 0) == mat21(m, 0) && mat1(0, 0) == mat21(0, 0) && mat1(m, n) == mat21(m, n) &&
+                (mat2(0, 0) == mat12(0, 0) && mat2(m, n) == mat12(m, n) &&
+                 mat2(0, n) == mat21(0, n) && mat2(m, 0) == mat21(m, 0) &&
+                 mat1(0, 0) == mat21(0, 0) && mat1(m, n) == mat21(m, n) &&
                  mat1(0, n) == mat12(0, n) && mat1(m, 0) == mat12(m, 0)))
             {
                 ++count;

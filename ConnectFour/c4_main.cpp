@@ -13,9 +13,9 @@ int main0()
 {
     random::init();
 
-    constexpr size_t M = 20;
-    constexpr size_t N = 20;
-    constexpr size_t K = 3;
+    constexpr std::size_t M = 20;
+    constexpr std::size_t N = 20;
+    constexpr std::size_t K = 3;
 
     game_board::board_2D<M, N, K, uint8_t> b{};
     std::array<uint64_t, M * N>            a{};
@@ -25,7 +25,12 @@ int main0()
         {
             for (int i = 0; i != N; ++i)
             {
-                b.set_position({ j, i }, static_cast<decltype(b)::repr_type>(random::randint(0, K - 1)));
+                b.set_position(
+                    { j, i },
+                    static_cast<decltype(b)::repr_type>(
+                        random::randint(0, K - 1)
+                    )
+                );
             }
         }
     };
@@ -64,9 +69,9 @@ int main()
 {
     random::init();
 
-    constexpr size_t M = 6;
-    constexpr size_t N = 7;
-    constexpr size_t K = 2;
+    constexpr std::size_t M = 6;
+    constexpr std::size_t N = 7;
+    constexpr std::size_t K = 2;
 
     using board_type = c4_board::board<M, N, 3, K>;
 
@@ -92,7 +97,8 @@ int main()
                 std::cout << "Leftd: " << b.leftd_count << std::endl;
                 std::cout << "rightd: " << b.rightd_count << std::endl;
                 std::cout << "horizontal: " << b.horizontal_count << std::endl;
-                std::cout << "vertcal: " << b.vertical_count << std::endl << std::endl;
+                std::cout << "vertcal: " << b.vertical_count << std::endl
+                          << std::endl;
                 break;
             }
         }

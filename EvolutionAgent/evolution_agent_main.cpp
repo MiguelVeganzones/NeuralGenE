@@ -11,18 +11,20 @@
 
 // void score_functions_test()
 // {
-// constexpr size_t N = 10;
+// constexpr std::size_t N = 10;
 
 // using namespace ga_snn;
 // using namespace ga_sm;
 
 // constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
-//     choose_function<score_functions::Identifiers::Weighted_normalized_score, 3, 1, 0>();
+//     choose_function<score_functions::Identifiers::Weighted_normalized_score,
+//     3, 1, 0>();
 
 // constexpr auto AF   = matrix_activation_functions::Identifiers::GELU;
 // constexpr auto Tanh = matrix_activation_functions::Identifiers::Tanh;
 // auto           SM =
-//     score_function_objects::score_function_object<decltype(fn), std::uint16_t, std::uint16_t, std::uint16_t>(fn);
+//     score_function_objects::score_function_object<decltype(fn),
+//     std::uint16_t, std::uint16_t, std::uint16_t>(fn);
 
 
 // using SM_t = decltype(SM);
@@ -32,7 +34,8 @@
 // constexpr Layer_Signature a9{ 9, AF };
 // constexpr Layer_Signature a25{ 25, AF };
 
-// using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9, a9, a1_tanh>;
+// using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9, a9,
+// a1_tanh>;
 
 // auto brain_a = ga_neural_model::brain<NET, SM_t>(random::randnormal, 0, 1);
 
@@ -40,8 +43,9 @@
 
 // for (size_t i = 0; i != N; ++i)
 // {
-//     gen_a[i] = ga_neural_model::brain<NET, SM_t>(SM, random::randnormal, 0, 1);
-//     gen_b[i] = ga_neural_model::brain<NET, SM_t>(SM, random::randnormal, 0, 1);
+//     gen_a[i] = ga_neural_model::brain<NET, SM_t>(SM, random::randnormal, 0,
+//     1); gen_b[i] = ga_neural_model::brain<NET, SM_t>(SM, random::randnormal,
+//     0, 1);
 // }
 
 // std::cout << gen_a[0].get_score_function_obj()->operator()() << std::endl;
@@ -61,20 +65,24 @@ void agent_construction()
     // using namespace ga_snn;
     // using namespace ga_sm;
 
-    constexpr auto AF_relu    = matrix_activation_functions::Identifiers::GELU;
-    constexpr auto AF_sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto AF_Tanh    = matrix_activation_functions::Identifiers::Tanh;
+    constexpr auto AF_relu = matrix_activation_functions::Identifiers::GELU;
+    constexpr auto AF_sigmoid =
+        matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto AF_Tanh = matrix_activation_functions::Identifiers::Tanh;
 
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1, AF_sigmoid };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1,
+                                                                   AF_sigmoid };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Tanh{ 1, AF_Tanh };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a9{ 9, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a25{ 25, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a42{ 42, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a16{ 16, AF_relu };
 
-    using NET = ga_snn::static_neural_net<float, 1, a9, a9, a25, a25, a9, a1_Sigmoid>;
-    // using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9, a9, a1_tanh>;
+    using NET =
+        ga_snn::static_neural_net<float, 1, a9, a9, a25, a25, a9, a1_Sigmoid>;
+    // using NET = static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a9, a9,
+    // a9, a1_tanh>;
 
     // std::cout << NET::parameter_count() << std::endl;
     // std::cout << NET2::parameter_count() << std::endl;
@@ -83,19 +91,27 @@ void agent_construction()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using brain_t =
+        ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
     using agent_t = evolution_agent::agent<brain_t>;
 
 
-    const auto agent_a = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) { return v; });
-    const auto agent_b = agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) { return v; });
+    const auto agent_a =
+        agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) {
+            return v;
+        });
+    const auto agent_b =
+        agent_t(std::move(brain_t(random::randnormal, 0, 0.1)), [](auto v) {
+            return v;
+        });
     const auto agent_c = agent_t(brain_t());
     const auto agent_d = agent_t(brain_t());
 
     agent_a.print();
     agent_b.print();
 
-    const auto [agent_c, agent_d] = evolution_agent::to_target_crossover(agent_a, agent_b, agent_c, );
+    const auto [agent_c, agent_d] =
+        evolution_agent::to_target_crossover(agent_a, agent_b, agent_c, );
 
     agent_c.print();
     agent_d.print();
@@ -135,13 +151,18 @@ void multi_agent_evolution_test()
     // using namespace ga_snn;
     // using namespace ga_sm;
 
-    [[maybe_unused]] constexpr auto AF_relu    = matrix_activation_functions::Identifiers::ReLU;
-    [[maybe_unused]] constexpr auto AF_thresh  = matrix_activation_functions::Identifiers::Threshold;
-    [[maybe_unused]] constexpr auto AF_sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
-    [[maybe_unused]] constexpr auto AF_Tanh    = matrix_activation_functions::Identifiers::Tanh;
+    [[maybe_unused]] constexpr auto AF_relu =
+        matrix_activation_functions::Identifiers::ReLU;
+    [[maybe_unused]] constexpr auto AF_thresh =
+        matrix_activation_functions::Identifiers::Threshold;
+    [[maybe_unused]] constexpr auto AF_sigmoid =
+        matrix_activation_functions::Identifiers::Sigmoid;
+    [[maybe_unused]] constexpr auto AF_Tanh =
+        matrix_activation_functions::Identifiers::Tanh;
 
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1, AF_sigmoid };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1,
+                                                                   AF_sigmoid };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Tanh{ 1, AF_Tanh };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a9{ 9, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a25{ 25, AF_relu };
@@ -149,9 +170,11 @@ void multi_agent_evolution_test()
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a16{ 16, AF_relu };
 
     // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a1_Tanh>;
-    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a1_Tanh>;
+    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a25, a25,
+    // a1_Tanh>;
     using NET = ga_snn::static_neural_net<float, 1, a1, a9, a25, a1_Tanh>;
-    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a9, a25, a9, a9, a25, a1_Tanh>;
+    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a9, a25,
+    // a9, a9, a25, a1_Tanh>;
 
     // std::cout << NET::parameter_count() << std::endl;
     // std::cout << NET2::parameter_count() << std::endl;
@@ -160,13 +183,15 @@ void multi_agent_evolution_test()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using brain_t =
+        ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
     using agent_t = evolution_agent::agent<brain_t>;
 
     using agent_input_type  = brain_t::value_type;
     using agent_output_type = brain_t::value_type;
 
-    [[maybe_unused]] auto mutation_policy = []<std::floating_point F> [[nodiscard]] (F f) -> F {
+    [[maybe_unused]] auto mutation_policy =
+        []<std::floating_point F> [[nodiscard]] (F f) -> F {
         const auto r = random::randfloat();
         if (r >= 0.0009)
         {
@@ -186,7 +211,8 @@ void multi_agent_evolution_test()
         }
         if (r < 0.00024)
         {
-            return f += random::randnormal(random::randnormal(), random::randfloat());
+            return f +=
+                random::randnormal(random::randnormal(), random::randfloat());
         }
         if (r < 0.00030)
         {
@@ -214,8 +240,12 @@ void multi_agent_evolution_test()
 
     for (size_t i = 0; i != N; ++i)
     {
-        gen[0].emplace_back(brain_t(random::randnormal, 0, 0.01), mutation_policy);
-        gen[1].emplace_back(brain_t(random::randnormal, 0, 0.01), mutation_policy);
+        gen[0].emplace_back(
+            brain_t(random::randnormal, 0, 0.01), mutation_policy
+        );
+        gen[1].emplace_back(
+            brain_t(random::randnormal, 0, 0.01), mutation_policy
+        );
     }
 
     for (int i = 0; i != 10000; ++i)
@@ -250,34 +280,62 @@ void multi_agent_evolution_test()
         gen[next_gen_idx][0] = gen[gen_idx][idx0].clone();
         gen[next_gen_idx][1] = gen[gen_idx][idx1].clone();
         // agent_t::to_target_crossover(
-        //     gen[gen_idx][idx0], gen[gen_idx][idx1], gen[next_gen_idx][0], gen[next_gen_idx][1]
+        //     gen[gen_idx][idx0], gen[gen_idx][idx1], gen[next_gen_idx][0],
+        //     gen[next_gen_idx][1]
         // );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx2], gen[next_gen_idx][2], gen[next_gen_idx][3]
+            gen[gen_idx][idx0],
+            gen[gen_idx][idx2],
+            gen[next_gen_idx][2],
+            gen[next_gen_idx][3]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx3], gen[next_gen_idx][4], gen[next_gen_idx][5]
+            gen[gen_idx][idx0],
+            gen[gen_idx][idx3],
+            gen[next_gen_idx][4],
+            gen[next_gen_idx][5]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx4], gen[next_gen_idx][6], gen[next_gen_idx][7]
+            gen[gen_idx][idx0],
+            gen[gen_idx][idx4],
+            gen[next_gen_idx][6],
+            gen[next_gen_idx][7]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx0], gen[gen_idx][idx5], gen[next_gen_idx][8], gen[next_gen_idx][9]
+            gen[gen_idx][idx0],
+            gen[gen_idx][idx5],
+            gen[next_gen_idx][8],
+            gen[next_gen_idx][9]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx1], gen[gen_idx][idx2], gen[next_gen_idx][10], gen[next_gen_idx][11]
+            gen[gen_idx][idx1],
+            gen[gen_idx][idx2],
+            gen[next_gen_idx][10],
+            gen[next_gen_idx][11]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx1], gen[gen_idx][idx3], gen[next_gen_idx][12], gen[next_gen_idx][13]
+            gen[gen_idx][idx1],
+            gen[gen_idx][idx3],
+            gen[next_gen_idx][12],
+            gen[next_gen_idx][13]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx2], gen[gen_idx][idx3], gen[next_gen_idx][14], gen[next_gen_idx][15]
+            gen[gen_idx][idx2],
+            gen[gen_idx][idx3],
+            gen[next_gen_idx][14],
+            gen[next_gen_idx][15]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx3], gen[gen_idx][idx4], gen[next_gen_idx][16], gen[next_gen_idx][17]
+            gen[gen_idx][idx3],
+            gen[gen_idx][idx4],
+            gen[next_gen_idx][16],
+            gen[next_gen_idx][17]
         );
         evolution_agent::to_target_crossover(
-            gen[gen_idx][idx4], gen[gen_idx][idx5], gen[next_gen_idx][18], gen[next_gen_idx][19]
+            gen[gen_idx][idx4],
+            gen[gen_idx][idx5],
+            gen[next_gen_idx][18],
+            gen[next_gen_idx][19]
         );
 
         for (auto& e : gen[next_gen_idx])
@@ -289,7 +347,8 @@ void multi_agent_evolution_test()
         }
         if (i % 51 == 0)
         {
-            std::cout << "Iteration: " << i << ". Min error: " << error[idx0] << std::endl;
+            std::cout << "Iteration: " << i << ". Min error: " << error[idx0]
+                      << std::endl;
         }
     }
 }

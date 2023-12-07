@@ -75,7 +75,7 @@ due to long names
 namespace ga_sm
 {
 
-template <typename T, size_t Size>
+template <typename T, std::size_t Size>
 class matrix_const_iterator
 {
 public:
@@ -89,7 +89,8 @@ public:
     }
 
     constexpr explicit matrix_const_iterator(
-        pointer p_arg, size_t offs = 0
+        pointer     p_arg,
+        std::size_t offs = 0
     ) noexcept :
         m_Ptr(p_arg + offs)
     {
@@ -228,7 +229,7 @@ private:
 
 //-------------------------------------------------------------------//
 
-template <typename T, size_t Size>
+template <typename T, std::size_t Size>
 class matrix_iterator : public matrix_const_iterator<T, Size>
 {
 public:
@@ -239,8 +240,10 @@ public:
 
     constexpr matrix_iterator() noexcept = default;
 
-    constexpr explicit matrix_iterator(pointer p_arg, size_t offs = 0) noexcept
-        :
+    constexpr explicit matrix_iterator(
+        pointer     p_arg,
+        std::size_t offs = 0
+    ) noexcept :
         My_Base(p_arg, offs)
     {
     }
@@ -332,13 +335,13 @@ public:
 //-------------------------------------------------------------------//
 
 //-------------------------------------------------------------------//
-template <typename T, size_t M, size_t N>
+template <typename T, std::size_t M, std::size_t N>
     requires(std::is_arithmetic_v<T> && (N > 0) && (M > 0))
 class static_matrix
 {
 public:
     using value_type      = T;
-    using size_type       = size_t;
+    using std::size_type  = std::size_t;
     using pointer         = T*;
     using const_pointer   = const T*;
     using reference       = T&;
@@ -359,7 +362,7 @@ public:
     /*--------------------------------------------*/
 
     [[nodiscard]]
-    constexpr size_type size() const noexcept
+    constexpr std::size_type size() const noexcept
     {
         return M * N;
     }
@@ -380,7 +383,9 @@ public:
     }
 
     constexpr void fill_n(
-        iterator dest, const ptrdiff_t count, const T val
+        iterator        dest,
+        const ptrdiff_t count,
+        const T         val
     ) noexcept
     {
 #ifdef _CHECKBOUNDS_
@@ -480,7 +485,7 @@ public:
 
     [[nodiscard]]
     inline constexpr reference
-    operator[](const size_t j, const size_t i) noexcept
+    operator[](const std::size_t j, const std::size_t i) noexcept
     {
         assert(j < M and i < N);
         return m_Elems[j * N + i];
@@ -488,7 +493,7 @@ public:
 
     [[nodiscard]]
     inline constexpr const_reference
-    operator[](const size_t j, const size_t i) const noexcept
+    operator[](const std::size_t j, const std::size_t i) const noexcept
     {
         assert(j < M and i < N);
         return m_Elems[j * N + i];
@@ -496,7 +501,7 @@ public:
 
     [[nodiscard]]
     inline constexpr reference
-    operator[](const size_t j) noexcept
+    operator[](const std::size_t j) noexcept
         requires(M == 1 || N == 1)
     {
         assert(j < M * N);
@@ -505,7 +510,7 @@ public:
 
     [[nodiscard]]
     inline constexpr const_reference
-    operator[](const size_t j) const noexcept
+    operator[](const std::size_t j) const noexcept
         requires(M == 1 || N == 1)
     {
         assert(j < M * N);
@@ -663,7 +668,7 @@ public:
 // Static matrix concept
 // -----------------------------------------------
 
-template <typename T, size_t M, size_t N>
+template <typename T, std::size_t M, std::size_t N>
 void matrix_dummy(static_matrix<T, M, N>)
 {
 }
@@ -693,7 +698,7 @@ constexpr auto cast_to(Matrix const& src) noexcept
     return ret;
 }
 
-template <size_t Out_M, size_t Out_N, static_matrix_type Matrix>
+template <size_t Out_M, std::size_t Out_N, static_matrix_type Matrix>
     requires((Matrix::Size_y * Matrix::Size_x) == (Out_M * Out_N))
 [[nodiscard]]
 constexpr auto cast_to_shape(Matrix const& src) noexcept
@@ -847,10 +852,11 @@ void to_target_x_crossover(
 //------------ Maths utility --------------------------------------------------
 //-----------------------------------------------------------------------------
 
-template <typename T, size_t M, size_t K, size_t N>
+template <typename T, std::size_t M, std::size_t K, std::size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, M, N> matrix_mul(
-    static_matrix<T, M, K> const& mat1, static_matrix<T, K, N> const& mat2
+    static_matrix<T, M, K> const& mat1,
+    static_matrix<T, K, N> const& mat2
 ) noexcept
 {
     static_matrix<T, M, N> ret{};
@@ -869,7 +875,7 @@ constexpr static_matrix<T, M, N> matrix_mul(
 }
 
 // // TODO check impl
-// template <size_t M, size_t K, size_t N>
+// template <size_t M, std::size_t K, std::size_t N>
 // [[nodiscard]] constexpr static_matrix<float, M, N> matrix_mul_avx(
 //     static_matrix<float, M, K> const& mat1, static_matrix<float, K, N> const&
 //     mat2
@@ -919,10 +925,11 @@ constexpr static_matrix<T, M, N> matrix_mul(
 //     return ret;
 // }
 
-template <typename T, size_t M, size_t N>
+template <typename T, std::size_t M, std::size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, M, N> matrix_vec_add(
-    static_matrix<T, M, N> const& mat, static_matrix<T, 1, N> const& vec
+    static_matrix<T, M, N> const& mat,
+    static_matrix<T, 1, N> const& vec
 ) noexcept
 {
     if constexpr (M == 1)
@@ -951,10 +958,11 @@ constexpr static_matrix<T, M, N> matrix_vec_add(
  * \param vec Vector to multiply
  * \return Multiplied matrix
  */
-template <size_t M, size_t N>
+template <size_t M, std::size_t N>
 [[nodiscard]]
 static_matrix<float, M, 1> matrix_vector_mul_float_avx(
-    static_matrix<float, M, N> const& mat, static_matrix<float, N, 1> const& vec
+    static_matrix<float, M, N> const& mat,
+    static_matrix<float, N, 1> const& vec
 )
 {
     static_matrix<float, M, 1> ret{};
@@ -982,7 +990,8 @@ static_matrix<float, M, 1> matrix_vector_mul_float_avx(
     // last iterations (lower 3 bits of N)
     if constexpr (N % 8 != 0)
     {
-        constexpr size_t iterations_completed = (N & (~static_cast<size_t>(7)));
+        constexpr std::size_t iterations_completed =
+            (N & (~static_cast<size_t>(7)));
         for (size_t ii = iterations_completed; ii != N; ++ii)
         {
             for (size_t j = 0; j != M; ++j)
@@ -996,7 +1005,7 @@ static_matrix<float, M, 1> matrix_vector_mul_float_avx(
 
 // multiplies every column of a matrix by the element of a row vector of same
 // index as the column
-template <typename T, size_t M, size_t N>
+template <typename T, std::size_t M, std::size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, M, N> vector_expand(
     static_matrix<T, 1, N> const& row_vector,
@@ -1019,7 +1028,7 @@ Multiplies pairs of vectors stored in two matrices
 Useful to make multiple vector multiplications with one operation and one data
 structure
 */
-template <typename T, size_t M, size_t N>
+template <typename T, std::size_t M, std::size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, 1, M> multiple_dot_product(
     static_matrix<T, M, N> const& row_vectors,
@@ -1037,7 +1046,7 @@ constexpr static_matrix<T, 1, M> multiple_dot_product(
     return ret;
 }
 
-template <typename T, size_t M, size_t N, size_t P, typename Fn>
+template <typename T, std::size_t M, std::size_t N, std::size_t P, typename Fn>
     requires std::is_invocable_r_v<T, Fn, T>
 [[nodiscard]]
 constexpr static_matrix<T, M, 1> multiply_add_activate(
@@ -1069,7 +1078,7 @@ returns:
              U is upped diagonal, including diagonal elements
 
 */
-template <typename T_In, typename T_Out, size_t N>
+template <typename T_In, typename T_Out, std::size_t N>
     requires(N > 1)
 [[nodiscard]]
 constexpr std::tuple<
@@ -1171,7 +1180,7 @@ constexpr std::tuple<
  * \param scr Input square matrix
  * \return Determinant of the input matrix
  */
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 [[nodiscard]]
 constexpr double determinant(static_matrix<T, N, N> const& scr)
 {
@@ -1189,7 +1198,7 @@ constexpr double determinant(static_matrix<T, N, N> const& scr)
  * \note Uses Gauss-Jordan elimination with partial pivoting
  *       Mutates input
  */
-template <std::floating_point T, size_t M, size_t N>
+template <std::floating_point T, std::size_t M, std::size_t N>
     requires(M <= N)
 [[nodiscard]]
 constexpr bool RREF(static_matrix<T, M, N>& scr)
@@ -1261,7 +1270,7 @@ constexpr bool RREF(static_matrix<T, M, N>& scr)
  * not the operation succeeded and the inverted matrix if the operation was
  * successful, empty matrix otherwise
  */
-template <typename T_In, std::floating_point T_Out = double, size_t N>
+template <typename T_In, std::floating_point T_Out = double, std::size_t N>
 [[nodiscard]]
 constexpr std::tuple<bool, static_matrix<T_Out, N, N>> inverse(
     static_matrix<T_In, N, N> const& scr
@@ -1303,7 +1312,7 @@ constexpr std::tuple<bool, static_matrix<T_Out, N, N>> inverse(
     return { invertible, std::move(inverse) };
 }
 
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, N, N> identity_matrix()
 {
@@ -1315,7 +1324,7 @@ constexpr static_matrix<T, N, N> identity_matrix()
     return ret;
 }
 
-// template <typename T, size_t N>
+// template <typename T, std::size_t N>
 // [[nodiscard]] constexpr static_matrix<T, N, N> transpose(static_matrix<T, N,
 // N> const& scr)
 // {
@@ -1330,7 +1339,7 @@ constexpr static_matrix<T, N, N> identity_matrix()
 //     return ret;
 // }
 
-template <typename T, size_t M, size_t N>
+template <typename T, std::size_t M, std::size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, N, M> transpose(static_matrix<T, M, N> const& scr)
 {
@@ -1419,7 +1428,9 @@ template <std::floating_point R, static_matrix_type Matrix, typename Distance>
         typename Matrix::value_type>
 [[nodiscard]]
 constexpr auto matrix_distance(
-    Matrix const& mat1, Matrix const& mat2, Distance&& dist_op
+    Matrix const& mat1,
+    Matrix const& mat2,
+    Distance&&    dist_op
 ) -> R
 {
     R distance{};

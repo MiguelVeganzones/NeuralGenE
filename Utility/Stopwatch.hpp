@@ -20,8 +20,10 @@
 
 #define USE_TIMER 1
 #if USE_TIMER
-#define MEASURE_FUNCTION_EXECUTION_TIME()                                                                              \
-    stopwatch _execution_time_stopwatch_(std::source_location::current().function_name())
+#define MEASURE_FUNCTION_EXECUTION_TIME()                                      \
+    stopwatch _execution_time_stopwatch_(                                      \
+        std::source_location::current().function_name()                        \
+    )
 #else
 #define MEASURE_FUNCTION_EXECUTION_TIME()
 #endif
@@ -46,12 +48,21 @@ public:
     {
         const auto duration = clock_type::now() - start;
         std::cout << std::fixed << std::setprecision(4);
-        std::cout << function_name << " took "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << "ms\t ("
-                  << std::chrono::duration_cast<std::chrono::microseconds>(duration).count() << "us)\t ("
-                  << std::chrono::duration_cast<std::chrono::seconds>(duration).count() << " s)\t ("
-                  << std::chrono::duration_cast<std::chrono::minutes>(duration).count() << " mins)\n"
-                  << std::defaultfloat;
+        std::cout
+            << function_name << " took "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(duration)
+                   .count()
+            << "ms\t ("
+            << std::chrono::duration_cast<std::chrono::microseconds>(duration)
+                   .count()
+            << "us)\t ("
+            << std::chrono::duration_cast<std::chrono::seconds>(duration).count(
+               )
+            << " s)\t ("
+            << std::chrono::duration_cast<std::chrono::minutes>(duration).count(
+               )
+            << " mins)\n"
+            << std::defaultfloat;
     }
 
 private:
@@ -67,8 +78,10 @@ auto t0 = std::chrono::steady_clock::now();
 f();
 auto t1 = std::chrono::steady_clock::now();
 // std::cout << nanoseconds{t-t0}.count << "ns\n";
-// std::cout << std::chrono::duration<double>{t1-t0}.count(); // print in floating point seconds
-// std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
+// std::cout << std::chrono::duration<double>{t1-t0}.count(); // print in
+floating point seconds
+// std::cout <<
+std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
 
 
 */
@@ -81,7 +94,8 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<void, Fn, Args...>
-    [[maybe_unused]] static measurement_units benchmark(Fn fn, Args&&... args)
+    [[maybe_unused]]
+    static measurement_units benchmark(Fn fn, Args&&... args)
     {
         const auto start = std::chrono::steady_clock::now();
         std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...);
@@ -92,13 +106,19 @@ public:
 
     template <typename Fn, typename... Args>
         requires std::is_invocable_r_v<void, Fn, Args...>
-    [[maybe_unused]] static precision_totalizer multiple_run_bench(size_t n, Fn fn, Args&&... args)
+    [[maybe_unused]]
+    static precision_totalizer multiple_run_bench(
+        size_t n,
+        Fn     fn,
+        Args&&... args
+    )
     {
         precision_totalizer totalizer{};
 
         while (n-- > 0)
         {
-            const measurement_units t_ns = benchmark(std::forward<Fn>(fn), std::forward<Args>(args)...);
+            const measurement_units t_ns =
+                benchmark(std::forward<Fn>(fn), std::forward<Args>(args)...);
             totalizer.add(t_ns.count());
         }
 
@@ -109,7 +129,9 @@ public:
 
 private:
     template <typename T, typename S>
-    [[nodiscard]] static constexpr auto duration_diff(T const& t, S const& s) -> std::common_type_t<T, S>
+    [[nodiscard]]
+    static constexpr auto duration_diff(T const& t, S const& s)
+        -> std::common_type_t<T, S>
     {
         typedef typename std::common_type_t<T, S> Common;
         return Common(t) - Common(s);
@@ -117,16 +139,21 @@ private:
 
     static void print_time_stats(precision_totalizer const& pt)
     {
-        const auto avg       = measurement_units(static_cast<size_t>(pt.get_average()));
+        const auto avg =
+            measurement_units(static_cast<size_t>(pt.get_average()));
         const auto units     = get_most_meaningful_units(avg);
         const auto units_str = ' ' + s_units_string_identifier[units];
-        const auto ratio     = static_cast<long double>(get_meaningful_ratio_values(units));
+        const auto ratio =
+            static_cast<long double>(get_meaningful_ratio_values(units));
 
         std::cout << "\n-----Benchmark stats------";
         std::cout << "\nRuns:\t\t\t" << pt.get_num_samples();
-        std::cout << "\nMin execution time:\t" << pt.get_min() / ratio << units_str;
-        std::cout << "\nAverage execution time:\t" << pt.get_average() / ratio << units_str;
-        std::cout << "\nStandard deviation:\t" << pt.get_stddev() / ratio << units_str;
+        std::cout << "\nMin execution time:\t" << pt.get_min() / ratio
+                  << units_str;
+        std::cout << "\nAverage execution time:\t" << pt.get_average() / ratio
+                  << units_str;
+        std::cout << "\nStandard deviation:\t" << pt.get_stddev() / ratio
+                  << units_str;
         std::cout << "\n-------------------------\n";
     }
 
@@ -154,16 +181,21 @@ private:
             return Minutes;
         if (std::chrono::duration_cast<std::chrono::seconds>(value).count() > 0)
             return Seconds;
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(value).count() > 0)
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(value).count(
+            ) > 0)
             return Milliseconds;
-        if (std::chrono::duration_cast<std::chrono::microseconds>(value).count() > 0)
+        if (std::chrono::duration_cast<std::chrono::microseconds>(value).count(
+            ) > 0)
             return Microseconds;
         return Nanoseconds;
     }
 
-    static constexpr size_t get_meaningful_ratio_values(TimeUnits units) noexcept
+    static constexpr std::size_t get_meaningful_ratio_values(TimeUnits units
+    ) noexcept
     {
-        static_assert(std::is_same_v<measurement_units, std::chrono::nanoseconds>);
+        static_assert(std::is_same_v<
+                      measurement_units,
+                      std::chrono::nanoseconds>);
         switch (units)
         {
         case Hours:

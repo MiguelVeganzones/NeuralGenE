@@ -45,8 +45,8 @@ public:
     using chosen_parents_container_type =
         std::array<chosen_parent_type, s_Population_Size>;
 
-    inline [[nodiscard]]
-    auto select_parents(
+    [[nodiscard]]
+    inline auto select_parents(
         ga_sm::
             static_matrix<float, s_Populaiton_Size, s_Populaiton_Size> const&,
         std::array<float, s_Populaiton_Size> const& fitness_scores

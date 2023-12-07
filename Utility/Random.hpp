@@ -23,9 +23,9 @@ struct random
 {
     inline static void init()
     {
-        s_Random_engine.seed(
-            static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count())
-        );
+        s_Random_engine.seed(static_cast<unsigned int>(
+            std::chrono::high_resolution_clock::now().time_since_epoch().count()
+        ));
     }
 
     inline static float randfloat()
@@ -40,14 +40,20 @@ struct random
         return u(random::s_Random_engine);
     }
 
-    inline static size_t randsize_t(const size_t min, const size_t max)
+    inline static std::size_t randsize_t(
+        const std::size_t min,
+        const std::size_t max
+    )
     {
         assert(min <= max);
         std::uniform_int_distribution<size_t> u(min, max);
         return u(random::s_Random_engine);
     }
 
-    inline static float randnormal(const float avg = 0.f, const float stddev = 1.f)
+    inline static float randnormal(
+        const float avg    = 0.f,
+        const float stddev = 1.f
+    )
     {
         std::normal_distribution<float> n(avg, stddev);
         return n(random::s_Random_engine);
@@ -57,12 +63,14 @@ struct random
 
     // static float mt_randfloat();
 
-    // static float mt_randnormal(const float avg = 0.f, const float stddev = 1.f);
+    // static float mt_randnormal(const float avg = 0.f, const float stddev
+    // = 1.f);
 
 private:
     inline static std::mt19937 s_Random_engine;
 
-    inline static auto s_Uniform_real = std::uniform_real_distribution<float>(0.f, 1.f);
+    inline static auto s_Uniform_real =
+        std::uniform_real_distribution<float>(0.f, 1.f);
     // auto random = std::bind(s_Uniform_real, s_Random_engine);
 };
 
@@ -86,7 +94,8 @@ private:
 //{
 //   mu_randfloat.lock();
 //   const float f = (float)s_distribution(random::s_random_engine) /
-//   (float)std::numeric_limits<uint32_t>::max(); mu_randfloat.unlock(); return f;
+//   (float)std::numeric_limits<uint32_t>::max(); mu_randfloat.unlock(); return
+//   f;
 // }
 
 // int random::randint(int Min = 0, int Max = 10)

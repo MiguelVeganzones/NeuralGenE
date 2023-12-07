@@ -18,4 +18,10 @@ The reproduction guide will contain a metric for the distamce between memebrs.
 ## Unit tests
 ## create a nullable type
 ## Issues
-Remove all crossover operation s except to target? (which is the one actualli used)
+Define all functions outside class
+## Conventions
+### [GCC](https://gcc.gnu.org/wiki/CppConventions)
+1. All data members should be private
+2. All data members should have names ending with an underscore
+3. Template parameter names should have a leading upper case
+4. When defining a class, first define all public types, then all public constructors, then the public destructor, then all public methods. 

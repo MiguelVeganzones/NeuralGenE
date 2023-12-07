@@ -76,7 +76,10 @@
         "cfenv": "cpp",
         "typeindex": "cpp",
         "set": "cpp",
-        "source_location": "cpp"
+        "source_location": "cpp",
+        "variant": "cpp",
+        "charconv": "cpp",
+        "format": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

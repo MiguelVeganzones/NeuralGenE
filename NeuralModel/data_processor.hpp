@@ -153,8 +153,7 @@ struct scalar_converter
 {
     inline static constexpr int index = 0;
 
-    template <typename Input_Type, typename Output_Type>
-        requires std::is_convertible_v<Input_Type, Output_Type>
+    template <typename Input_Type, typename Output_Type> requires std::is_convertible_v<Input_Type, Output_Type>
     [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
     {
         return static_cast<Output_Type>(input_value);

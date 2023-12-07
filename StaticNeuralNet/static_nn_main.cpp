@@ -20,11 +20,16 @@ int flat_test()
     for (float i = 0; auto& e : in)
         e = i++;
 
-    [[maybe_unused]] constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
-    [[maybe_unused]] constexpr auto ReLU     = matrix_activation_functions::Identifiers::ReLU;
-    [[maybe_unused]] constexpr auto PReLU    = matrix_activation_functions::Identifiers::PReLU;
-    [[maybe_unused]] constexpr auto Sigmoid  = matrix_activation_functions::Identifiers::Sigmoid;
-    [[maybe_unused]] constexpr auto Swish    = matrix_activation_functions::Identifiers::Swish;
+    [[maybe_unused]] constexpr auto Identity =
+        matrix_activation_functions::Identifiers::Identity;
+    [[maybe_unused]] constexpr auto ReLU =
+        matrix_activation_functions::Identifiers::ReLU;
+    [[maybe_unused]] constexpr auto PReLU =
+        matrix_activation_functions::Identifiers::PReLU;
+    [[maybe_unused]] constexpr auto Sigmoid =
+        matrix_activation_functions::Identifiers::Sigmoid;
+    [[maybe_unused]] constexpr auto Swish =
+        matrix_activation_functions::Identifiers::Swish;
 
     constexpr Layer_Signature a1{ 1, Identity };
     constexpr Layer_Signature a2{ 4, ReLU };
@@ -44,8 +49,11 @@ int flat_test()
 
     for (size_t i = 0; const auto& e : in)
     {
-        std::cout << ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e })[0, 0] << std::endl;
-        pred[i++, 0] = ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e })[0, 0];
+        std::cout << ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e }
+                     )[0, 0]
+                  << std::endl;
+        pred[i++, 0] =
+            ptr_net->forward_pass<1, 1>(static_matrix<float, 1, 1>{ e })[0, 0];
     }
 
     ptr_net->print_net();
@@ -67,19 +75,32 @@ int flat_test()
     ptr_net2->print_net();
     ptr_net21->print_net();
 
-    std::cout << "L1:" << distance<float>(*ptr_net21.get(), *ptr_net2.get(), [](float a, float b) {
-        return std::abs(a - b);
-    }) << std::endl;
-    std::cout << "L1:" << distance<float>(*ptr_net.get(), *ptr_net2.get(), [](float a, float b) {
-        return std::abs(a - b);
-    }) << std::endl;
-    std::cout << "L1:" << distance<float>(*ptr_net.get(), *ptr_net21.get(), [](float a, float b) {
-        return std::abs(a - b);
-    }) << std::endl;
+    std::cout << "L1:"
+              << neural_net_distance<float>(
+                     *ptr_net21.get(),
+                     *ptr_net2.get(),
+                     [](float a, float b) { return std::abs(a - b); }
+                 )
+              << std::endl;
+    std::cout << "L1:"
+              << neural_net_distance<float>(
+                     *ptr_net.get(),
+                     *ptr_net2.get(),
+                     [](float a, float b) { return std::abs(a - b); }
+                 )
+              << std::endl;
+    std::cout << "L1:"
+              << neural_net_distance<float>(
+                     *ptr_net.get(),
+                     *ptr_net21.get(),
+                     [](float a, float b) { return std::abs(a - b); }
+                 )
+              << std::endl;
 
     for (size_t i = 0; const auto& e : in)
     {
-        const auto res = ptr_net2->batch_forward_pass(static_matrix<float, 2, 1>{ e, e });
+        const auto res =
+            ptr_net2->batch_forward_pass(static_matrix<float, 2, 1>{ e, e });
         // std::cout << res << std::endl;
         pred2[i, 0]   = res[0, 0];
         pred2[i++, 1] = res[1, 0];
@@ -101,12 +122,12 @@ void abench(int n)
     constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
 
     constexpr auto ls5  = Layer_Signature{ 5, AF };
-    constexpr auto ls5  = Layer_Signature{ 5, AF };
     constexpr auto ls10 = Layer_Signature{ 10, AF };
     constexpr auto ls25 = Layer_Signature{ 25, AF };
     constexpr auto ls50 = Layer_Signature{ 50, AF };
 
-    using NNet = static_neural_net<T, N, ls5, ls10, ls25, ls50, ls25, ls10, ls5>;
+    using NNet =
+        static_neural_net<T, N, ls5, ls10, ls25, ls50, ls25, ls10, ls5>;
 
     static_matrix<T, N, 5> in{};
 
@@ -114,7 +135,8 @@ void abench(int n)
 
     in.fill(random::randfloat);
 
-    const auto ptr_net = static_neural_net_factory<NNet>(random::randnormal, 0, 1);
+    const auto ptr_net =
+        static_neural_net_factory<NNet>(random::randnormal, 0, 1);
     // ptr_net->print_net();
 
     // stopwatch s;
@@ -145,7 +167,8 @@ void get_layer()
 
     using NNet = static_neural_net<T, N, ls5, ls5, ls5>;
 
-    const auto ptr_net = static_neural_net_factory<NNet>(random::randnormal, 0, 1);
+    const auto ptr_net =
+        static_neural_net_factory<NNet>(random::randnormal, 0, 1);
 
 
     ptr_net->print_net();
@@ -220,11 +243,12 @@ int activation_functions_test()
     for (float i = -(N / 2); auto& e : in)
         e = i++;
 
-    constexpr auto Identity = matrix_activation_functions::Identifiers::Identity;
-    constexpr auto ReLU     = matrix_activation_functions::Identifiers::ReLU;
-    constexpr auto PReLU    = matrix_activation_functions::Identifiers::PReLU;
-    constexpr auto Sigmoid  = matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto Swish    = matrix_activation_functions::Identifiers::Swish;
+    constexpr auto Identity =
+        matrix_activation_functions::Identifiers::Identity;
+    constexpr auto ReLU    = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto PReLU   = matrix_activation_functions::Identifiers::PReLU;
+    constexpr auto Sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto Swish   = matrix_activation_functions::Identifiers::Swish;
 
     constexpr Layer_Signature identity_layer{ 1, Identity };
     constexpr Layer_Signature relu_layer{ 4, ReLU };
@@ -232,7 +256,14 @@ int activation_functions_test()
     constexpr Layer_Signature sigmoid_layer{ 4, Sigmoid };
     constexpr Layer_Signature swish_layer{ 2, Swish };
 
-    using NET = static_neural_net<float, 1, identity_layer, relu_layer, prelu_layer, sigmoid_layer, swish_layer>;
+    using NET = static_neural_net<
+        float,
+        1,
+        identity_layer,
+        relu_layer,
+        prelu_layer,
+        sigmoid_layer,
+        swish_layer>;
 
     auto ptr_net = std::make_unique<NET>();
 
@@ -243,12 +274,44 @@ int activation_functions_test()
     for (const auto& e : in)
     {
         std::cout << "Input:: " << e << "\n###############\n";
-        std::cout << ptr_net->forward_pass<1, 2>(static_matrix<float, 1, 1>{ e }) << std::endl;
+        std::cout << ptr_net->forward_pass<1, 2>(static_matrix<float, 1, 1>{ e }
+                     )
+                  << std::endl;
     }
 
     ptr_net->print_net();
 
     return 0;
+}
+
+void matirx_crossover_test()
+{
+    random::init();
+    constexpr auto M = 1;
+    constexpr auto N = 7;
+    using value_type = float;
+
+    ga_sm::static_matrix<value_type, M, N> mat1;
+    ga_sm::static_matrix<value_type, M, N> mat2;
+    ga_sm::static_matrix<value_type, M, N> mat3;
+    ga_sm::static_matrix<value_type, M, N> mat4;
+
+    mat1.fill(random::randnormal, 0, 1);
+    // mat2.fill(random::randnormal, 0, 1);
+    mat3.fill(random::randnormal, 0, 1);
+    mat4.fill(random::randnormal, 0, 1);
+
+    std::cout << mat1;
+    std::cout << mat2;
+    std::cout << mat3;
+    std::cout << mat4;
+
+    ga_sm::to_target_x_crossover(mat1, mat2, mat3, mat4);
+
+    std::cout << mat1;
+    std::cout << mat2;
+    std::cout << mat3;
+    std::cout << mat4;
 }
 
 int main()
@@ -259,7 +322,9 @@ int main()
 
     // layer_swap_test();
 
-    flat_test();
+    matirx_crossover_test();
+
+    // flat_test();
 
     // // activation_functions_test();
 
@@ -267,12 +332,14 @@ int main()
     // mat.fill(random::randnormal, 0, 10);
 
     // std::cout << mat << std::endl;
-    // std::cout << ga_sm::reduce<1, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
-    // std::cout << ga_sm::reduce<6, 1>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
-    // std::cout << ga_sm::reduce<1, 5>(mat, [](auto a, auto b) { return a + b; }) << std::endl;
+    // std::cout << ga_sm::reduce<1, 1>(mat, [](auto a, auto b) { return a + b;
+    // }) << std::endl; std::cout << ga_sm::reduce<6, 1>(mat, [](auto a, auto b)
+    // { return a + b; }) << std::endl; std::cout << ga_sm::reduce<1, 5>(mat,
+    // [](auto a, auto b) { return a + b; }) << std::endl;
 
     // auto af = matrix_activation_functions::
-    //     activation_function<decltype(mat), matrix_activation_functions::Identifiers::Softmax>();
+    //     activation_function<decltype(mat),
+    //     matrix_activation_functions::Identifiers::Softmax>();
 
     // std::cout << mat << std::endl;
 

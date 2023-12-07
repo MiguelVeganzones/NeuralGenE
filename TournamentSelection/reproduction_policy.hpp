@@ -28,28 +28,41 @@ struct sexual_reproduction_parents
     parent b;
 }
 
-template <std::uint16_t Population_Size>
+template <
+    std::uint16_t         Population_Size,
+    std::floating_point_t Score_Type,
+    std::floatng_point_t  Distance_Type>
 class mixed_reproduction_policy
 
 {
 public:
     inline static constexpr auto s_Populaiton_Size = Population_Size;
 
-    using parent_type                   = parent; // Maybe make parent a template?
-    using chosen_parent_type            = std::variant<parent, std::pair<parent, parent>>;
-    using chosen_parents_container_type = std::array<chosen_parent_type, s_Population_Size>;
+    using score_type    = Score_Type;
+    using distance_type = Distance_Type;
+    using chosen_parent_type =
+        std::variant<asexual_reproduction_parent, sexual_reproduction_parents>;
+    using chosen_parents_container_type =
+        std::array<chosen_parent_type, s_Population_Size>;
 
     inline [[nodiscard]]
     auto select_parents(
-        ga_sm::static_matrix<float, s_Populaiton_Size, s_Populaiton_Size> const&,
+        ga_sm::
+            static_matrix<float, s_Populaiton_Size, s_Populaiton_Size> const&,
         std::array<float, s_Populaiton_Size> const& fitness_scores
     ) -> std::array<parent_selection_result>
     {
         // TODO
     }
+
+private:
+    score_type    best_socre_;
+    distance_type mean_distance_;
+    float         fitness_score_importance_;
+    float         distance_score_importance_;
 };
 
-// TODO : Require N % 2 == 0 in only sexuaql reproduction policies
+// TODO : Require N % 2 == 0 in only sexual reproduction policies
 
 } // namespace reproduction_policy
 

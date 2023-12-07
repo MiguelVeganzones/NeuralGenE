@@ -10,6 +10,7 @@ DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
 					-Wextra \
 					-Wshadow \
 					-Wconversion \
+					-Wmisleading-indentation \
 					-fsanitize=address \
 					-fsanitize=leak \
 					-fsanitize=undefined \
@@ -30,6 +31,7 @@ RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
 					-Wextra \
 					-Wshadow \
 					-Wconversion \
+					-Wmisleading-indentation \
 					-Werror \
 					-pedantic \
 					-mavx \
@@ -46,6 +48,7 @@ FULL_RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
 					-Wextra \
 					-Wshadow \
 					-Wconversion \
+					-Wmisleading-indentation \
 					-Werror \
 					-pedantic \
 					-mavx \
@@ -63,6 +66,7 @@ NO_WERROR_DEBUG_CXXFLAGS =  -fdiagnostics-color=always \
 							-Wextra \
 							-Wshadow \
 							-Wconversion \
+							-Wmisleading-indentation \
 							-fsanitize=address \
 							-fsanitize=leak \
 							-fsanitize=undefined \
@@ -81,6 +85,7 @@ NO_WERROR_RELEASE_CXXFLAGS =-fdiagnostics-color=always \
 							-Wextra \
 							-Wshadow \
 							-Wconversion \
+							-Wmisleading-indentation \
 							-pedantic \
 							-mavx \
 							-fbounds-check \

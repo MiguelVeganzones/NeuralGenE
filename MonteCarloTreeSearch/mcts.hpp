@@ -43,15 +43,16 @@ class mcts_search_engine
 {
     // FIXME Remove public
 public:
-    using game_state_type                = Game_Board;
-    using valid_moves_container          = typename Game_Board::valid_moves_container;
-    using action_type                    = typename Game_Board::action_type;
-    using encode_type                    = typename Game_Board::encode_type;
-    using flat_tree_node                 = mcts_flat_tree_node<encode_type>;
-    using flat_tree_idx                  = typename flat_tree_node::flat_tree_idx;
-    using points_type                    = typename flat_tree_node::result_type::points_type;
-    using leaf_node_idx                  = size_t;
-    using player_type                    = typename Game_Board::player_repr_type;
+    using game_state_type = Game_Board;
+    using valid_moves_container_type =
+        typename Game_Board::valid_moves_container_type;
+    using action_type    = typename Game_Board::action_type;
+    using encode_type    = typename Game_Board::encode_type;
+    using flat_tree_node = mcts_flat_tree_node<encode_type>;
+    using flat_tree_idx  = typename flat_tree_node::flat_tree_idx;
+    using points_type    = typename flat_tree_node::result_type::points_type;
+    using leaf_node_idx  = size_t;
+    using player_type    = typename Game_Board::player_repr_type;
     using sampling_states_container_type = std::vector<flat_tree_node>;
     using leaf_nodes_container_type      = std::vector<flat_tree_idx>;
 
@@ -68,7 +69,9 @@ private:
 public:
     mcts_search_engine(const game_state_type& game_state) noexcept :
         m_Initial_game_board(game_state),
-        m_Monte_carlo_sampling{ mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } },
+        m_Monte_carlo_sampling{
+            mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} }
+        },
         m_Target_player{ m_Initial_game_board.current_player() }
     {
         assert(m_Initial_game_board.any_moves_left());
@@ -76,7 +79,9 @@ public:
     }
 
     mcts_search_engine() noexcept :
-        m_Monte_carlo_sampling{ mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} } }
+        m_Monte_carlo_sampling{
+            mcts_flat_tree_node{ m_Initial_game_board.encode(), -1, {} }
+        }
     {
     }
 
@@ -94,8 +99,9 @@ public:
      */
     flat_tree_idx selection()
     {
-        const leaf_node_idx leaf_idx           = random::randsize_t(0, m_Leaf_nodes_idx.size() - 1);
-        const auto          selected_state_idx = m_Leaf_nodes_idx[leaf_idx];
+        const leaf_node_idx leaf_idx =
+            random::randsize_t(0, m_Leaf_nodes_idx.size() - 1);
+        const auto selected_state_idx = m_Leaf_nodes_idx[leaf_idx];
 
         // remove element from leaf nodes
         std::swap(m_Leaf_nodes_idx[leaf_idx], m_Leaf_nodes_idx.back());
@@ -106,7 +112,9 @@ public:
 
     flat_tree_idx expansion(const flat_tree_idx next_parent_idx)
     {
-        auto parent_game_state = game_state_type::decode(m_Monte_carlo_sampling[next_parent_idx].encoded_game_state);
+        auto parent_game_state = game_state_type::decode(
+            m_Monte_carlo_sampling[next_parent_idx].encoded_game_state
+        );
         flat_tree_idx next_leaf_idx = m_Monte_carlo_sampling.size();
         const auto    valid_moves   = parent_game_state.get_valid_moves();
 
@@ -119,7 +127,9 @@ public:
                 continue;
 
             parent_game_state.make_move(move);
-            m_Monte_carlo_sampling.push_back({ parent_game_state.encode(), next_parent_idx, {} });
+            m_Monte_carlo_sampling.push_back(
+                { parent_game_state.encode(), next_parent_idx, {} }
+            );
 
             if (!parent_game_state.winning_move(move))
             {
@@ -128,7 +138,12 @@ public:
             }
             else
             {
-                backpropagation(next_leaf_idx, parent_game_state.previous_player() == m_Target_player ? won() : lost());
+                backpropagation(
+                    next_leaf_idx,
+                    parent_game_state.previous_player() == m_Target_player
+                        ? won()
+                        : lost()
+                );
             }
             ++next_leaf_idx;
             parent_game_state.undo_move(move);
@@ -144,26 +159,34 @@ public:
 
     game_result_type simulation(const flat_tree_idx game_state_idx)
     {
-        auto& selected_node     = m_Monte_carlo_sampling[game_state_idx];
-        auto  sample_game_state = game_state_type::decode(selected_node.encoded_game_state);
+        auto& selected_node = m_Monte_carlo_sampling[game_state_idx];
+        auto  sample_game_state =
+            game_state_type::decode(selected_node.encoded_game_state);
 
         while (sample_game_state.any_moves_left())
         {
             const auto selected_move = sample_game_state.select_random_move();
             sample_game_state.make_move(selected_move);
             if (sample_game_state.winning_move(selected_move))
-                return m_Target_player == sample_game_state.previous_player() ? won() : lost();
+                return m_Target_player == sample_game_state.previous_player()
+                    ? won()
+                    : lost();
         }
         return tied();
     }
 
-    void backpropagation(flat_tree_idx game_state_idx, const game_result_type result)
+    void backpropagation(
+        flat_tree_idx          game_state_idx,
+        const game_result_type result
+    )
     {
         const auto trial_score = points_increment(result);
         std::cout << game_state_idx;
         while (game_state_idx > -1)
         {
-            m_Monte_carlo_sampling[game_state_idx].results.add_trial_score(trial_score);
+            m_Monte_carlo_sampling[game_state_idx].results.add_trial_score(
+                trial_score
+            );
             game_state_idx = m_Monte_carlo_sampling[game_state_idx].parent_idx;
             std::cout << "->" << game_state_idx;
         }
@@ -186,7 +209,8 @@ private:
         return game_result_type::loss;
     }
 
-    static constexpr points_type points_increment(const game_result_type result) noexcept
+    static constexpr points_type points_increment(const game_result_type result
+    ) noexcept
     {
         switch (result)
         {

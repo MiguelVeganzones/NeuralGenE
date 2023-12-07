@@ -48,24 +48,27 @@ It is highly based in std::array, but with two dimensional indexing.
 It is a trivial type, and has standar layout (called POD type (Pre c++20)).
 That means it is trivially copiable, trivially copy constructible, and others.
 
-Most functionality is constexpr and can be exceuted in compile time. This is used
-for its unit testing and can be a useful feature in some situations.
+Most functionality is constexpr and can be exceuted in compile time. This is
+used for its unit testing and can be a useful feature in some situations.
 
-Added functionality is mainly math operations, to make this a matrix and not just a 2D array,
-convenience functions, and basic functionality that can be useful in GA algorithms.
+Added functionality is mainly math operations, to make this a matrix and not
+just a 2D array, convenience functions, and basic functionality that can be
+useful in GA algorithms.
 
-This is not a matrix intended to do math, but does have math functionality. Which means that
-algorithms like inverse or RREF might yield wrong results when matrices are not invertible or
-is their determinant is too small (Note: having a small determinant is not a condition for closeness
-to singularity, but can be a good heuristic). This is specially the case when using single precision
-floating point numbers, and thus, double recision should be used for math applications. Results of
-this operations should be double checked if singular matrices might appear as the algorithms do not
-cover corner cases.
+This is not a matrix intended to do math, but does have math functionality.
+Which means that algorithms like inverse or RREF might yield wrong results when
+matrices are not invertible or is their determinant is too small (Note: having a
+small determinant is not a condition for closeness to singularity, but can be a
+good heuristic). This is specially the case when using single precision floating
+point numbers, and thus, double recision should be used for math applications.
+Results of this operations should be double checked if singular matrices might
+appear as the algorithms do not cover corner cases.
 
-Code bloat could be an issue if using multiple types of matrices (shapes and value types). This has
-not been taken into account during design.
+Code bloat could be an issue if using multiple types of matrices (shapes and
+value types). This has not been taken into account during design.
 
-I decided to use - T const& - in most cases because i found it easier to read due to long names
+I decided to use - T const& - in most cases because i found it easier to read
+due to long names
 
 */
 
@@ -85,7 +88,9 @@ public:
     {
     }
 
-    constexpr explicit matrix_const_iterator(pointer p_arg, size_t offs = 0) noexcept :
+    constexpr explicit matrix_const_iterator(
+        pointer p_arg, size_t offs = 0
+    ) noexcept :
         m_Ptr(p_arg + offs)
     {
     }
@@ -234,7 +239,8 @@ public:
 
     constexpr matrix_iterator() noexcept = default;
 
-    constexpr explicit matrix_iterator(pointer p_arg, size_t offs = 0) noexcept :
+    constexpr explicit matrix_iterator(pointer p_arg, size_t offs = 0) noexcept
+        :
         My_Base(p_arg, offs)
     {
     }
@@ -365,20 +371,26 @@ public:
 
     template <class Fn, class... Args>
         requires std::is_invocable_r_v<T, Fn, Args...>
-    void fill(Fn&& fn, Args&&... args) noexcept(noexcept(std::invoke(fn, std::forward<Args>(args)...)))
+    void fill(Fn&& fn, Args&&... args) noexcept(
+        noexcept(std::invoke(fn, std::forward<Args>(args)...))
+    )
     {
         for (iterator it = begin(); it != end(); ++it)
             *it = static_cast<T>(std::invoke(fn, std::forward<Args>(args)...));
     }
 
-    constexpr void fill_n(iterator dest, const ptrdiff_t count, const T val) noexcept
+    constexpr void fill_n(
+        iterator dest, const ptrdiff_t count, const T val
+    ) noexcept
     {
 #ifdef _CHECKBOUNDS_
         const bool indexing_b = *dest < *m_Elems; // pointer before array
-        const bool indexing_p = *dest + count > *m_Elems + M * N; // write past array limits
+        const bool indexing_p =
+            *dest + count > *m_Elems + M * N; // write past array limits
         if (indexing_b || indexing_p)
         {
-            std::cout << "Indexing before array: " << indexing_b << "Indexing past array: " << indexing_p << std::endl;
+            std::cout << "Indexing before array: " << indexing_b
+                      << "Indexing past array: " << indexing_p << std::endl;
             std::cout << "fill_n subscript out of bounds\n";
             std::exit(EXIT_FAILURE);
         }
@@ -585,13 +597,14 @@ public:
     }
 
     /**
-     * \brief Rescales the L1 dist_op of the matrix to the input dist_op value by dividing every element by a constant
-     * amount.
+     * \brief Rescales the L1 dist_op of the matrix to the input dist_op value
+     * by dividing every element by a constant amount.
      *
      * \param dist_op The resulting L1 dist_op of the matrix
      *
      * \note Only works for floating point matrix value types
-     * \throws std::logic_error (or other, implementation dependent) when divsion by zero
+     * \throws std::logic_error (or other, implementation dependent) when
+     * divsion by zero
      */
     constexpr void rescale_L_1_1_norm(const T dist_op = T(1)) noexcept(false)
         requires std::is_floating_point_v<T>
@@ -604,7 +617,8 @@ public:
     }
 
     /// <summary>
-    /// Rescales all values in the matrix to fit a normal distribution N(0,1) (mean 0 and sttdev 1)
+    /// Rescales all values in the matrix to fit a normal distribution N(0,1)
+    /// (mean 0 and sttdev 1)
     /// </summary>
     void standarize()
         requires std::is_floating_point_v<T>
@@ -662,7 +676,8 @@ concept static_matrix_type = requires { matrix_dummy(std::declval<T&>()); };
 
 template <typename R, static_matrix_type Matrix>
 [[nodiscard]]
-constexpr auto cast_to(Matrix const& src) noexcept -> static_matrix<R, Matrix::Size_y, Matrix::Size_x>
+constexpr auto cast_to(Matrix const& src) noexcept
+    -> static_matrix<R, Matrix::Size_y, Matrix::Size_x>
 {
     constexpr auto M = Matrix::Size_y;
     constexpr auto N = Matrix::Size_x;
@@ -681,7 +696,8 @@ constexpr auto cast_to(Matrix const& src) noexcept -> static_matrix<R, Matrix::S
 template <size_t Out_M, size_t Out_N, static_matrix_type Matrix>
     requires((Matrix::Size_y * Matrix::Size_x) == (Out_M * Out_N))
 [[nodiscard]]
-constexpr auto cast_to_shape(Matrix const& src) noexcept -> static_matrix<typename Matrix::value_type, Out_M, Out_N>
+constexpr auto cast_to_shape(Matrix const& src) noexcept
+    -> static_matrix<typename Matrix::value_type, Out_M, Out_N>
 {
     constexpr auto M = Matrix::Size_y;
     constexpr auto N = Matrix::Size_x;
@@ -741,7 +757,9 @@ operator!=(Matrix const& mat1, Matrix const& mat2)
 template <static_matrix_type Matrix>
 [[nodiscard]]
 constexpr bool nearly_equals(
-    Matrix const& mat1, Matrix const& mat2, const typename Matrix::value_type epsilon = 1e-4
+    Matrix const&                     mat1,
+    Matrix const&                     mat2,
+    const typename Matrix::value_type epsilon = 1e-4
 ) noexcept
 {
     for (size_t j = 0; j != Matrix::Size_y; ++j)
@@ -775,20 +793,52 @@ constexpr bool exactly_equals(Matrix const& mat1, Matrix const& mat2) noexcept
 //------------ GA-Specific functionallity -------------------------------------
 //-----------------------------------------------------------------------------
 
-template <static_matrix_type Matrix>
-void to_target_x_crossover(Matrix const& in_mat1, Matrix const& in_mat2, Matrix& out_mat1, Matrix& out_mat2) noexcept
-{
-    // indices to slice. a: horizontal, b: vertical
-    const auto a = static_cast<size_t>(random::randint(0, Matrix::Size_y));
-    const auto b = static_cast<size_t>(random::randint(0, Matrix::Size_x));
+// template <static_matrix_type Matrix>
+// void to_target_x_crossover(Matrix const& in_mat1, Matrix const& in_mat2,
+// Matrix& out_mat1, Matrix& out_mat2) noexcept
+// {
+//     // indices to slice. a: horizontal, b: vertical
+//     const auto a = static_cast<size_t>(random::randint(0, Matrix::Size_y));
+//     const auto b = static_cast<size_t>(random::randint(0, Matrix::Size_x));
 
-    for (size_t j = 0; j != Matrix::Size_y; ++j)
+//     for (size_t j = 0; j != Matrix::Size_y; ++j)
+//     {
+//         for (size_t i = 0; i != Matrix::Size_x; ++i)
+//         {
+//             auto main_diagonal = (j < a) == (i < b);
+//             out_mat1[j, i]     = main_diagonal ? in_mat1[j, i] : in_mat2[j,
+//             i]; out_mat2[j, i]     = main_diagonal ? in_mat2[j, i] :
+//             in_mat1[j, i];
+//         }
+//     }
+// }
+
+// TODO test
+template <static_matrix_type Matrix>
+void to_target_x_crossover(
+    Matrix const& in_mat1,
+    Matrix const& in_mat2,
+    Matrix&       out_mat1,
+    Matrix&       out_mat2
+) noexcept
+{
+    constexpr auto M = Matrix::Size_y;
+    constexpr auto N = Matrix::Size_x;
+
+    // indices to slice. a: horizontal, b: vertical
+    const auto a = static_cast<size_t>(random::randint(0, M));
+    const auto b = static_cast<size_t>(random::randint(0, N));
+
+    auto area1 = a * b + (N - b) * (M - a);
+    auto area2 = M * N - area1;
+
+    for (size_t j = 0; j != M; ++j)
     {
-        for (size_t i = 0; i != Matrix::Size_x; ++i)
+        for (size_t i = 0; i != N; ++i)
         {
-            auto main_diagonal = (j < a) == (i < b);
-            out_mat1[j, i]     = main_diagonal ? in_mat1[j, i] : in_mat2[j, i];
-            out_mat2[j, i]     = main_diagonal ? in_mat2[j, i] : in_mat1[j, i];
+            auto fall_through = ((j < a) == (i < b)) == (area1 > area2);
+            out_mat1[j, i]    = fall_through ? in_mat1[j, i] : in_mat2[j, i];
+            out_mat2[j, i]    = fall_through ? in_mat2[j, i] : in_mat1[j, i];
         }
     }
 }
@@ -821,7 +871,8 @@ constexpr static_matrix<T, M, N> matrix_mul(
 // // TODO check impl
 // template <size_t M, size_t K, size_t N>
 // [[nodiscard]] constexpr static_matrix<float, M, N> matrix_mul_avx(
-//     static_matrix<float, M, K> const& mat1, static_matrix<float, K, N> const& mat2
+//     static_matrix<float, M, K> const& mat1, static_matrix<float, K, N> const&
+//     mat2
 // ) noexcept
 // {
 //     static_matrix<float, M, N> ret{};
@@ -834,16 +885,20 @@ constexpr static_matrix<T, M, N> matrix_mul(
 //             for (size_t jj = 0; jj < K - 7; jj += 8)
 //             {
 //                 // std::cout << "Here2\n";
-//                 const __m256 row_piece = _mm256_loadu_ps(mat1.m_Elems + j * K + jj);
-//                 for (size_t k = 0; k != N; ++k)
+//                 const __m256 row_piece = _mm256_loadu_ps(mat1.m_Elems + j * K
+//                 + jj); for (size_t k = 0; k != N; ++k)
 //                 {
 //                     // std::cout << "Here3\n";
-//                     const __m256 v_piece = _mm256_loadu_ps(tmat2.m_Elems + k * K + jj);
+//                     const __m256 v_piece = _mm256_loadu_ps(tmat2.m_Elems + k
+//                     * K + jj);
 
-//                     const __m256 m256_dot_piece = _mm256_dp_ps(v_piece, row_piece, 0xf1); // compare 0xff with 0xf1
+//                     const __m256 m256_dot_piece = _mm256_dp_ps(v_piece,
+//                     row_piece, 0xf1); // compare 0xff with 0xf1
 
-//                     const auto float8_dot_piece = std::bit_cast<std::array<float, 8>>(m256_dot_piece);
-//                     ret[j, k] += float8_dot_piece[0] + float8_dot_piece[4]; // Now without UB! std::bit_cast edition
+//                     const auto float8_dot_piece =
+//                     std::bit_cast<std::array<float, 8>>(m256_dot_piece);
+//                     ret[j, k] += float8_dot_piece[0] + float8_dot_piece[4];
+//                     // Now without UB! std::bit_cast edition
 //                 }
 //             }
 //         }
@@ -910,11 +965,17 @@ static_matrix<float, M, 1> matrix_vector_mul_float_avx(
             const __m256 v_piece = _mm256_loadu_ps(vec.m_Elems + i);
             for (size_t j = 0; j != M; ++j)
             {
-                const __m256 row_piece      = _mm256_loadu_ps(mat.m_Elems + i + j * N);
-                const __m256 m256_dot_piece = _mm256_dp_ps(v_piece, row_piece, 0xf1); // compare 0xff with 0xf1
+                const __m256 row_piece =
+                    _mm256_loadu_ps(mat.m_Elems + i + j * N);
+                const __m256 m256_dot_piece = _mm256_dp_ps(
+                    v_piece, row_piece, 0xf1
+                ); // compare 0xff with 0xf1
 
-                const auto float8_dot_piece = std::bit_cast<std::array<float, 8>>(m256_dot_piece);
-                ret[j, 0] += float8_dot_piece[0] + float8_dot_piece[4]; // Now without UB! std::bit_cast edition
+                const auto float8_dot_piece =
+                    std::bit_cast<std::array<float, 8>>(m256_dot_piece);
+                ret[j, 0] += float8_dot_piece[0] +
+                    float8_dot_piece[4]; // Now without UB! std::bit_cast
+                                         // edition
             }
         }
     }
@@ -933,11 +994,13 @@ static_matrix<float, M, 1> matrix_vector_mul_float_avx(
     return ret;
 }
 
-// multiplies every column of a matrix by the element of a row vector of same index as the column
+// multiplies every column of a matrix by the element of a row vector of same
+// index as the column
 template <typename T, size_t M, size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, M, N> vector_expand(
-    static_matrix<T, 1, N> const& row_vector, static_matrix<T, M, N> const& col_vectors
+    static_matrix<T, 1, N> const& row_vector,
+    static_matrix<T, M, N> const& col_vectors
 )
 {
     auto ret{ col_vectors };
@@ -953,12 +1016,14 @@ constexpr static_matrix<T, M, N> vector_expand(
 
 /*
 Multiplies pairs of vectors stored in two matrices
-Useful to make multiple vector multiplications with one operation and one data structure
+Useful to make multiple vector multiplications with one operation and one data
+structure
 */
 template <typename T, size_t M, size_t N>
 [[nodiscard]]
 constexpr static_matrix<T, 1, M> multiple_dot_product(
-    static_matrix<T, M, N> const& row_vectors, static_matrix<T, N, M> const& col_vectors
+    static_matrix<T, M, N> const& row_vectors,
+    static_matrix<T, N, M> const& col_vectors
 )
 {
     static_matrix<T, 1, M> ret{};
@@ -1007,16 +1072,19 @@ returns:
 template <typename T_In, typename T_Out, size_t N>
     requires(N > 1)
 [[nodiscard]]
-constexpr std::tuple<bool, double, static_matrix<T_Out, N, N>, std::array<size_t, N>> PII_LUDecomposition(
-    static_matrix<T_In, N, N> const& scr
-)
+constexpr std::tuple<
+    bool,
+    double,
+    static_matrix<T_Out, N, N>,
+    std::array<size_t, N>> PII_LUDecomposition(static_matrix<T_In, N, N> const&
+                                                   scr)
 {
     /*
     source:
     http://web.archive.org/web/20150701223512/http://download.intel.com/design/PentiumIII/sml/24504601.pdf
 
-    Factors "_Source" matrix into out=LU where L is lower triangular and U is upper
-    triangular. The matrix is overwritten by LU with the diagonal elements
+    Factors "_Source" matrix into out=LU where L is lower triangular and U is
+    upper triangular. The matrix is overwritten by LU with the diagonal elements
     of L (which are unity) not stored. This must be a square n x n matrix.
     */
 
@@ -1048,11 +1116,13 @@ constexpr std::tuple<bool, double, static_matrix<T_Out, N, N>, std::array<size_t
 
         if (out(r_idx[p], p) == 0)
         {
-            // The matrix is singular. //or not invertible by this method until fixed (no
-            // permutations)
-            return std::tuple<bool, double, return_type_congruent_matrix, std::array<size_t, N>>(
-                false, 0.0, std::move(out), {}
-            );
+            // The matrix is singular. //or not invertible by this method until
+            // fixed (no permutations)
+            return std::tuple<
+                bool,
+                double,
+                return_type_congruent_matrix,
+                std::array<size_t, N>>(false, 0.0, std::move(out), {});
         }
         // Multiply the diagonal elements.
         det *= out[r_idx[p], p];
@@ -1081,12 +1151,19 @@ constexpr std::tuple<bool, double, static_matrix<T_Out, N, N>, std::array<size_t
             {
                 std::swap(out[j, i], out[r_idx[j], i]);
             }
-            std::swap(r_idx[j], r_idx[static_cast<size_t>(std::find(r_idx.begin(), r_idx.end(), j) - r_idx.begin())]);
+            std::swap(
+                r_idx[j],
+                r_idx[static_cast<size_t>(
+                    std::find(r_idx.begin(), r_idx.end(), j) - r_idx.begin()
+                )]
+            );
         }
     }
     // F.21
     // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#f21-to-return-multiple-out-values-prefer-returning-a-struct-or-tuple
-    return { det != 0.0, det != 0.0 ? det : NAN, std::move(out), std::move(ri) };
+    return {
+        det != 0.0, det != 0.0 ? det : NAN, std::move(out), std::move(ri)
+    };
 }
 
 /**
@@ -1106,7 +1183,8 @@ constexpr double determinant(static_matrix<T, N, N> const& scr)
  * Can be used to solve systems of linear equations with an augmented matrix
  * or to invert a matrix M : ( M | I ) -> ( I | M^-1 )
  * \param scr Input matrix
- * \return Bool indicating whether or not the matrix is invertible and the transformation succeeded
+ * \return Bool indicating whether or not the matrix is invertible and the
+ * transformation succeeded
  *
  * \note Uses Gauss-Jordan elimination with partial pivoting
  *       Mutates input
@@ -1162,7 +1240,12 @@ constexpr bool RREF(static_matrix<T, M, N>& scr)
             {
                 std::swap(scr[j, i], scr[r_idx[j], i]);
             }
-            std::swap(r_idx[j], r_idx[static_cast<size_t>(std::find(r_idx.begin(), r_idx.end(), j) - r_idx.begin())]);
+            std::swap(
+                r_idx[j],
+                r_idx[static_cast<size_t>(
+                    std::find(r_idx.begin(), r_idx.end(), j) - r_idx.begin()
+                )]
+            );
         }
     }
     return true;
@@ -1171,17 +1254,18 @@ constexpr bool RREF(static_matrix<T, M, N>& scr)
 /**
  * \brief Inverts N*N matrix using gauss-jordan reduction with pivoting
  *        Not the most stable algorithm, nor the most efficient in space or time
- *        Beware of stability problems with singular or close to singularity matrices
- * \tparam T_In Value_Type of the input matrix
- * \tparam T_Out Value_Type of the output matrix
- * \tparam N Size of the input square matrix
- * \param scr Matrix to invert
- * \return Tuple containing a bool that represents whether or not the operation succeeded and the inverted matrix if the
- *         operation was successful, empty matrix otherwise
+ *        Beware of stability problems with singular or close to singularity
+ * matrices \tparam T_In Value_Type of the input matrix \tparam T_Out Value_Type
+ * of the output matrix \tparam N Size of the input square matrix \param scr
+ * Matrix to invert \return Tuple containing a bool that represents whether or
+ * not the operation succeeded and the inverted matrix if the operation was
+ * successful, empty matrix otherwise
  */
 template <typename T_In, std::floating_point T_Out = double, size_t N>
 [[nodiscard]]
-constexpr std::tuple<bool, static_matrix<T_Out, N, N>> inverse(static_matrix<T_In, N, N> const& scr)
+constexpr std::tuple<bool, static_matrix<T_Out, N, N>> inverse(
+    static_matrix<T_In, N, N> const& scr
+)
 {
     // Tmp == ( M | I )
     static_matrix<T_Out, N, N * 2> tmp{};
@@ -1232,7 +1316,8 @@ constexpr static_matrix<T, N, N> identity_matrix()
 }
 
 // template <typename T, size_t N>
-// [[nodiscard]] constexpr static_matrix<T, N, N> transpose(static_matrix<T, N, N> const& scr)
+// [[nodiscard]] constexpr static_matrix<T, N, N> transpose(static_matrix<T, N,
+// N> const& scr)
 // {
 //     static_matrix<T, N, N> ret{ scr };
 //     for (size_t j = 0; j != N - 1; ++j)
@@ -1273,17 +1358,18 @@ constexpr static_matrix<T, N, M> transpose(static_matrix<T, M, N> const& scr)
     return ret;
 }
 
-template <std::size_t Out_M, std::size_t Out_N, static_matrix_type Matrix, typename Fn>
-    requires((Out_M == 1 || Out_N == 1) &&
-             (Out_M == Matrix::Size_y || Out_N == Matrix::Size_x || Out_N == Out_M /* == 1*/) &&
-             std::is_invocable_r_v<
-                 typename Matrix::value_type,
-                 Fn,
-                 typename Matrix::value_type,
-                 typename Matrix::value_type>)
-[[nodiscard]] auto reduce(Matrix const& mat, Fn&& fn) -> static_matrix<typename Matrix::value_type, Out_M, Out_N>
+template <
+    std::size_t        Out_M,
+    std::size_t        Out_N,
+    static_matrix_type Matrix,
+    typename Fn>
+    requires((Out_M == 1 || Out_N == 1) && (Out_M == Matrix::Size_y || Out_N == Matrix::Size_x || Out_N == Out_M /* == 1*/) && std::is_invocable_r_v<typename Matrix::value_type, Fn, typename Matrix::value_type, typename Matrix::value_type>)
+[[nodiscard]]
+auto reduce(Matrix const& mat, Fn&& fn)
+    -> static_matrix<typename Matrix::value_type, Out_M, Out_N>
 {
-    using return_type     = static_matrix<typename Matrix::value_type, Out_M, Out_N>;
+    using return_type =
+        static_matrix<typename Matrix::value_type, Out_M, Out_N>;
     constexpr auto M      = Matrix::Size_y;
     constexpr auto N      = Matrix::Size_x;
     auto           ret    = return_type();
@@ -1315,8 +1401,9 @@ constexpr Matrix element_wise_mul(Matrix const& mat1, Matrix const& mat2)
     return ret;
 }
 
-/// @brief Accumulates dist_op(mat1_ij, mat2_ij) for all ij. If dist_op is the Ln dist_op, then this
-/// function returns the Ln dist_op between mat1 and mat2 to the power, i.e. Ln(mat1, mat2)^n
+/// @brief Accumulates dist_op(mat1_ij, mat2_ij) for all ij. If dist_op is the
+/// Ln dist_op, then this function returns the Ln dist_op between mat1 and mat2
+/// to the power, i.e. Ln(mat1, mat2)^n
 /// @tparam Distance A Binary operation type (R, R) -> R
 /// @tparam R A floating point type
 /// @tparam Matrix A static matrix type
@@ -1325,28 +1412,38 @@ constexpr Matrix element_wise_mul(Matrix const& mat1, Matrix const& mat2)
 /// @param dist_op Binary operation to accumulate over mat1 and mat2
 /// @return Distance between mat1 and mat2 defined by the Distance dist_op
 template <std::floating_point R, static_matrix_type Matrix, typename Distance>
-    requires std::is_invocable_r_v<R, Distance, typename Matrix::value_type, typename Matrix::value_type>
+    requires std::is_invocable_r_v<
+        R,
+        Distance,
+        typename Matrix::value_type,
+        typename Matrix::value_type>
 [[nodiscard]]
-constexpr auto distance(Matrix const& mat1, Matrix const& mat2, Distance&& dist_op) -> R
+constexpr auto matrix_distance(
+    Matrix const& mat1, Matrix const& mat2, Distance&& dist_op
+) -> R
 {
     R distance{};
     for (size_t j = 0; j != Matrix::Size_y; ++j)
     {
         for (size_t i = 0; i != Matrix::Size_x; ++i)
         {
-            distance += std::invoke_r<R>(std::forward<Distance>(dist_op), mat1[j, i], mat2[j, i]);
+            distance += std::invoke_r<R>(
+                std::forward<Distance>(dist_op), mat1[j, i], mat2[j, i]
+            );
         }
     }
     return distance;
 }
 
 //-----------------------------------------------------------------------------
-//------------ Miscellany related functionality  -------------------------------------
+//------------ Miscellany related functionality
+//-------------------------------------
 //-----------------------------------------------------------------------------
 
 /*
 returns the element-wise type consistent average of a pack of matrices
-beware of overflow issues if matrices have large numbers or calculating the average over a big array
+beware of overflow issues if matrices have large numbers or calculating the
+average over a big array
 */
 template <static_matrix_type Matrix>
 [[nodiscard]]

@@ -8,7 +8,7 @@ AlignOperands: false
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignTrailingComments: false
-AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowAllArgumentsOnNextLine: true
 AlwaysBreakTemplateDeclarations: Yes
 BinPackParameters: false
@@ -16,6 +16,7 @@ BinPackArguments: false
 BreakAfterAttributes: Always
 BreakBeforeConceptDeclarations: Always
 BreakConstructorInitializers: AfterColon
+ColumnLimit: 80
 IndentCaseBlocks: true
 IndentRequiresClause: true
 MaxEmptyLinesToKeep: 2
@@ -23,6 +24,7 @@ PackConstructorInitializers: NextLine
 PackConstructorInitializers: Never
 PenaltyBreakTemplateDeclaration: 0
 PointerAlignment: Left
+# RequiresClausePositionStyle: OwnLine
 SeparateDefinitionBlocks: Always
 SortIncludes: true
 SpaceAfterTemplateKeyword: true

@@ -14,7 +14,8 @@ concept brain_concept = requires(T t) {
     typename T::brain_output_type;
     typename T::value_type;
     T();
-    t.mutate(std::declval<typename T::value_type (*)(typename T::value_type)>());
+    t.mutate(std::declval<typename T::value_type (*)(typename T::value_type)>()
+    );
     {
         to_target_brain_crossover(t, t, t, t)
     } -> std::same_as<void>;
@@ -36,6 +37,7 @@ public:
     using brain_type             = std::remove_cvref_t<Brain>;
     using brain_value_type       = typename brain_type::value_type;
     using agent_output_type      = typename brain_type::brain_output_type;
+    using agent_input_type       = typename brain_type::brain_input_type;
     using id_type                = std::size_t;
     using generation_type        = std::size_t;
     using parents_container_type = std::vector<id_type>; // TODO: Optimize(?)
@@ -95,7 +97,8 @@ public:
     // Agent asexual reproduction
     //--------------------------------------------------------------------------------------//
 
-    /// @brief Asexual reproduction by cloning. Generates an identical agent member of the next generation.
+    /// @brief Asexual reproduction by cloning. Generates an identical agent
+    /// member of the next generation.
     /// @return New Agent member of the next generation to the parent.
     [[nodiscard]]
     auto clone() const -> agent
@@ -104,7 +107,10 @@ public:
     }
 
     void mutate()
-        requires std::is_invocable_r_v<brain_value_type, mutation_policy_type, brain_value_type>
+        requires std::is_invocable_r_v<
+            brain_value_type,
+            mutation_policy_type,
+            brain_value_type>
     {
         m_Brain.mutate(m_Mutation_policy);
     }
@@ -157,24 +163,29 @@ public:
         return m_Mutation_policy;
     }
 
-    // [[nodiscard]] static auto get_offsprings_generation(generation_type gen_a, generation_type gen_b) ->
-    // generation_type
+    // [[nodiscard]] static auto get_offsprings_generation(generation_type
+    // gen_a, generation_type gen_b) -> generation_type
     // {
-    //     return static_cast<generation_type>(static_cast<float>(gen_a + gen_b) / 2.f);
+    //     return static_cast<generation_type>(static_cast<float>(gen_a + gen_b)
+    //     / 2.f);
     // }
 
     [[nodiscard]]
-    static auto get_offsprings_generation(std::same_as<generation_type> auto... generations) -> generation_type
+    static auto get_offsprings_generation(
+        std::same_as<generation_type> auto... generations
+    ) -> generation_type
     {
         return static_cast<generation_type>(
-            static_cast<float>((generations + ...)) / static_cast<float>(sizeof...(generations))
+            static_cast<float>((generations + ...)) /
+            static_cast<float>(sizeof...(generations))
         );
     }
 
     auto print() const -> void
     {
         m_Brain.print_net();
-        std::cout << "ID: " << m_ID << "\nGeneration " << m_Generation << "\nParents: ";
+        std::cout << "ID: " << m_ID << "\nGeneration " << m_Generation
+                  << "\nParents: ";
         for (auto e : m_Parents)
             std::cout << e << ' ';
         std::cout << "\nMutation policy parameters: [ ";
@@ -194,16 +205,24 @@ void agent_dummy(agent<Brain, Mutation_Policy>)
 }
 
 template <typename T>
-concept agent_type = requires { agent_dummy(std::declval<std::remove_cvref_t<T>&>()); };
+concept agent_type =
+    requires { agent_dummy(std::declval<std::remove_cvref_t<T>&>()); };
 
 //--------------------------------------------------------------------------------------//
 // Agent sexual reproduction
 //--------------------------------------------------------------------------------------//
 
 template <agent_type Agent>
-auto to_target_crossover(const Agent& parent_a, const Agent& parent_b, Agent& child_a, Agent& child_b) -> void
+auto to_target_crossover(
+    const Agent& parent_a, const Agent& parent_b, Agent& child_a, Agent& child_b
+) -> void
 {
-    to_target_brain_crossover(parent_a.get_brain(), parent_b.get_brain(), child_a.get_brain(), child_b.get_brain());
+    to_target_brain_crossover(
+        parent_a.get_brain(),
+        parent_b.get_brain(),
+        child_a.get_brain(),
+        child_b.get_brain()
+    );
 }
 
 template <std::floating_point R, agent_type Agent, typename Distance>
@@ -213,9 +232,15 @@ template <std::floating_point R, agent_type Agent, typename Distance>
         } -> std::convertible_to<typename Agent::brain_type>;
     }
 [[nodiscard]]
-auto distance(Agent const& agent_a, Agent const& agent_b, Distance&& dist_op) -> R
+auto agent_distance(
+    Agent const& agent_a, Agent const& agent_b, Distance&& dist_op
+) -> R
 {
-    return distance<R>(agent_a.get_brain(), agent_b.get_brain(), std::forward<Distance>(dist_op));
+    return neural_net_distance<R>(
+        agent_a.get_brain(),
+        agent_b.get_brain(),
+        std::forward<Distance>(dist_op)
+    );
 }
 
 } // namespace evolution_agent

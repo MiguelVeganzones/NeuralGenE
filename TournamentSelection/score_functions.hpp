@@ -16,8 +16,7 @@ concept Score_Function = requires(Fn_Obj fn) {
     } -> std::convertible_to<typename Fn_Obj::output_type>;
 };
 
-template <typename R, typename Fn, typename Arg>
-    requires std::is_invocable_r_v<R, Fn, Arg>
+template <typename R, typename Fn, typename Arg> requires std::is_invocable_r_v<R, Fn, Arg>
 class score_function
 {
 public:

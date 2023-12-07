@@ -14,19 +14,23 @@ namespace fitness_calculator
 template <typename Agent>
 struct fitness_calculator
 {
-    using agent_type       = Agent; // std::remove_cvref_t<typename generation_container_type::value_type>;
-    using probability_type = tournament_selection::floating_point_normalized_type<float>;
+    using agent_type = Agent; // std::remove_cvref_t<typename
+                              // generation_container_type::value_type>;
+    using probability_type =
+        tournament_selection::floating_point_normalized_type<float>;
 
     inline static constexpr float distance_threshold = 0.1f; // TODO
 
-    // auto operator()(generation_container_type const&, scores_container_type const&)
+    // auto operator()(generation_container_type const&, scores_container_type
+    // const&)
     // {
     //     reproduction_probabilities_container_type();
     // }
 
     template <std::floating_point R, size_t N>
         requires(N > 1)
-    [[nodiscard]] static auto generation_variability(std::array<agent_type, N> const& agents)
+    [[nodiscard]]
+    static auto generation_variability(std::array<agent_type, N> const& agents)
         -> ga_sm::static_matrix<R, N, N>
     {
         ga_sm::static_matrix<R, N, N> distance_matrix{};
@@ -34,10 +38,13 @@ struct fitness_calculator
         {
             for (size_t i = j + 1; i != N; ++i)
             {
-                const auto _distance =
-                    distance<R>(agents[j], agents[i], [](float a, float b) { return std::pow(a - b, 2); });
-                distance_matrix[j, i] = _distance;
-                distance_matrix[i, j] = _distance;
+                const auto distance = agent_distance<R>(
+                    agents[j],
+                    agents[i],
+                    [](float a, float b) { return std::pow(a - b, 2); }
+                );
+                distance_matrix[j, i] = distance;
+                distance_matrix[i, j] = distance;
             }
         }
         return distance_matrix;
@@ -46,8 +53,10 @@ struct fitness_calculator
     template <std::size_t N>
         requires(N > 1)
     //[[nodiscard]]
-    static auto generation_fitness(std::array<agent_type, N> const& agents, std::array<float, N> generation_loss)
-        -> std::array<probability_type, N>
+    static auto generation_fitness(
+        std::array<agent_type, N> const& agents,
+        std::array<float, N>             generation_loss
+    ) -> std::array<probability_type, N>
     {
         const auto distance_matrix = generation_variability(agents);
 
@@ -57,14 +66,15 @@ struct fitness_calculator
         std::sort(
             indexer.begin(),
             indexer.end(),
-            [&generation_loss](const std::size_t idx_1, const std::size_t idx_2) -> bool {
+            [&generation_loss](const std::size_t idx_1, const std::size_t idx_2)
+                -> bool {
                 return generation_loss[idx_1] < generation_loss[idx_2];
             }
         );
 
         std::array<probability_type, N> scores{};
         std::array<bool, N>             done{ false };
-        const auto                      max_loss = std::ranges::max(generation_loss);
+        const auto max_loss = std::ranges::max(generation_loss);
 
         for (auto j : indexer)
         {

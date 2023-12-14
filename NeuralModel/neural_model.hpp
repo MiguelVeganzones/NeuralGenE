@@ -139,9 +139,11 @@ public:
 
     template <typename Brain_Input_Type>
         requires requires {
-            preprocessor::template process<Brain_Input_Type, nn_input_type>(
-                std::declval<Brain_Input_Type&>()
-            );
+            {
+                preprocessor::template process<Brain_Input_Type, nn_input_type>(
+                    std::declval<Brain_Input_Type&>()
+                )
+            } -> std::same_as<nn_input_type>;
         }
     [[nodiscard]]
     auto
@@ -221,13 +223,13 @@ template <std::floating_point R, brain_type Brain, typename Distance>
             typename std::remove_cvref_t<Brain>::neural_net_type>;
     }
 [[nodiscard]]
-auto distance(
+auto brain_distance(
     Brain const& c4_brain_a,
     Brain const& c4_brain_b,
     Distance&&   dist_op
 ) -> R
 {
-    return distance<R>(
+    return neural_net_distance<R>(
         c4_brain_a.get_net(),
         c4_brain_b.get_net(),
         std::forward<Distance>(dist_op)

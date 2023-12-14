@@ -113,6 +113,7 @@ PLT_DIR = Plotting
 NEURAL_MODEL_DIR = NeuralModel
 MINIMAX_SEARCH_DIR = MinimaxTreeSearch
 EVOLUTION_AGENT_DIR = EvolutionAgent
+EVOLUTION_ENV_DIR = EvolutionEnvironment
 C4_AGENT_TRAINING_DIR = C4AgentTraining
 TOURNAMENT_DIR = TournamentSelection
 BENCHMARKING_DIR = Benchmarking
@@ -133,6 +134,7 @@ MINIMAX_SEARCH_INCL = 	-I./$(C4_DIR) $(C4_INCL) $(GENERAL_INCL) \
 EVOLUTION_AGENT_INCL = 	$(GENERAL_INCL) -I./$(NEURAL_MODEL_DIR) $(NEURAL_MODEL_INCL) #\
 						-I/usr/include/python3.10 \
 						-I/home/miguelveganzones/.local/lib/python3.10/site-packages/numpy/core/include
+EVOLUTION_ENV_INCL		= $(GENERAL_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL)
 C4_AGENT_TRAINING_INCL  = $(GENERAL_INCL) -I./$(C4_DIR) $(C4_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL)
 TOURNAMENT_INCL 		= $(GENERAL_INCL) -I./$(C4_DIR) $(C4_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL)
 BENCHMARKING_INCL =		$(GENERAL_INCL) -isystem benchmark/include
@@ -224,6 +226,16 @@ $(TOURNAMENT_DIR)/$(OUT_DIR)/tournament_selection_main.o: $(TOURNAMENT_DIR)/*.cp
 	@echo -e Building $@..."\n"
 	@mkdir -p $(TOURNAMENT_DIR)/${OUT_DIR}
 	$(CXX) $(CXXFLAGS) $(TOURNAMENT_INCL) $(TOURNAMENT_DIR)/tournament_selection_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=================================================================================================
+
+#=================================================================================================
+evolution_environment_main: $(EVOLUTION_ENV_DIR)/$(OUT_DIR)/evolution_environment_main.o $(UTILITY_DIR)/${OUT_DIR}/utility_main.o
+	
+$(EVOLUTION_ENV_DIR)/$(OUT_DIR)/evolution_environment_main.o: $(EVOLUTION_ENV_DIR)/*.cpp $(EVOLUTION_ENV_DIR)/*.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(EVOLUTION_ENV_DIR)/${OUT_DIR}
+	$(CXX) $(CXXFLAGS) $(EVOLUTION_ENV_INCL) $(EVOLUTION_ENV_DIR)/evolution_environment_main.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=================================================================================================
 

@@ -4,6 +4,7 @@
 #include "Precision_totalizer.hpp"
 #include "Random.hpp"
 #include "Stopwatch.hpp"
+#include "generics.hpp"
 
 auto rng()
 {
@@ -11,14 +12,30 @@ auto rng()
     return double(rn);
 }
 
+auto top_n_test() -> void
+{
+    auto&& v = std::array{ 0, 555, 5,    2,    888,  322,  53, 3,
+                           0, 49,  2143, 213,  2384, 1283, 31, 1383,
+                           1, 233, 453,  2323, 429,  -1000 };
+
+    auto&& ret = generics::algorithms::top_n_indeces(v, 10);
+    for (auto&& e : ret)
+    {
+        std::cout << e << ' ';
+    }
+    std::cout << '\n';
+}
+
 int main()
 {
+    top_n_test();
+
     MEASURE_FUNCTION_EXECUTION_TIME();
     stopwatch s("name");
     auto      pt  = precision_totalizer{};
     double    sum = 0;
 
-    constexpr std::size_t n = 10'000'000;
+    constexpr std::size_t n = 100'000'000;
 
     random::init();
 

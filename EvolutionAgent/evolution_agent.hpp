@@ -3,6 +3,7 @@
 
 #include "Random.hpp"
 #include "data_processor.hpp"
+#include "generics.hpp"
 #include <atomic>
 #include <iostream>
 
@@ -27,17 +28,17 @@ concept mutation_policy_concept = requires(T t) {
     typename T::parameters_type;
     {
         t(std::declval<typename T::value_type&>())
-    } -> std::same_as<typename T::value_type&>;
+    } -> std::same_as<typename T::value_type>;
 };
 
 template <brain_concept Brain, mutation_policy_concept Mutation_Policy_Type>
 class agent
 {
 public:
-    using brain_type             = std::remove_cvref_t<Brain>;
-    using brain_value_type       = typename brain_type::value_type;
-    using agent_output_type      = typename brain_type::brain_output_type;
-    using agent_input_type       = typename brain_type::brain_input_type;
+    using brain_type        = std::remove_cvref_t<Brain>;
+    using brain_value_type  = typename brain_type::value_type;
+    using agent_output_type = typename brain_type::brain_output_type;
+    // using agent_input_type       = typename brain_type::brain_input_type;
     using id_type                = std::size_t;
     using generation_type        = std::size_t;
     using parents_container_type = std::vector<id_type>; // TODO: Optimize(?)
@@ -214,7 +215,10 @@ concept agent_type =
 
 template <agent_type Agent>
 auto to_target_crossover(
-    const Agent& parent_a, const Agent& parent_b, Agent& child_a, Agent& child_b
+    const Agent& parent_a,
+    const Agent& parent_b,
+    Agent&       child_a,
+    Agent&       child_b
 ) -> void
 {
     to_target_brain_crossover(
@@ -233,14 +237,45 @@ template <std::floating_point R, agent_type Agent, typename Distance>
     }
 [[nodiscard]]
 auto agent_distance(
-    Agent const& agent_a, Agent const& agent_b, Distance&& dist_op
+    Agent const& agent_a,
+    Agent const& agent_b,
+    Distance&&   dist_op
 ) -> R
 {
-    return neural_net_distance<R>(
+    return brain_distance<R>(
         agent_a.get_brain(),
         agent_b.get_brain(),
         std::forward<Distance>(dist_op)
     );
+}
+
+// TODO change to mdspan when gcc implements it (clang has support for it
+// already)
+
+template <
+    std::floating_point R,
+    agent_type          Agent,
+    std::size_t         N,
+    typename Distance>
+    requires(N > 1)
+[[nodiscard]]
+static auto population_variability(
+    std::array<Agent, N> const& agents,
+    Distance&&                  dist_op
+) -> ga_sm::static_matrix<R, N, N>
+{
+    ga_sm::static_matrix<R, N, N> distance_matrix{};
+    for (size_t j = 0; j != N - 1; ++j)
+    {
+        for (size_t i = j + 1; i != N; ++i)
+        {
+            const auto distance =
+                agent_distance<R>(agents[j], agents[i], dist_op);
+            distance_matrix[j, i] = distance;
+            distance_matrix[i, j] = distance;
+        }
+    }
+    return distance_matrix;
 }
 
 } // namespace evolution_agent

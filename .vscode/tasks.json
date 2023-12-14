@@ -16,7 +16,7 @@
     {
       "label": "debug build",
       "type": "shell",
-      "command": "make -j4 ${fileBasenameNoExtension}.o RELEASE=0",
+      "command": "make -j4 ${fileBasenameNoExtension} RELEASE=0",
       "group": {
           "kind": "build",
           "isDefault": true

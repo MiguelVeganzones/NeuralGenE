@@ -1,7 +1,11 @@
 #ifndef MUTATION_POLICY_GENERATOR
 #define MUTATION_POLICY_GENERATOR
 
-#include "tournament_selection.hpp"
+#include "Random.hpp"
+#include "error_handling.hpp"
+#include <array>
+#include <concepts>
+#include <type_traits>
 
 // FIXME gene replacement plocy?
 namespace mutation_policy
@@ -30,9 +34,8 @@ class mutation_policy_generator
 public:
     inline static constexpr std::size_t N = 6;
 
-    using value_type = Value_Type;
-    using probability_type =
-        tournament_selection::floating_point_normalized_type<float>;
+    using value_type             = Value_Type;
+    using probability_type       = float;
     using parameters_type        = std::array<probability_type, N>;
     using mutation_function_type = value_type (*)(value_type);
 
@@ -79,7 +82,7 @@ public:
             const auto r = random::randfloat();
             if (r >= m_Cummulative_params[5])
             {
-                return f;
+                return f * 0.999f;
             }
             if (r < m_Cummulative_params[0])
             {

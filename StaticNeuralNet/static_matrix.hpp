@@ -341,7 +341,7 @@ class static_matrix
 {
 public:
     using value_type      = T;
-    using std::size_type  = std::size_t;
+    using size_type       = std::size_t;
     using pointer         = T*;
     using const_pointer   = const T*;
     using reference       = T&;
@@ -362,7 +362,7 @@ public:
     /*--------------------------------------------*/
 
     [[nodiscard]]
-    constexpr std::size_type size() const noexcept
+    constexpr size_type size() const noexcept
     {
         return M * N;
     }

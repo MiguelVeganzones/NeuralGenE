@@ -12,13 +12,18 @@ void multi_agent_evolution_test()
 {
     random::init();
 
-    [[maybe_unused]] constexpr auto AF_relu    = matrix_activation_functions::Identifiers::ReLU;
-    [[maybe_unused]] constexpr auto AF_thresh  = matrix_activation_functions::Identifiers::Threshold;
-    [[maybe_unused]] constexpr auto AF_sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
-    [[maybe_unused]] constexpr auto AF_Tanh    = matrix_activation_functions::Identifiers::Tanh;
+    [[maybe_unused]] constexpr auto AF_relu =
+        matrix_activation_functions::Identifiers::ReLU;
+    [[maybe_unused]] constexpr auto AF_thresh =
+        matrix_activation_functions::Identifiers::Threshold;
+    [[maybe_unused]] constexpr auto AF_sigmoid =
+        matrix_activation_functions::Identifiers::Sigmoid;
+    [[maybe_unused]] constexpr auto AF_Tanh =
+        matrix_activation_functions::Identifiers::Tanh;
 
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
-    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1, AF_sigmoid };
+    [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1,
+                                                                   AF_sigmoid };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Tanh{ 1, AF_Tanh };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a9{ 9, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a25{ 25, AF_relu };
@@ -26,9 +31,11 @@ void multi_agent_evolution_test()
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a16{ 16, AF_relu };
 
     // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a1_Tanh>;
-    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a25, a25, a1_Tanh>;
+    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a25, a25,
+    // a1_Tanh>;
     using NET = ga_snn::static_neural_net<float, 1, a1, a9, a25, a1_Tanh>;
-    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a9, a25, a9, a9, a25, a1_Tanh>;
+    // using NET = ga_snn::static_neural_net<float, 1, a1, a9, a9, a9, a9, a25,
+    // a9, a9, a25, a1_Tanh>;
 
     // std::cout << NET::parameter_count() << std::endl;
     // std::cout << NET2::parameter_count() << std::endl;
@@ -37,10 +44,11 @@ void multi_agent_evolution_test()
     using postprocessor = data_processor::scalar_converter;
     using return_type   = NET::value_type;
 
-    using brain_t = ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
+    using brain_t =
+        ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
     using agent_t = evolution_agent::agent<brain_t>;
 
-    using agent_input_type            = brain_t::value_type;
+    // using agent_input_type            = brain_t::value_type;
     using agent_output_type           = brain_t::value_type;
     constexpr int                  P  = 5;
     constexpr float                p0 = 0.00006f;
@@ -49,8 +57,8 @@ void multi_agent_evolution_test()
 
     for (int i = 0; i != P; ++i)
     {
-        cummulative_mutation_probabilities[i] =
-            mutation_probabilities[i] + (i > 0 ? cummulative_mutation_probabilities[i - 1] : 0);
+        cummulative_mutation_probabilities[i] = mutation_probabilities[i] +
+            (i > 0 ? cummulative_mutation_probabilities[i - 1] : 0);
     }
     for (auto e : cummulative_mutation_probabilities)
     {
@@ -81,7 +89,9 @@ void multi_agent_evolution_test()
         }
         if (r < cummulative_mutation_probabilities[3])
         {
-            return f += random::randnormal(random::randnormal(), random::randfloat() * 0.1f);
+            return f += random::randnormal(
+                       random::randnormal(), random::randfloat() * 0.1f
+                   );
         }
         if (r < cummulative_mutation_probabilities[4])
         {

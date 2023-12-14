@@ -85,7 +85,7 @@ int main()
     int i = 0;
     while (b.any_moves_left() && random::randfloat() > 0.03f)
     {
-        for (const auto p : b.get_valid_moves())
+        for (const auto& p : b.get_valid_moves())
         {
             std::cout << p << " :: ";
             if (p && random::randfloat() < 0.2f)

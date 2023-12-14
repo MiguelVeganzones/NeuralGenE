@@ -233,7 +233,7 @@ public:
             return score;
         }
 
-        auto valid_actions = state.get_valid_actions();
+        const auto& valid_actions = state.get_valid_actions();
         // TODO merge valid actions and their scores
         // for (const auto action : valid_actions)
         scores_container_type scores{};

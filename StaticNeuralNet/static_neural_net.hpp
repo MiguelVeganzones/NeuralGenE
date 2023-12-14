@@ -20,8 +20,8 @@ namespace ga_snn
 
 struct Layer_Signature
 {
-    using std::size_type = unsigned int;
-    std::size_type                                         Size;
+    using size_type = unsigned int;
+    size_type                                              Size;
     matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
     constexpr bool operator==(const Layer_Signature&) const = default;

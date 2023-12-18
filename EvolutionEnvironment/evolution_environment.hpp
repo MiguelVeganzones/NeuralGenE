@@ -78,22 +78,23 @@ public:
     [[nodiscard]]
     inline auto train(std::size_t generations) -> result_type
     {
-        generation_fitness_score_container generation_fitness{};
+        auto generation_fitness =
+            m_System.evaluate(m_Population.get_current_generation());
         for (auto iter = 0uz; iter != generations; ++iter)
         {
-            generation_fitness =
-                m_System.evaluate(m_Population.get_current_generation());
-            for (auto&& e : generation_fitness)
-            {
-                std::cout << e << ", ";
-            }
-            std::cout << std::endl;
             m_Reproduction_manager.yield_next_generation(
                 m_Population.get_current_generation(),
                 generation_fitness,
                 m_Population.get_next_generation_nest()
             );
             m_Population.increment_generation();
+            generation_fitness =
+                m_System.evaluate(m_Population.get_current_generation());
+            // for (auto&& e : generation_fitness)
+            // {
+            //     std::cout << e << ", ";
+            // }
+            // std::cout << std::endl;
         }
         const auto best_fitness_idx = std::distance(
             std::begin(generation_fitness),

@@ -51,14 +51,14 @@ public:
         value_ = clip(value);
     }
 
-    auto increment() -> void
+    auto increment(T delta = T(1)) -> void
     {
-        set_value(get_value() + 1);
+        set_value(get_value() + delta);
     }
 
-    auto decrement() -> void
+    auto decrement(T delta = T(1)) -> void
     {
-        set_value(get_value() - 1);
+        set_value(get_value() - delta);
     }
 
 private:

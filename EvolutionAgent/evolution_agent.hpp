@@ -31,7 +31,7 @@ concept mutation_policy_concept = requires(T t) {
     } -> std::same_as<typename T::value_type>;
 };
 
-template <brain_concept Brain, mutation_policy_concept Mutation_Policy_Type>
+template <brain_concept Brain>
 class agent
 {
 public:
@@ -42,48 +42,18 @@ public:
     using id_type                = std::size_t;
     using generation_type        = std::size_t;
     using parents_container_type = std::vector<id_type>; // TODO: Optimize(?)
-    using mutation_policy_type   = Mutation_Policy_Type;
 
 private:
-    inline static std::atomic<id_type> s_ID = 1;
-
-    id_type                m_ID = s_ID++;
-    generation_type        m_Generation{};
-    parents_container_type m_Parents{};
-    brain_type             m_Brain{};
-    mutation_policy_type   m_Mutation_policy{};
-
+    brain_type m_Brain{};
 
 public:
-    agent(
-        const brain_type&             brain,
-        const parents_container_type& parents,
-        generation_type               generation,
-        mutation_policy_type          mutation_policy
-    ) noexcept :
-        m_Generation{ generation },
-        m_Parents{ parents },
-        m_Brain(brain),
-        m_Mutation_policy{ mutation_policy }
+    agent(const brain_type& brain) noexcept :
+        m_Brain(brain)
     {
     }
 
-    agent(
-        brain_type&&                  brain,
-        const parents_container_type& parents,
-        generation_type               generation,
-        mutation_policy_type          mutation_policy
-    ) noexcept :
-        m_Generation{ generation },
-        m_Parents{ parents },
-        m_Brain(std::move(brain)),
-        m_Mutation_policy{ mutation_policy }
-    {
-    }
-
-    agent(Brain&& brain, mutation_policy_type mutation_policy) noexcept :
-        m_Brain(std::forward<Brain>(brain)),
-        m_Mutation_policy{ mutation_policy }
+    agent(Brain&& brain) noexcept :
+        m_Brain(std::forward<Brain>(brain))
     {
     }
 
@@ -98,22 +68,14 @@ public:
     // Agent asexual reproduction
     //--------------------------------------------------------------------------------------//
 
-    /// @brief Asexual reproduction by cloning. Generates an identical agent
-    /// member of the next generation.
-    /// @return New Agent member of the next generation to the parent.
-    [[nodiscard]]
-    auto clone() const -> agent
-    {
-        return agent(m_Brain, { m_ID }, m_Generation + 1, m_Mutation_policy);
-    }
-
-    void mutate()
+    template <mutation_policy_concept Mutation_Policy_Type>
+    void mutate(Mutation_Policy_Type const& mutation_policy)
         requires std::is_invocable_r_v<
             brain_value_type,
-            mutation_policy_type,
+            Mutation_Policy_Type,
             brain_value_type>
     {
-        m_Brain.mutate(m_Mutation_policy);
+        m_Brain.mutate(mutation_policy);
     }
 
     //--------------------------------------------------------------------------------------//
@@ -133,19 +95,6 @@ public:
     // Utility
     //--------------------------------------------------------------------------------------//
 
-
-    [[nodiscard]]
-    auto get_ID() const -> id_type
-    {
-        return m_ID;
-    }
-
-    [[nodiscard]]
-    auto get_generation() const -> generation_type
-    {
-        return m_Generation;
-    }
-
     [[nodiscard]]
     auto get_brain() const -> const brain_type&
     {
@@ -158,12 +107,6 @@ public:
         return m_Brain;
     }
 
-    [[nodiscard]]
-    auto get_mutation_policy() const -> mutation_policy_type
-    {
-        return m_Mutation_policy;
-    }
-
     // [[nodiscard]] static auto get_offsprings_generation(generation_type
     // gen_a, generation_type gen_b) -> generation_type
     // {
@@ -171,28 +114,9 @@ public:
     //     / 2.f);
     // }
 
-    [[nodiscard]]
-    static auto get_offsprings_generation(
-        std::same_as<generation_type> auto... generations
-    ) -> generation_type
-    {
-        return static_cast<generation_type>(
-            static_cast<float>((generations + ...)) /
-            static_cast<float>(sizeof...(generations))
-        );
-    }
-
     auto print() const -> void
     {
         m_Brain.print_net();
-        std::cout << "ID: " << m_ID << "\nGeneration " << m_Generation
-                  << "\nParents: ";
-        for (auto e : m_Parents)
-            std::cout << e << ' ';
-        std::cout << "\nMutation policy parameters: [ ";
-        for (auto e : m_Mutation_policy.get_parameters())
-            std::cout << e << ' ';
-        std::cout << "]\n";
     }
 };
 
@@ -200,8 +124,8 @@ public:
 //  Neural net concept
 //--------------------------------------------------------------------------------------//
 
-template <brain_concept Brain, mutation_policy_concept Mutation_Policy>
-void agent_dummy(agent<Brain, Mutation_Policy>)
+template <brain_concept Brain>
+void agent_dummy(agent<Brain>)
 {
 }
 

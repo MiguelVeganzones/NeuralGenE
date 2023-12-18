@@ -15,6 +15,16 @@
 namespace reproduction_mngr
 {
 
+template <typename T>
+concept mutation_policy_concept = requires(T t) {
+    typename T::value_type;
+    typename T::parameters_type;
+
+    {
+        std::declval<T&>()(std::declval<typename T::value_type>())
+    } -> std::same_as<typename T::value_type>;
+};
+
 struct parent
 {
     int index = -1;
@@ -31,115 +41,45 @@ struct sexual_reproduction_parents
     parent b;
 };
 
-class parent_categories_manager
+class parent_categories
 {
 public:
-    using restricted_type = generics::containers::restricted<int>;
-
-public:
-    parent_categories_manager(int generation_size) noexcept :
-        parent_categories_manager(
-            generation_size,
-            restricted_type(1, (int)(generation_size / 15) + 1, 1),
-            2
-        )
+    parent_categories(int gen_size) noexcept :
+        elites_n{ 1 },
+        progenitors_n{ (int)((unsigned int)(gen_size - elites_n - 1) >> 1) },
+        survivors_n(gen_size - elites_n - 2 * progenitors_n)
     {
     }
-
-    parent_categories_manager(
-        int             generation_size,
-        restricted_type elite_n,
-        int             survivors_n
-    ) noexcept :
-        generation_size_{ generation_size },
-        elite_n_{ elite_n },
-        survivors_n_{ survivors_n },
-        progenitors_n_{
-            static_cast<unsigned int>(
-                generation_size - elite_n.get_value() - survivors_n
-            ) >>
-            1 // shift one bit to divide by two and round down
-        }
-    {
-        if (generation_size_ < elite_n_.max() + survivors_n + 2)
-        {
-            std::cout
-                << "Invalid group sizes.  There must be at least space "
-                   "for two progenitors at all moments in the generation.\n";
-            std::exit(EXIT_FAILURE);
-        }
-        update_extra_survivor();
-    }
-
-    parent_categories_manager(parent_categories_manager const&) noexcept =
-        default;
-    parent_categories_manager(parent_categories_manager&&) noexcept = default;
-    parent_categories_manager&
-    operator=(parent_categories_manager const&) noexcept = default;
-    parent_categories_manager& operator=(parent_categories_manager&&) noexcept =
-        default;
 
     [[nodiscard]]
     auto elites_count() const noexcept -> int
     {
-        return elite_n_.get_value();
-    }
-
-    [[nodiscard]]
-    auto survivors_count() const noexcept -> int
-    {
-        return survivors_n_ + extra_survivor();
+        return elites_n;
     }
 
     [[nodiscard]]
     auto progenitors_count() const noexcept -> int
     {
-        return static_cast<int>(progenitors_n_);
+        return progenitors_n;
     }
 
     [[nodiscard]]
-    auto parents_count() const noexcept -> int
+    auto survivors_count() const noexcept -> int
     {
-        return elites_count() + survivors_count() + parents_count();
+        return survivors_n;
     }
 
 private:
-    [[nodiscard]]
-    auto extra_survivor() const noexcept -> int
-    {
-        return extra_survivor_ ? 1 : 0;
-    }
-
-    auto update_extra_survivor() noexcept -> void
-    {
-        extra_survivor_ = generation_size_ >
-            (elite_n_.get_value() + survivors_n_ + (int)progenitors_n_ * 2);
-    }
-
-    auto increment_elite_count() noexcept -> void
-    {
-        elite_n_.increment();
-        update_extra_survivor();
-    }
-
-    auto decrement_elite_count() noexcept -> void
-    {
-        elite_n_.decrement();
-        update_extra_survivor();
-    }
-
-private:
-    int             generation_size_;
-    restricted_type elite_n_;
-    int             survivors_n_;
-    unsigned int    progenitors_n_;
-    bool            extra_survivor_;
+    int elites_n;
+    int progenitors_n;
+    int survivors_n;
 };
 
 template <
     int                                         Generation_Size,
     evolution_environment_traits::agent_concept Agent_Type,
-    std::floating_point                         Fitness_Score_Type>
+    std::floating_point                         Fitness_Score_Type,
+    mutation_policy_concept                     Mutation_Policy>
 class reproduction_manager
 
 {
@@ -153,7 +93,10 @@ public:
         s_Generation_size>;
     using fitness_score_type        = Fitness_Score_Type;
     using agent_type                = Agent_Type;
+    using mutation_policy_type      = Mutation_Policy;
     using generation_container_type = std::array<agent_type, s_Generation_size>;
+    template <typename T>
+    using container_type = std::array<T, s_Generation_size>;
     using generation_fitness_container_type =
         std::array<fitness_score_type, s_Generation_size>;
     using restricted_type = generics::containers::restricted<float>;
@@ -162,20 +105,26 @@ public:
 
 public:
     reproduction_manager() noexcept :
-        m_Diversity_weight(0.f, 3.f, 1.0f),
-        m_Fitness_weight(1.0f, 3.f, 2.f),
-        m_Parent_categories(s_Generation_size)
+        m_Parent_categories(s_Generation_size),
+        m_Asexual_reproduction_parents(
+            m_Parent_categories.elites_count() +
+            m_Parent_categories.survivors_count()
+        ),
+        m_Sexual_reproduction_parents(m_Parent_categories.progenitors_count()),
+        m_Base_probability(0.01f),
+        m_Mutation_policy(m_Base_probability)
     {
     }
 
-    reproduction_manager(
-        restricted_type           diversity_weight,
-        restricted_type           fitness_weight,
-        parent_categories_manager parent_categories
-    ) noexcept :
-        m_Diversity_weight{ diversity_weight },
-        m_Fitness_weight{ fitness_weight },
-        m_Parent_categories(parent_categories)
+    reproduction_manager(parent_categories parent_categories) noexcept :
+        m_Parent_categories(parent_categories),
+        m_Asexual_reproduction_parents(
+            m_Parent_categories.elites_count() +
+            m_Parent_categories.survivors_count()
+        ),
+        m_Sexual_reproduction_parents(m_Parent_categories.progenitors_count()),
+        m_Base_probability(0.01f),
+        m_Mutation_policy(m_Base_probability)
     {
     }
 
@@ -200,176 +149,272 @@ public:
             } -> std::same_as<diversity_scores_container_type>;
         }
     {
-        auto&& diversity = population_variability<float>(
+        const auto& diversity = population_variability<float>(
             current_generation, generics::algorithms::L2_norm
         );
-        const auto parents_count =
-            update_current_parents(fitness_scores, diversity);
-        reproduce_generation(
-            parents_count, current_generation, next_generation_nest
-        );
+        update_current_parents(fitness_scores, diversity);
+        reproduce_generation(current_generation, next_generation_nest);
     }
 
 private:
     auto update_current_parents(
         generation_fitness_container_type const& fitness_scores,
         diversity_scores_container_type const&   diversity
-    ) -> int
+    ) -> void
     {
         if (random::randfloat() < 0.001)
         {
             std::cout << diversity << std::endl;
         }
-        const auto& elite_n_indeces = generics::algorithms::top_n_indeces(
-            fitness_scores, m_Parent_categories.elites_count()
-        );
+        //
+        // reset diversity scores
+        reset_internal_state();
 
-        update_best_fitness_score(fitness_scores[elite_n_indeces.back()]);
+        update_normalized_fitness_scores(fitness_scores);
 
-        generation_fitness_container_type partially_accumulated_fitness{};
-        std::partial_sum(
-            std::begin(fitness_scores),
-            std::end(fitness_scores),
-            std::begin(partially_accumulated_fitness)
-        );
-
-        // Store actual parents
-        int parent_idx = 0;
-        for (auto& idx : elite_n_indeces)
+        if (m_Parent_categories.elites_count())
         {
-            m_Selected_parents[parent_idx++] =
-                asexual_reproduction_parent{ idx };
+            const auto& elite_n_indeces = generics::algorithms::top_n_indeces(
+                fitness_scores, m_Parent_categories.elites_count()
+            );
+            update_best_fitness_score(fitness_scores[elite_n_indeces.front()]);
+            for (auto& idx : elite_n_indeces)
+            {
+                add_parent(asexual_reproduction_parent{ idx }, diversity);
+            }
         }
+        else
+        {
+            update_best_fitness_score(std::ranges::max(fitness_scores));
+        }
+
+        // std::partial_sum(
+        //     std::begin(fitness_scores),
+        //     std::end(fitness_scores),
+        //     std::begin(partially_accumulated_fitness)
+        // );
+
+
+        // funcion add parent/s que actualice current_parents, diversity scores
+        // y modified fitness(?) y discretice fitness si tal
+
+
         for (int i = 0; i != m_Parent_categories.survivors_count(); ++i)
         {
-            m_Selected_parents[parent_idx++] = asexual_reproduction_parent{
-                roulette_select_parent(partially_accumulated_fitness)
-            };
+            auto idx = roulette_select_parent();
+            add_parent(asexual_reproduction_parent{ idx }, diversity);
         }
         for (int i = 0; i != m_Parent_categories.progenitors_count(); ++i)
         {
-            const auto a =
-                roulette_select_parent(partially_accumulated_fitness);
-            auto b = -1;
+            const auto a = roulette_select_parent();
+            auto       b = -1;
             do
             {
-                b = roulette_select_parent(partially_accumulated_fitness);
+                b = roulette_select_parent();
             } while (a == b);
 
-            m_Selected_parents[parent_idx++] =
-                sexual_reproduction_parents{ a, b };
+            add_parent(sexual_reproduction_parents{ a, b }, diversity);
         }
-        return parent_idx;
+    }
+
+    auto reset_internal_state() noexcept
+
+    {
+        m_Diversity_scores.fill(0);
+        m_Asexual_parents_idx = 0;
+        m_Sexual_parents_idx  = 0;
+    }
+
+    auto add_parent(
+        asexual_reproduction_parent            parent,
+        diversity_scores_container_type const& diversity
+    ) noexcept -> void
+    {
+        m_Asexual_reproduction_parents[m_Asexual_parents_idx++] = parent;
+        for (auto j = 0; j != s_Generation_size; ++j)
+        {
+            m_Diversity_scores[j] += diversity[j, parent.p.index];
+        }
+        // std::cout << "Diversity_scores " << parent.p.index << "\t";
+        // for (auto& e : m_Diversity_scores)
+        // {
+        //     std::cout << e << " ";
+        // }
+        // std::cout << '\n';
+    }
+
+    auto add_parent(
+        sexual_reproduction_parents            parents,
+        diversity_scores_container_type const& diversity
+    ) noexcept -> void
+    {
+        m_Sexual_reproduction_parents[m_Sexual_parents_idx++] = parents;
+        for (auto j = 0; j != s_Generation_size; ++j)
+        {
+            m_Diversity_scores[j] +=
+                diversity[j, parents.a.index] + diversity[j, parents.b.index];
+        }
+        // std::cout << "Diversity_scores " << parents.a.index << " "
+        //           << parents.b.index << "\t";
+        // for (auto& e : m_Diversity_scores)
+        // {
+        //     std::cout << e << " ";
+        // }
+        // std::cout << '\n';
+    }
+
+    auto update_normalized_fitness_scores(
+        generation_fitness_container_type const& fitness_scores
+    ) -> void
+    {
+        std::array<int, s_Generation_size> indeces{};
+        std::ranges::iota(indeces, 0);
+        std::ranges::sort(indeces, [&fitness_scores](int a, int b) {
+            return fitness_scores[a] > fitness_scores[b];
+        });
+        for (int i = 0; i != s_Generation_size; ++i)
+        {
+            m_Fitness_scores[indeces[i]] = (float)std::pow(0.97f, i);
+        }
+        // std::cout << "Fitness\t\t";
+        // for (auto& e : fitness_scores)
+        // {
+        //     std::cout << e << " ";
+        // }
+        // std::cout << '\n';
+        // std::cout << "indeces\t\t";
+        // for (auto& e : indeces)
+        // {
+        //     std::cout << e << " ";
+        // }
+        // std::cout << '\n';
+        // std::cout << "Normalized fitness ";
+        // for (auto& e : m_Fitness_scores)
+        // {
+        //     std::cout << e << " ";
+        // }
+        // std::cout << '\n';
     }
 
     auto reproduce_generation(
-        const int                        parents_count,
         generation_container_type const& current_generation,
         generation_container_type&       next_generation_nest
+
     ) -> void
     {
-        // for (int i = 0; i != parents_count; ++i)
-        // {
-        //     auto&& parent_variant = m_Selected_parents[i];
-        //     if (std::holds_alternative<sexual_reproduction_parents>(
-        //             parent_variant
-        //         ))
-        //     {
-        //         const auto& parents =
-        //             std::get<sexual_reproduction_parents>(parent_variant);
-        //         std::cout << parents.a.index << " & " << parents.b.index
-        //                   << '\n';
-        //     }
-        //     else if (std::holds_alternative<asexual_reproduction_parent>(
-        //                  parent_variant
-        //              ))
-        //     {
-        //         auto&& parent =
-        //             std::get<asexual_reproduction_parent>(parent_variant);
-        //         std::cout << parent.p.index << '\n';
-        //     }
-        // }
-        for (int next_gen_idx = 0, parent_idx = 0; parent_idx != parents_count;
-             ++parent_idx)
+        int next_gen_idx = 0;
+        for (auto parent : m_Asexual_reproduction_parents)
         {
-            const auto& parent_variant = m_Selected_parents[parent_idx];
-            if (std::holds_alternative<sexual_reproduction_parents>(
-                    parent_variant
-                ))
-            {
-                assert(next_gen_idx < s_Generation_size - 1);
-                const auto& parents =
-                    std::get<sexual_reproduction_parents>(parent_variant);
-                to_target_crossover(
-                    current_generation[parents.a.index],
-                    current_generation[parents.b.index],
-                    next_generation_nest[next_gen_idx + 0],
-                    next_generation_nest[next_gen_idx + 1]
-                );
-                next_gen_idx += 2;
-            }
-            else if (std::holds_alternative<asexual_reproduction_parent>(
-                         parent_variant
-                     ))
-            {
-                assert(next_gen_idx < s_Generation_size);
-                auto&& parent =
-                    std::get<asexual_reproduction_parent>(parent_variant);
-                next_generation_nest[next_gen_idx++] =
-                    current_generation[parent.p.index];
-            }
-            else
-            {
-                assert_unreachable();
-            }
+            next_generation_nest[next_gen_idx++] =
+                current_generation[parent.p.index];
         }
-        // todo fix
-        for (int i = m_Parent_categories.elites_count(); i != parents_count;
+        for (auto parents : m_Sexual_reproduction_parents)
+        {
+            to_target_crossover(
+                current_generation[parents.a.index],
+                current_generation[parents.b.index],
+                next_generation_nest[next_gen_idx + 0],
+                next_generation_nest[next_gen_idx + 1]
+            );
+            next_gen_idx += 2;
+        }
+        // // TODO fix
+        // for (int i = m_Parent_categories.elites_count(); i !=
+        // s_Generation_size;
+        //      ++i)
+        for (int i = m_Parent_categories.elites_count(); i != s_Generation_size;
              ++i)
         {
-            next_generation_nest[i].mutate();
+            next_generation_nest[i].mutate(m_Mutation_policy);
         }
     }
 
     auto update_best_fitness_score(fitness_score_type top_score) noexcept
         -> void
     {
+
+        static constexpr
+            typename mutation_policy_type::value_type delta{ 0.000005f };
+        static constexpr
+            typename mutation_policy_type::value_type min{ 0.0005f };
         if (top_score > m_Best_score)
         {
+            m_Base_probability = min;
+            m_Mutation_policy.set_base_probability(m_Base_probability);
             m_Best_score = top_score;
-            /*
-            TODO
-            */
         }
+        else
+        {
+            if (random::randfloat() < 0.0005)
+            {
+                m_Base_probability = min;
+            }
+            else
+            {
+                m_Base_probability += delta;
+            }
+            m_Mutation_policy.set_base_probability(m_Base_probability);
+        }
+        // if (top_score < m_Best_score)
+        // {
+        //     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+        // }
+        std::cout << m_Base_probability << '\n';
+        std::cout << top_score << '\n';
     }
 
-    auto roulette_select_parent(
-        generation_fitness_container_type const& partially_accumulated_fitness
-    ) const -> int
+    auto roulette_select_parent() const -> int
     {
-        // TODO make fitness allways positive and better the greater
-        auto r = random::randfloat() * partially_accumulated_fitness.back();
+        const auto max_diversity = std::ranges::max(m_Diversity_scores);
+
+        std::array<diversity_score_type, s_Generation_size> m_Modified_scores{};
+
+        m_Modified_scores[0] = generics::algorithms::L2_norm(
+            m_Fitness_scores[0], m_Diversity_scores[0] / max_diversity
+        );
+        for (int i = 1; i != s_Generation_size; ++i)
+        {
+            m_Modified_scores[i] =
+                generics::algorithms::L2_norm(
+                    m_Fitness_scores[i], m_Diversity_scores[i] / max_diversity
+                ) +
+                m_Modified_scores[i - 1];
+        }
+        // std::cout << "diversity scores:\t";
+        // for (auto& e : m_Diversity_scores)
+        // {
+        //     std::cout << e << ' ';
+        // }
+        // std::cout << '\n';
+        // std::cout << "Modified fitness:\t";
+        // for (auto& e : m_Modified_scores)
+        // {
+        //     std::cout << e << ' ';
+        // }
+        // std::cout << '\n';
         auto rand_idx = std::distance(
-            std::begin(partially_accumulated_fitness),
+            std::begin(m_Modified_scores),
             std::lower_bound(
-                std::begin(partially_accumulated_fitness),
-                std::end(partially_accumulated_fitness),
-                r
+                std::begin(m_Modified_scores),
+                std::end(m_Modified_scores),
+                random::randfloat() * m_Modified_scores.back()
             )
         );
-
         return static_cast<int>(rand_idx);
     }
 
 private:
-    std::array<parent_type, s_Generation_size> m_Selected_parents{};
-    fitness_score_type                         m_Best_score =
+    fitness_score_type m_Best_score =
         std::numeric_limits<fitness_score_type>::min();
-    diversity_score_type m_Reference_diversity_score =
-        std::numeric_limits<diversity_score_type>::min();
-    restricted_type           m_Diversity_weight;
-    restricted_type           m_Fitness_weight;
-    parent_categories_manager m_Parent_categories;
+    parent_categories                        m_Parent_categories;
+    std::vector<asexual_reproduction_parent> m_Asexual_reproduction_parents;
+    std::vector<sexual_reproduction_parents> m_Sexual_reproduction_parents;
+    std::array<diversity_score_type, s_Generation_size> m_Diversity_scores{};
+    std::array<diversity_score_type, s_Generation_size> m_Fitness_scores{};
+    int                                       m_Asexual_parents_idx = 0;
+    int                                       m_Sexual_parents_idx  = 0;
+    typename mutation_policy_type::value_type m_Base_probability;
+    mutation_policy_type                      m_Mutation_policy;
 };
 
 } // namespace reproduction_mngr

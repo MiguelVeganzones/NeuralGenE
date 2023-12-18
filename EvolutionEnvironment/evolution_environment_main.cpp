@@ -9,6 +9,7 @@
 #include "reproduction_manager.hpp"
 #include "static_neural_net.hpp"
 #include "system.hpp"
+#include <iomanip>
 #include <iostream>
 #include <ranges>
 
@@ -33,7 +34,9 @@ struct activity
         output_data_container ret{};
         for (auto i = 0uz; i != N; ++i)
         {
-            ret[i] = std::sin(static_cast<float>(input_data[i]) / 100.f);
+            const auto x = static_cast<float>(input_data[i]) / 50.f;
+            ret[i]       = std::sin(x) * std::cos(std::sqrt(x));
+            // ret[i] = std::sin(static_cast<float>(input_data[i]) / 100.f);
         }
         return ret;
     }();
@@ -98,21 +101,20 @@ int main()
     using brain_t =
         ga_neural_model::brain<NET, preprocessor, postprocessor, return_type>;
 
-    using mutation_policy_generator_t =
-        mutation_policy::mutation_policy_generator<typename NET::value_type>;
-    using agent_t = evolution_agent::agent<
-        brain_t,
-        typename mutation_policy_generator_t::mutation_policy_type>;
-
+    using agent_t = evolution_agent::agent<brain_t>;
 
     constexpr int GEN_SIZE = 21;
+    activity      a;
 
-    activity                                   a;
     [[maybe_unused]] evaluation_system::system system(a);
     using system_t = decltype(system);
 
-    using reproduction_manager_t =
-        reproduction_mngr::reproduction_manager<GEN_SIZE, agent_t, float>;
+    using mutation_policy_t =
+        mutation_policy_::mutation_policy<typename NET::value_type, 6>;
+
+
+    using reproduction_manager_t = reproduction_mngr::
+        reproduction_manager<GEN_SIZE, agent_t, float, mutation_policy_t>;
 
     using evolution_environment_t = evolution_env::evolution_environment<
         GEN_SIZE,
@@ -121,12 +123,7 @@ int main()
         reproduction_manager_t>;
 
     auto make_agent = []() -> agent_t {
-        return agent_t(
-            brain_t(random::randnormal, 0, 0.05),
-            mutation_policy_generator_t::generate(
-                mutation_policy_generator_t::default_parameters()
-            )
-        );
+        return agent_t(brain_t(random::randnormal, 0, 0.1));
     };
 
     reproduction_manager_t reproduction_manager;
@@ -135,10 +132,11 @@ int main()
         make_agent, system, reproduction_manager
     );
 
-    eenv.print_population();
-    auto [agent, result] = eenv.train(100000);
+
+    auto [agent, result] = eenv.train(20000);
 
     a.predict(agent);
+    eenv.print_population();
 
     agent.print();
     std::cout << "Score: " << result << '\n';

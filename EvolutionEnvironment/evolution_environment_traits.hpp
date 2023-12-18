@@ -13,9 +13,9 @@ concept agent_concept = requires(T t) {
     typename T::brain_value_type;
     // typename T::agent_input_type;
     typename T::agent_output_type;
-    {
-        t.mutate()
-    } -> std::same_as<void>;
+    // {
+    //     t.mutate()
+    // } -> std::same_as<void>;
     {
         to_target_crossover(t, t, t, t)
     } -> std::same_as<void>;

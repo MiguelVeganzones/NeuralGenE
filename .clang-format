@@ -24,7 +24,7 @@ PackConstructorInitializers: NextLine
 PackConstructorInitializers: Never
 PenaltyBreakTemplateDeclaration: 0
 PointerAlignment: Left
-# RequiresClausePositionStyle: OwnLine
+RequiresClausePosition: OwnLine
 SeparateDefinitionBlocks: Always
 SortIncludes: true
 SpaceAfterTemplateKeyword: true

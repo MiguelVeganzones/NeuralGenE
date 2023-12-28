@@ -116,10 +116,11 @@ EVOLUTION_AGENT_DIR = EvolutionAgent
 EVOLUTION_ENV_DIR = EvolutionEnvironment
 C4_AGENT_TRAINING_DIR = C4AgentTraining
 TOURNAMENT_DIR = TournamentSelection
+ROOT_PLOTTING_DIR = RootPlotting
 BENCHMARKING_DIR = Benchmarking
 
 UTILITY_INCL =		
-GENERAL_INCL =			-I./$(UTILITY_DIR)
+GENERAL_INCL =			-I./$(UTILITY_DIR) $(UTILITY_INCL)
 MCTS_INCL =				-I./$(C4_DIR) $(GENERAL_INCL)
 C4_INCL =				$(GENERAL_INCL)
 SNN_INCL =				$(GENERAL_INCL)
@@ -134,10 +135,11 @@ MINIMAX_SEARCH_INCL = 	-I./$(C4_DIR) $(C4_INCL) $(GENERAL_INCL) \
 EVOLUTION_AGENT_INCL = 	$(GENERAL_INCL) -I./$(NEURAL_MODEL_DIR) $(NEURAL_MODEL_INCL) #\
 						-I/usr/include/python3.10 \
 						-I/home/miguelveganzones/.local/lib/python3.10/site-packages/numpy/core/include
-EVOLUTION_ENV_INCL		= $(GENERAL_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL)
+EVOLUTION_ENV_INCL		= $(GENERAL_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL) $(ROOT_INCL) -I./$(ROOT_PLOTTING_DIR) 
 C4_AGENT_TRAINING_INCL  = $(GENERAL_INCL) -I./$(C4_DIR) $(C4_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL)
 TOURNAMENT_INCL 		= $(GENERAL_INCL) -I./$(C4_DIR) $(C4_INCL) -I./$(EVOLUTION_AGENT_DIR) $(EVOLUTION_AGENT_INCL)
-BENCHMARKING_INCL =		$(GENERAL_INCL) -isystem benchmark/include
+ROOT_INCL		 		= $(GENERAL_INCL)
+BENCHMARKING_INCL		= $(GENERAL_INCL) -isystem benchmark/include
 
 
 PLT_LIB = 				-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib -l:libmatplot.a \
@@ -145,7 +147,11 @@ PLT_LIB = 				-L/home/miguelveganzones/Libraries/matplotplusplus-1.1.0-Linux/lib
 MINIMAX_LIB = 			-ltbb
 EVOLUTION_AGENT_LIB =	-lpthread -lutil -ldl #-lpython3.10 -Xlinker -export-dynamic
 C4_AGENT_TRAINING_LIB = $(MINIMAX_LIB) $(EVOLUTION_AGENT_LIB)
-BENCHMARKING_LIB =		-Lbenchmark/build/src -lbenchmark -lpthread
+EVOLUTION_ENV_LIB 		= -ltbb $(ROOT_LIB) -pthread
+BENCHMARKING_LIB 		= -Lbenchmark/build/src -lbenchmark -lpthread
+ROOT_LIB			 	= `root-config --libs`
+
+ROOT_FLAGS 				= `root-config --cflags --libs`
 
 all: mcts_main c4_main static_nn_main utility_main minimax_main neural_model_main evolution_agent_main
 
@@ -235,7 +241,23 @@ evolution_environment_main: $(EVOLUTION_ENV_DIR)/$(OUT_DIR)/evolution_environmen
 $(EVOLUTION_ENV_DIR)/$(OUT_DIR)/evolution_environment_main.o: $(EVOLUTION_ENV_DIR)/*.cpp $(EVOLUTION_ENV_DIR)/*.hpp
 	@echo -e Building $@..."\n"
 	@mkdir -p $(EVOLUTION_ENV_DIR)/${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(EVOLUTION_ENV_INCL) $(EVOLUTION_ENV_DIR)/evolution_environment_main.cpp -o $@
+	$(CXX) $(CXXFLAGS) -Wno-cpp $(EVOLUTION_ENV_INCL) $(EVOLUTION_ENV_LIB) $(EVOLUTION_ENV_DIR)/evolution_environment_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=================================================================================================
+
+#=================================================================================================
+root_plotting_main: $(ROOT_PLOTTING_DIR)/$(OUT_DIR)/root_plotting_main.o $(ROOT_PLOTTING_DIR)/$(OUT_DIR)/root_plotting_utility.o $(UTILITY_DIR)/${OUT_DIR}/utility_main.o
+
+$(ROOT_PLOTTING_DIR)/$(OUT_DIR)/root_plotting_main.o: $(ROOT_PLOTTING_DIR)/root_plotting_main.cpp $(ROOT_PLOTTING_DIR)/$(OUT_DIR)/root_plotting_utility.o
+	@echo -e Building $@..."\n"
+	@mkdir -p $(ROOT_PLOTTING_DIR)/${OUT_DIR}
+	$(CXX) $(CXXFLAGS) $(ROOT_LIB) -Wno-cpp $(ROOT_INCL) $(ROOT_PLOTTING_DIR)/$(OUT_DIR)/root_plotting_utility.o $(ROOT_PLOTTING_DIR)/root_plotting_main.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+	
+$(ROOT_PLOTTING_DIR)/$(OUT_DIR)/root_plotting_utility.o: $(ROOT_PLOTTING_DIR)/root_plotting_utility.cpp $(ROOT_PLOTTING_DIR)/root_plotting_utility.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(ROOT_PLOTTING_DIR)/${OUT_DIR}
+	$(CXX) $(ROOT_FLAGS) $(ROOT_INCL) -c $(ROOT_PLOTTING_DIR)/root_plotting_utility.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=================================================================================================
 

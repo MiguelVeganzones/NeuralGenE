@@ -79,7 +79,8 @@
         "source_location": "cpp",
         "variant": "cpp",
         "charconv": "cpp",
-        "format": "cpp"
+        "format": "cpp",
+        "unordered_set": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

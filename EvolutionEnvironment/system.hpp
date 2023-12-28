@@ -5,6 +5,7 @@
 #include "generics.hpp"
 #include <concepts>
 #include <ranges>
+#include <span>
 #include <type_traits>
 
 namespace evaluation_system
@@ -18,8 +19,8 @@ public:
     using stimulus_type      = typename Fn::stimulus_type;
 
 public:
-    system(Fn const& fn) noexcept :
-        m_Evaluation_function{ fn }
+    system(Fn& fn) noexcept :
+        m_Evaluation_function{ std::forward<Fn>(fn) }
     {
     }
 
@@ -62,7 +63,7 @@ public:
                      Fn,
                      std::vector<Agent_Type>>
     [[nodiscard]]
-    auto evaluate(std::vector<Agent_Type> const& population) const
+    auto evaluate(std::span<Agent_Type> population) const
         -> std::vector<fitness_score_type>
     {
         if constexpr (std::is_invocable_r_v<fitness_score_type, Fn, Agent_Type>)

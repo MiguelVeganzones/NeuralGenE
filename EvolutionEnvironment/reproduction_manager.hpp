@@ -51,6 +51,19 @@ public:
     {
     }
 
+    parent_categories(
+        int gen_size,
+        int elites_count,
+        int survivor_count
+    ) noexcept :
+        elites_n{ elites_count },
+        progenitors_n{
+            (int)((unsigned int)(gen_size - elites_n - survivor_count) >> 1)
+        },
+        survivors_n(gen_size - elites_n - 2 * progenitors_n)
+    {
+    }
+
     [[nodiscard]]
     auto elites_count() const noexcept -> int
     {
@@ -337,11 +350,10 @@ private:
             typename mutation_policy_type::value_type delta{ 0.000005f };
         static constexpr
             typename mutation_policy_type::value_type min{ 0.0005f };
-        if (top_score > m_Best_score)
+        if (top_score > m_Best_score * 1.001f)
         {
             m_Base_probability = min;
-            m_Mutation_policy.set_base_probability(m_Base_probability);
-            m_Best_score = top_score;
+            m_Best_score       = top_score;
         }
         else
         {
@@ -353,8 +365,8 @@ private:
             {
                 m_Base_probability += delta;
             }
-            m_Mutation_policy.set_base_probability(m_Base_probability);
         }
+        m_Mutation_policy.set_base_probability(m_Base_probability);
         // if (top_score < m_Best_score)
         // {
         //     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";

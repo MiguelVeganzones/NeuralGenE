@@ -8,7 +8,7 @@
 
 auto rng()
 {
-    auto rn = random::randnormal(0, 10000);
+    auto rn = random_::random::s_randnormal(0, 10000);
     return double(rn);
 }
 
@@ -37,7 +37,7 @@ int main()
 
     constexpr std::size_t n = 100'000'000;
 
-    random::init();
+    random_::random::s_seed();
 
     for (size_t i = 0; i != n; ++i)
     {

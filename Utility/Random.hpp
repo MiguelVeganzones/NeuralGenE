@@ -7,123 +7,125 @@
 #define NOMINMAX
 #endif
 
-#include <random>
-// #include <mutex>
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <iostream>
 #include <limits>
+#include <random>
 
 #ifdef max
 #undef max
 #endif
 
-struct random
+namespace random_
 {
-    inline static void init()
+class random
+{
+private:
+    [[nodiscard]]
+    static auto static_instance() noexcept -> random&
     {
-        s_Random_engine.seed(static_cast<unsigned int>(
-            std::chrono::high_resolution_clock::now().time_since_epoch().count()
-        ));
+        static random s_Random_engine(0);
+        return s_Random_engine;
     }
 
-    inline static float randfloat()
+public:
+    static auto s_seed(unsigned int seed_ = std::random_device{}()) noexcept
+        -> void
     {
-        return s_Uniform_real(s_Random_engine);
+        static_instance().seed(seed_);
     }
 
-    inline static int randint(const int min, const int max)
+    [[nodiscard]]
+    static auto s_randfloat() noexcept -> float
+    {
+        return static_instance().randfloat();
+    }
+
+    /// @brief Generates a uniform integral number in the range [min, max]
+    /// @tparam T Integral type
+    /// @param min Inclusive lower bound
+    /// @param max Inclusive upper bound
+    /// @return integral number of type T uniformly distributed in the raneg
+    /// [min, max]
+    template <std::integral T>
+    [[nodiscard]]
+    static auto s_randintegral(T min, T max) noexcept -> T
+    {
+        return static_instance().randintegral(min, max);
+    }
+
+    [[nodiscard]]
+    inline static auto s_randnormal(float avg, float stddev) noexcept -> float
+    {
+        return static_instance().randnormal(avg, stddev);
+    }
+
+    [[nodiscard]]
+    static auto s_standard_randnormal() noexcept -> float
+    {
+        return static_instance().randnormal();
+    }
+
+public:
+    random(unsigned int seed_ = std::random_device{}()) noexcept
+    {
+        seed(seed_);
+    }
+
+    random(random const&) noexcept            = default;
+    random(random&&) noexcept                 = default;
+    random& operator=(random const&) noexcept = default;
+    random& operator=(random&&) noexcept      = default;
+    ~random() noexcept                        = default;
+
+    [[nodiscard]]
+    auto randfloat() noexcept -> float
+    {
+        return m_Uniform_real(m_Random_engine);
+    }
+
+    /// @brief Generates a uniform integral number in the range [min, max]
+    /// @tparam T Integral type
+    /// @param min Inclusive lower bound
+    /// @param max Inclusive upper bound
+    /// @return integral number of type T uniformly distributed in the raneg
+    /// [min, max]
+    template <std::integral T>
+    [[nodiscard]]
+    auto randintegral(T min, T max) noexcept -> T
     {
         assert(min <= max);
         std::uniform_int_distribution<int> u(min, max);
-        return u(random::s_Random_engine);
+        return u(random::m_Random_engine);
     }
 
-    inline static std::size_t randsize_t(
-        const std::size_t min,
-        const std::size_t max
-    )
-    {
-        assert(min <= max);
-        std::uniform_int_distribution<size_t> u(min, max);
-        return u(random::s_Random_engine);
-    }
-
-    inline static float randnormal(
-        const float avg    = 0.f,
-        const float stddev = 1.f
-    )
+    [[nodiscard]]
+    auto randnormal(float avg, float stddev) noexcept -> float
     {
         std::normal_distribution<float> n(avg, stddev);
-        return n(random::s_Random_engine);
+        return n(m_Random_engine);
     }
 
-    // static int mt_randint(int Min, int Max);
-
-    // static float mt_randfloat();
-
-    // static float mt_randnormal(const float avg = 0.f, const float stddev
-    // = 1.f);
+    [[nodiscard]]
+    auto randnormal() noexcept -> float
+    {
+        return m_Default_normal(m_Random_engine);
+    }
 
 private:
-    inline static std::mt19937 s_Random_engine;
+    inline auto seed(unsigned int seed) noexcept -> void
+    {
+        m_Random_engine.seed(seed);
+    }
 
-    inline static auto s_Uniform_real =
+private:
+    std::mt19937                          m_Random_engine;
+    std::uniform_real_distribution<float> m_Uniform_real =
         std::uniform_real_distribution<float>(0.f, 1.f);
-    // auto random = std::bind(s_Uniform_real, s_Random_engine);
+    std::normal_distribution<float> m_Default_normal =
+        std::normal_distribution<float>(0.f, 1.f);
 };
-
-// std::mutex mu_randint;
-// std::mutex mu_randfloat;
-// std::mutex mu_randnormal;
-
-// void random::init()
-//{
-//   s_random_engine.seed((unsigned
-//   int)std::chrono::high_resolution_clock::now().time_since_epoch().count());
-// }
-//
-// float random::randfloat()
-//{
-//   return (float)s_distribution(random::s_random_engine) /
-//   (float)std::numeric_limits<uint32_t>::max();
-// }
-
-// float random::mt_randfloat()
-//{
-//   mu_randfloat.lock();
-//   const float f = (float)s_distribution(random::s_random_engine) /
-//   (float)std::numeric_limits<uint32_t>::max(); mu_randfloat.unlock(); return
-//   f;
-// }
-
-// int random::randint(int Min = 0, int Max = 10)
-//{
-//   std::uniform_int_distribution<int> U(Min, Max);
-//   return U(random::s_random_engine);
-// }
-
-// int random::mt_randint(int Min = 0, int Max = 10) //multi threaded randint
-//{
-//   std::uniform_int_distribution<int> U(Min, Max);
-//   mu_randint.lock();
-//   const int n = U(random::s_random_engine);
-//   mu_randint.unlock();
-//   return n;
-// }
-
-// float random::randnormal(const float avg, const float stddev) {
-//   std::normal_distribution<float> N(avg, stddev);
-//   return N(random::s_random_engine);
-// }
-
-// float random::mt_randnormal(const float avg, const float stddev) {
-//   std::normal_distribution<float> N(avg, stddev);
-//   mu_randnormal.lock();
-//   const float n = N(random::s_random_engine);
-//   mu_randnormal.unlock();
-//   return n;
-// }
-
+} // namespace random_
 #endif // RANDOM_NUMBER_GENERATOR

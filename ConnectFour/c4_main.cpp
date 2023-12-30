@@ -11,7 +11,7 @@
 
 int main0()
 {
-    random::init();
+    random::seed();
 
     constexpr std::size_t M = 20;
     constexpr std::size_t N = 20;
@@ -67,7 +67,7 @@ int main0()
 
 int main()
 {
-    random::init();
+    random::seed();
 
     constexpr std::size_t M = 6;
     constexpr std::size_t N = 7;

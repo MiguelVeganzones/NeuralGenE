@@ -60,31 +60,30 @@ public:
         update_cummulative_params();
     }
 
-    // TODO generalize
     [[nodiscard]]
     auto
     operator()(value_type f) const noexcept -> value_type
     {
-        const auto r = random::randfloat();
+        const auto r = m_Random_engine.randfloat();
         if (r < m_Cummulative_params[0])
         {
             f *= value_type(1.05);
         }
         else if (r < m_Cummulative_params[1])
         {
-            f += random::randnormal(0.f, 0.15f);
+            f += m_Random_engine.randnormal(0.f, 0.15f);
         }
         else if (r < m_Cummulative_params[2])
         {
-            f += random::randnormal(0.f, 0.3f);
+            f += m_Random_engine.randnormal(0.f, 0.3f);
         }
         else if (r < m_Cummulative_params[3])
         {
-            f = random::randnormal(0.f, 0.2f);
+            f = m_Random_engine.randnormal(0.f, 0.2f);
         }
         else if (r < m_Cummulative_params[4])
         {
-            f = random::randnormal(0.f, 0.4f);
+            f = m_Random_engine.randnormal(0.f, 0.4f);
         }
         else
         {
@@ -104,8 +103,9 @@ private:
     }
 
 private:
-    parameters_type m_Params;
-    parameters_type m_Cummulative_params;
+    mutable random_::random m_Random_engine{};
+    parameters_type         m_Params;
+    parameters_type         m_Cummulative_params;
 };
 
 } // namespace mutation_policy_

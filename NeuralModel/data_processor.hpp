@@ -15,12 +15,13 @@ namespace encoders
 struct tristate_encoder
 {
     inline static constexpr std::array  s_Encoding_array = { 0.f, 1.f, -1.f };
-    inline static constexpr std::size_t s_Values         = s_Encoding_array.size();
+    inline static constexpr std::size_t s_Values = s_Encoding_array.size();
 
     using encode_type = typename decltype(s_Encoding_array)::value_type;
 
     template <std::integral T>
-    [[nodiscard]] static auto encode(T value) -> encode_type
+    [[nodiscard]]
+    static auto encode(T value) -> encode_type
     {
         assert(value >= 0 && value < s_Values);
         return s_Encoding_array[value];
@@ -28,7 +29,8 @@ struct tristate_encoder
 };
 
 template <typename T>
-concept tristate_encoder_type = requires { std::is_same_v<T, tristate_encoder>; };
+concept tristate_encoder_type =
+    requires { std::is_same_v<T, tristate_encoder>; };
 
 template <typename Encoder>
 concept encoder_type = (
@@ -47,8 +49,10 @@ struct c4_data_preprocessor
     template <c4_board::c4_board_type Input_Type, typename Output_Type>
         requires requires { typename Input_Type::board_position; } &&
         (std::is_floating_point_v<typename Output_Type::value_type> &&
-         std::is_integral_v<typename Input_Type::repr_type> && encoder::s_Values == Input_Type::s_Valid_states &&
-         (Input_Type::Size_y * Input_Type::Size_x == Output_Type::Size_y * Output_Type::Size_x))
+         std::is_integral_v<typename Input_Type::repr_type> &&
+         encoder::s_Values == Input_Type::s_Valid_states &&
+         (Input_Type::Size_y * Input_Type::Size_x ==
+          Output_Type::Size_y * Output_Type::Size_x))
     [[nodiscard]] static auto process(const Input_Type& board) -> Output_Type
     {
         using board_position = typename Input_Type::board_position;
@@ -82,8 +86,8 @@ concept iterable_type = requires(T v) {
         v.begin() != v.end()
     } -> std::same_as<bool>;
     // {
-    //     std::declval<std::remove_cvref_t<std::decay_t<typename T::iterator>>&>() + 1
-    //     } -> std::same_as<typename T::iterator>;
+    //     std::declval<std::remove_cvref_t<std::decay_t<typename
+    //     T::iterator>>&>() + 1 } -> std::same_as<typename T::iterator>;
     {
         std::remove_cvref_t<decltype(*v.begin())>()
     } -> std::same_as<typename T::value_type>;
@@ -95,8 +99,12 @@ concept iterable_type = requires(T v) {
 
 struct iterable_converter
 {
-    template <iterable_type Input_Iterable_Type, iterable_type Output_Iterable_Type>
-    [[nodiscard]] static auto process(const Input_Iterable_Type& input) -> Output_Iterable_Type
+    template <
+        iterable_type Input_Iterable_Type,
+        iterable_type Output_Iterable_Type>
+    [[nodiscard]]
+    static auto process(const Input_Iterable_Type& input)
+        -> Output_Iterable_Type
     {
         auto ret = Output_Iterable_Type{};
         assert(ret.size() == input.size());
@@ -110,9 +118,13 @@ struct iterable_converter
         return ret;
     }
 
-    template <iterable_type Input_Iterable_Type, iterable_type Output_Iterable_Type>
+    template <
+        iterable_type Input_Iterable_Type,
+        iterable_type Output_Iterable_Type>
         requires std::is_same_v<Input_Iterable_Type, Output_Iterable_Type>
-    [[nodiscard]] static auto process(const Input_Iterable_Type& input) -> Output_Iterable_Type
+    [[nodiscard]]
+    static auto process(const Input_Iterable_Type& input)
+        -> Output_Iterable_Type
     {
         return input;
     }
@@ -127,8 +139,10 @@ struct iterable_indexer
     inline static constexpr std::size_t index = Idx;
 
     template <iterable_type Input_Type, typename Output_Type>
-        requires std::convertible_to<typename Input_Type::value_type, Output_Type>
-    [[nodiscard]] static auto process(const Input_Type& input_range) -> Output_Type
+        requires std::
+            convertible_to<typename Input_Type::value_type, Output_Type>
+        [[nodiscard]]
+        static auto process(const Input_Type& input_range) -> Output_Type
     {
         assert(index < input_range.size());
         auto p = input_range.begin();
@@ -139,36 +153,30 @@ struct iterable_indexer
     }
 };
 
-struct uniform_normalized_random
-{
-    template <typename Input_Type, typename Output_Type>
-        requires requires { Output_Type{ 0 }; }
-    [[nodiscard]] static auto process([[maybe_unused]] const Input_Type& input_range) -> Output_Type
-    {
-        return static_cast<Output_Type>(random::randfloat());
-    }
-};
-
 struct scalar_converter
 {
     inline static constexpr int index = 0;
 
-    template <typename Input_Type, typename Output_Type> requires std::is_convertible_v<Input_Type, Output_Type>
-    [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
+    template <typename Input_Type, typename Output_Type>
+        requires std::is_convertible_v<Input_Type, Output_Type>
+    [[nodiscard]]
+    static auto process(Input_Type input_value) -> Output_Type
     {
         return static_cast<Output_Type>(input_value);
     }
 
     template <iterable_type Input_Type, typename Output_Type>
         requires(Input_Type::Size_y* Input_Type::Size_x == 1)
-    [[nodiscard]] static auto process([[maybe_unused]] Input_Type input_range) -> Output_Type
+    [[nodiscard]]
+    static auto process([[maybe_unused]] Input_Type input_range) -> Output_Type
     {
         return static_cast<Output_Type>(*input_range.begin());
     }
 
     template <typename Input_Type, iterable_type Output_Type>
         requires(Output_Type::Size_y* Output_Type::Size_x == 1)
-    [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
+    [[nodiscard]]
+    static auto process(Input_Type input_value) -> Output_Type
     {
         Output_Type ret{};
         *ret.begin() = static_cast<Output_Type::value_type>(input_value);
@@ -176,8 +184,12 @@ struct scalar_converter
     }
 
     template <iterable_type Input_Type, iterable_type Output_Type>
-        requires((Input_Type::Size_y * Input_Type::Size_x == 1) && (Output_Type::Size_y * Output_Type::Size_x == 1))
-    [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
+        requires(
+            (Input_Type::Size_y * Input_Type::Size_x == 1) &&
+            (Output_Type::Size_y * Output_Type::Size_x == 1)
+        )
+    [[nodiscard]]
+    static auto process(Input_Type input_value) -> Output_Type
     {
         Output_Type ret{};
         *ret.begin() = *input_value.begin();
@@ -185,7 +197,8 @@ struct scalar_converter
     }
 
     template <iterable_type Input_Type, iterable_type Output_Type>
-    [[nodiscard]] static auto process(Input_Type input_value) -> Output_Type
+    [[nodiscard]]
+    static auto process(Input_Type input_value) -> Output_Type
     {
         Output_Type ret{};
         assert(input_value.size() == 1 && ret.size() == 1);
@@ -208,10 +221,12 @@ void iterable_indexer_dummy(iterable_indexer<Idx>)
 }
 
 template <typename T>
-concept c4_data_processor_type = requires { c4_data_processor_dummy(std::declval<T&>()); };
+concept c4_data_processor_type =
+    requires { c4_data_processor_dummy(std::declval<T&>()); };
 
 template <typename T>
-concept iterable_indexer_type = requires { iterable_indexer_dummy(std::declval<T&>()); };
+concept iterable_indexer_type =
+    requires { iterable_indexer_dummy(std::declval<T&>()); };
 
 template <typename T>
 concept iterable_converter_type = std::is_same_v<T, iterable_converter>;
@@ -220,12 +235,9 @@ template <typename T>
 concept scalar_converter_type = std::is_same_v<T, scalar_converter>;
 
 template <typename T>
-concept uniform_normalized_random_type = std::is_same_v<T, uniform_normalized_random>;
-
-template <typename T>
 concept data_processor_type =
-    (c4_data_processor_type<T> || iterable_indexer_type<T> || scalar_converter_type<T> ||
-     uniform_normalized_random_type<T> || iterable_converter_type<T>);
+    (c4_data_processor_type<T> || iterable_indexer_type<T> ||
+     scalar_converter_type<T> || iterable_converter_type<T>);
 
 } // namespace data_processor
 

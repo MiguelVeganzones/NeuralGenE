@@ -21,37 +21,25 @@ concept factory_of = requires(Factory f) {
 // ---------------  Population  -----------------------------------------------
 //-----------------------------------------------------------------------------
 
-template <
-    std::uint8_t                                Generation_Count,
-    std::uint16_t                               Generation_Size,
-    evolution_environment_traits::agent_concept Agent_Type>
+template <evolution_environment_traits::agent_concept Agent_Type>
 class population
 {
 public:
-    inline static constexpr auto s_Generation_size        = Generation_Size;
-    inline static constexpr auto s_Population_generations = Generation_Count;
+    inline static constexpr auto s_Population_generations = 2;
+    using generation_idx_type                             = int;
     using agent_type                                      = Agent_Type;
-    using generation_container_type = std::array<agent_type, s_Generation_size>;
+    using generation_container_type = std::vector<agent_type>;
     using population_container_type =
         std::array<generation_container_type, s_Population_generations>;
-    using generation_idx_type = decltype(Generation_Count);
-
 
 public:
-    population() noexcept
-        requires std::is_default_constructible_v<agent_type>
-        :
-        m_Population{ make_population([]() -> agent_type {
-            return agent_type{};
-        }) }
-
-    {
-    }
-
     template <factory_of<agent_type> Factory>
-    population(Factory&& agent_factory) noexcept :
-        m_Population{ make_population(std::forward<Factory>(agent_factory)) }
-
+    population(int generation_size, Factory&& agent_factory) noexcept :
+        m_Generation_size{ generation_size },
+        m_Population{ make_population(
+            m_Generation_size,
+            std::forward<Factory>(agent_factory)
+        ) }
     {
     }
 
@@ -63,7 +51,7 @@ public:
 
 public:
     [[nodiscard]]
-    auto get_current_generation() -> generation_container_type const&
+    auto get_current_generation() const -> generation_container_type const&
     {
         return m_Population[current_generation_idx()];
     }
@@ -84,17 +72,17 @@ public:
         std::cout
             << "========================================================\n"
             << "Population generations: " << s_Population_generations
-            << "\nGeneration size:" << s_Generation_size
+            << "\nGeneration size: " << m_Generation_size
             << "\n========================================================\n";
         for (int gen_idx = 0; auto&& gen : m_Population)
         {
-            std::cout << "Gen " << gen_idx++ << '\n';
+            std::cout << "\nGen " << gen_idx++ << '\n';
             for (auto&& e : gen)
             {
                 e.print();
             }
             std::cout
-                << "########################################################";
+                << "########################################################\n";
         }
     }
 
@@ -104,56 +92,55 @@ private:
     [[nodiscard]]
     inline static auto population_factory(
         std::index_sequence<Is...>,
+        int                generation_size,
         Agent_Factory_Fn&& agent_factory
     ) -> population_container_type
     {
         return {
             ((void)Is,
-             make_generation(std::forward<Agent_Factory_Fn>(agent_factory)))...
+             make_generation(
+                 generation_size, std::forward<Agent_Factory_Fn>(agent_factory)
+             ))...
         };
     }
 
     template <factory_of<agent_type> Agent_Factory_Fn>
     [[nodiscard]]
-    inline static auto make_population(Agent_Factory_Fn&& agent_factory)
-        -> population_container_type
+    inline static auto make_population(
+        int                generation_size,
+        Agent_Factory_Fn&& agent_factory
+    ) -> population_container_type
     {
         return population_factory(
             std::make_index_sequence<s_Population_generations>(),
+            generation_size,
             std::forward<Agent_Factory_Fn>(agent_factory)
         );
-    }
-
-    template <std::size_t... Is, factory_of<agent_type> Agent_Factory_Fn>
-        requires(sizeof...(Is) == s_Generation_size)
-    [[nodiscard]]
-    inline static auto generation_factory(
-        std::index_sequence<Is...>,
-        Agent_Factory_Fn&& agent_factory
-    ) -> generation_container_type
-    {
-        return { ((void)Is, std::invoke(agent_factory))... };
     }
 
     template <factory_of<agent_type> Agent_Factory_Fn>
     [[nodiscard]]
-    inline static auto make_generation(Agent_Factory_Fn&& agent_factory)
-        -> generation_container_type
+    inline static auto make_generation(
+        int                generation_size,
+        Agent_Factory_Fn&& agent_factory
+    ) -> generation_container_type
     {
-        return generation_factory(
-            std::make_index_sequence<s_Generation_size>(),
-            std::forward<Agent_Factory_Fn>(agent_factory)
-        );
+        generation_container_type generation;
+        for (int i = 0; i != generation_size; ++i)
+        {
+            generation.emplace_back(std::invoke(agent_factory));
+        }
+        return generation;
     }
 
     [[nodiscard]]
-    inline auto current_generation_idx() -> generation_idx_type
+    inline auto current_generation_idx() const -> generation_idx_type
     {
         return m_Current_generation_idx;
     }
 
     [[nodiscard]]
-    inline auto next_generation_idx() -> generation_idx_type
+    inline auto next_generation_idx() const -> generation_idx_type
     {
         return static_cast<generation_idx_type>(
             (m_Current_generation_idx + generation_idx_type{ 1 }) %
@@ -163,6 +150,7 @@ private:
 
 private:
     generation_idx_type       m_Current_generation_idx = 0;
+    int                       m_Generation_size;
     population_container_type m_Population;
 };
 

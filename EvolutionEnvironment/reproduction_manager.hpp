@@ -1,6 +1,7 @@
 #ifndef REPRODUCTION_MANAGER
 #define REPRODUCTION_MANAGER
 
+#include "Random.hpp"
 #include "evolution_environment_traits.hpp"
 #include "generics.hpp"
 #include "static_matrix.hpp"
@@ -44,13 +45,6 @@ struct sexual_reproduction_parents
 class parent_categories
 {
 public:
-    parent_categories(int gen_size) noexcept :
-        elites_n{ 1 },
-        progenitors_n{ (int)((unsigned int)(gen_size - elites_n - 1) >> 1) },
-        survivors_n(gen_size - elites_n - 2 * progenitors_n)
-    {
-    }
-
     parent_categories(
         int gen_size,
         int elites_count,
@@ -82,6 +76,12 @@ public:
         return survivors_n;
     }
 
+    [[nodiscard]]
+    auto generation_size() const noexcept -> int
+    {
+        return elites_count() + progenitors_count() * 2 + survivors_count();
+    }
+
 private:
     int elites_n;
     int progenitors_n;
@@ -89,7 +89,6 @@ private:
 };
 
 template <
-    int                                         Generation_Size,
     evolution_environment_traits::agent_concept Agent_Type,
     std::floating_point                         Fitness_Score_Type,
     mutation_policy_concept                     Mutation_Policy>
@@ -97,46 +96,31 @@ class reproduction_manager
 
 {
 public:
-    inline static constexpr auto s_Generation_size = Generation_Size;
-
-    using diversity_score_type            = float;
-    using diversity_scores_container_type = ga_sm::static_matrix<
-        diversity_score_type,
-        s_Generation_size,
-        s_Generation_size>;
+    using diversity_score_type = float;
+    using diversity_scores_container_type =
+        std::vector<std::vector<diversity_score_type>>;
     using fitness_score_type        = Fitness_Score_Type;
     using agent_type                = Agent_Type;
     using mutation_policy_type      = Mutation_Policy;
-    using generation_container_type = std::array<agent_type, s_Generation_size>;
+    using generation_container_type = std::vector<agent_type>;
     template <typename T>
-    using container_type = std::array<T, s_Generation_size>;
-    using generation_fitness_container_type =
-        std::array<fitness_score_type, s_Generation_size>;
+    using container_type                    = std::vector<T>;
+    using generation_fitness_container_type = std::vector<fitness_score_type>;
     using restricted_type = generics::containers::restricted<float>;
     using parent_type =
         std::variant<asexual_reproduction_parent, sexual_reproduction_parents>;
 
 public:
-    reproduction_manager() noexcept :
-        m_Parent_categories(s_Generation_size),
-        m_Asexual_reproduction_parents(
-            m_Parent_categories.elites_count() +
-            m_Parent_categories.survivors_count()
-        ),
-        m_Sexual_reproduction_parents(m_Parent_categories.progenitors_count()),
-        m_Base_probability(0.01f),
-        m_Mutation_policy(m_Base_probability)
-    {
-    }
-
     reproduction_manager(parent_categories parent_categories) noexcept :
+        m_Generation_size{ parent_categories.generation_size() },
         m_Parent_categories(parent_categories),
         m_Asexual_reproduction_parents(
             m_Parent_categories.elites_count() +
             m_Parent_categories.survivors_count()
         ),
         m_Sexual_reproduction_parents(m_Parent_categories.progenitors_count()),
-        m_Base_probability(0.01f),
+        m_Diversity_scores(m_Generation_size),
+        m_Fitness_scores(m_Generation_size),
         m_Mutation_policy(m_Base_probability)
     {
     }
@@ -162,7 +146,7 @@ public:
             } -> std::same_as<diversity_scores_container_type>;
         }
     {
-        const auto& diversity = population_variability<float>(
+        const auto& diversity = population_variability<diversity_score_type>(
             current_generation, generics::algorithms::L2_norm
         );
         update_current_parents(fitness_scores, diversity);
@@ -175,9 +159,18 @@ private:
         diversity_scores_container_type const&   diversity
     ) -> void
     {
-        if (random::randfloat() < 0.001)
+        if (m_Random_engine.randfloat() < 0.01f)
         {
-            std::cout << diversity << std::endl;
+            std::cout << "[\n";
+            for (auto& v : diversity)
+            {
+                for (auto& e : v)
+                {
+                    std::cout << e << ", ";
+                }
+                std::cout << '\n';
+            }
+            std::cout << "]\n";
         }
         //
         // reset diversity scores
@@ -231,9 +224,8 @@ private:
     }
 
     auto reset_internal_state() noexcept
-
     {
-        m_Diversity_scores.fill(0);
+        std::ranges::fill(m_Diversity_scores, 0);
         m_Asexual_parents_idx = 0;
         m_Sexual_parents_idx  = 0;
     }
@@ -244,9 +236,9 @@ private:
     ) noexcept -> void
     {
         m_Asexual_reproduction_parents[m_Asexual_parents_idx++] = parent;
-        for (auto j = 0; j != s_Generation_size; ++j)
+        for (auto j = 0; j != m_Generation_size; ++j)
         {
-            m_Diversity_scores[j] += diversity[j, parent.p.index];
+            m_Diversity_scores[j] += diversity[j][parent.p.index];
         }
         // std::cout << "Diversity_scores " << parent.p.index << "\t";
         // for (auto& e : m_Diversity_scores)
@@ -262,10 +254,10 @@ private:
     ) noexcept -> void
     {
         m_Sexual_reproduction_parents[m_Sexual_parents_idx++] = parents;
-        for (auto j = 0; j != s_Generation_size; ++j)
+        for (auto j = 0; j != m_Generation_size; ++j)
         {
             m_Diversity_scores[j] +=
-                diversity[j, parents.a.index] + diversity[j, parents.b.index];
+                diversity[j][parents.a.index] + diversity[j][parents.b.index];
         }
         // std::cout << "Diversity_scores " << parents.a.index << " "
         //           << parents.b.index << "\t";
@@ -280,12 +272,12 @@ private:
         generation_fitness_container_type const& fitness_scores
     ) -> void
     {
-        std::array<int, s_Generation_size> indeces{};
+        std::vector<int> indeces(m_Generation_size);
         std::ranges::iota(indeces, 0);
         std::ranges::sort(indeces, [&fitness_scores](int a, int b) {
             return fitness_scores[a] > fitness_scores[b];
         });
-        for (int i = 0; i != s_Generation_size; ++i)
+        for (int i = 0; i != m_Generation_size; ++i)
         {
             m_Fitness_scores[indeces[i]] = (float)std::pow(0.97f, i);
         }
@@ -335,7 +327,7 @@ private:
         // for (int i = m_Parent_categories.elites_count(); i !=
         // s_Generation_size;
         //      ++i)
-        for (int i = m_Parent_categories.elites_count(); i != s_Generation_size;
+        for (int i = m_Parent_categories.elites_count(); i != m_Generation_size;
              ++i)
         {
             next_generation_nest[i].mutate(m_Mutation_policy);
@@ -357,7 +349,7 @@ private:
         }
         else
         {
-            if (random::randfloat() < 0.0005)
+            if (m_Random_engine.randfloat() < 0.0005)
             {
                 m_Base_probability = min;
             }
@@ -371,20 +363,21 @@ private:
         // {
         //     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
         // }
-        std::cout << m_Base_probability << '\n';
-        std::cout << top_score << '\n';
+        // std::cout << m_Base_probability << '\n';
+        // std::cout << top_score << '\n';
     }
 
     auto roulette_select_parent() const -> int
     {
         const auto max_diversity = std::ranges::max(m_Diversity_scores);
 
-        std::array<diversity_score_type, s_Generation_size> m_Modified_scores{};
+        container_type<diversity_score_type> m_Modified_scores(m_Generation_size
+        );
 
         m_Modified_scores[0] = generics::algorithms::L2_norm(
             m_Fitness_scores[0], m_Diversity_scores[0] / max_diversity
         );
-        for (int i = 1; i != s_Generation_size; ++i)
+        for (int i = 1; i != m_Generation_size; ++i)
         {
             m_Modified_scores[i] =
                 generics::algorithms::L2_norm(
@@ -409,24 +402,26 @@ private:
             std::lower_bound(
                 std::begin(m_Modified_scores),
                 std::end(m_Modified_scores),
-                random::randfloat() * m_Modified_scores.back()
+                m_Random_engine.randfloat() * m_Modified_scores.back()
             )
         );
         return static_cast<int>(rand_idx);
     }
 
 private:
+    int                m_Generation_size;
     fitness_score_type m_Best_score =
         std::numeric_limits<fitness_score_type>::min();
-    parent_categories                        m_Parent_categories;
-    std::vector<asexual_reproduction_parent> m_Asexual_reproduction_parents;
-    std::vector<sexual_reproduction_parents> m_Sexual_reproduction_parents;
-    std::array<diversity_score_type, s_Generation_size> m_Diversity_scores{};
-    std::array<diversity_score_type, s_Generation_size> m_Fitness_scores{};
+    parent_categories                         m_Parent_categories;
+    std::vector<asexual_reproduction_parent>  m_Asexual_reproduction_parents;
+    std::vector<sexual_reproduction_parents>  m_Sexual_reproduction_parents;
+    container_type<diversity_score_type>      m_Diversity_scores;
+    container_type<diversity_score_type>      m_Fitness_scores;
     int                                       m_Asexual_parents_idx = 0;
     int                                       m_Sexual_parents_idx  = 0;
-    typename mutation_policy_type::value_type m_Base_probability;
+    typename mutation_policy_type::value_type m_Base_probability{ 0.0001f };
     mutation_policy_type                      m_Mutation_policy;
+    mutable random_::random                   m_Random_engine{};
 };
 
 } // namespace reproduction_mngr

@@ -21,7 +21,7 @@ void test0()
 
 void test1()
 {
-    random::init();
+    random::seed();
 
     ga_sm::static_matrix<float, 30, 1> y{};
 
@@ -32,7 +32,7 @@ void test1()
 
 void test2()
 {
-    random::init();
+    random::seed();
 
     ga_sm::static_matrix<float, 10, 1> x{}, y1{}, y2{}, y3{}, y4{}, y5{}, y6{};
 
@@ -49,7 +49,7 @@ void test2()
 
 void training_test()
 {
-    random::init();
+    random::seed();
 
     constexpr std::size_t N = 20;
     constexpr std::size_t M = 1500;

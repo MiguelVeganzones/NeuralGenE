@@ -10,7 +10,7 @@
 
 void multi_agent_evolution_test()
 {
-    random::init();
+    random::seed();
 
     [[maybe_unused]] constexpr auto AF_relu =
         matrix_activation_functions::Identifiers::ReLU;

@@ -173,30 +173,24 @@ auto agent_distance(
     );
 }
 
-// TODO change to mdspan when gcc implements it (clang has support for it
-// already)
-
-template <
-    std::floating_point R,
-    agent_type          Agent,
-    std::size_t         N,
-    typename Distance>
-    requires(N > 1)
+template <std::floating_point R, agent_type Agent, typename Distance>
 [[nodiscard]]
 static auto population_variability(
-    std::array<Agent, N> const& agents,
-    Distance&&                  dist_op
-) -> ga_sm::static_matrix<R, N, N>
+    std::vector<Agent> const& agents,
+    Distance&&                dist_op
+) -> std::vector<std::vector<R>>
 {
-    ga_sm::static_matrix<R, N, N> distance_matrix{};
-    for (size_t j = 0; j != N - 1; ++j)
+    const auto                  n = agents.size();
+    std::vector<std::vector<R>> distance_matrix(n, std::vector<R>(n));
+    for (size_t j = 0; j != n - 1; ++j)
     {
-        for (size_t i = j + 1; i != N; ++i)
+        for (size_t i = j + 1; i != n; ++i)
         {
-            const auto distance =
-                agent_distance<R>(agents[j], agents[i], dist_op);
-            distance_matrix[j, i] = distance;
-            distance_matrix[i, j] = distance;
+            const auto distance = agent_distance<R>(
+                agents[j], agents[i], std::forward<Distance>(dist_op)
+            );
+            distance_matrix[j][i] = distance;
+            distance_matrix[i][j] = distance;
         }
     }
     return distance_matrix;

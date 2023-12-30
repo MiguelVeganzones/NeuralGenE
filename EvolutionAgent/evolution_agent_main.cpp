@@ -60,7 +60,7 @@ void agent_construction()
 {
     std::cout << "Evolution agent construction\n";
 
-    random::init();
+    random::seed();
 
     // using namespace ga_snn;
     // using namespace ga_sm;
@@ -146,7 +146,7 @@ void agent_construction()
 
 void multi_agent_evolution_test()
 {
-    random::init();
+    random::seed();
 
     // using namespace ga_snn;
     // using namespace ga_sm;

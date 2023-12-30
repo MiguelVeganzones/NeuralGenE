@@ -7,7 +7,7 @@
 
 int flat_test()
 {
-    random::init();
+    random::seed();
     stopwatch s0;
     using namespace ga_snn;
     using namespace ga_sm;
@@ -131,7 +131,7 @@ void abench(int n)
 
     static_matrix<T, N, 5> in{};
 
-    random::init();
+    random::seed();
 
     in.fill(random::randfloat);
 
@@ -184,7 +184,7 @@ void get_layer()
 
 void layer_swap_test()
 {
-    random::init();
+    random::seed();
 
     using namespace ga_sm;
     using namespace ga_snn;
@@ -286,7 +286,7 @@ int activation_functions_test()
 
 void matirx_crossover_test()
 {
-    random::init();
+    random::seed();
     constexpr auto M = 1;
     constexpr auto N = 7;
     using value_type = float;

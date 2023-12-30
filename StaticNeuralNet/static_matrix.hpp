@@ -831,8 +831,10 @@ void to_target_x_crossover(
     constexpr auto N = Matrix::Size_x;
 
     // indices to slice. a: horizontal, b: vertical
-    const auto a = static_cast<size_t>(random::randint(0, M));
-    const auto b = static_cast<size_t>(random::randint(0, N));
+    const auto a =
+        static_cast<size_t>(random_::random::s_randintegral<int>(0, M));
+    const auto b =
+        static_cast<size_t>(random_::random::s_randintegral<int>(0, N));
 
     auto area1 = a * b + (N - b) * (M - a);
     auto area2 = M * N - area1;

@@ -141,7 +141,8 @@ public:
             }
         }
 
-        return m_Valid_moves[valid_idx[random::randint(0, valid_moves - 1)]];
+        return m_Valid_moves[valid_idx[random_::random::s_randintegral<
+            int>(0, valid_moves - 1)]];
     }
 
     [[nodiscard]]

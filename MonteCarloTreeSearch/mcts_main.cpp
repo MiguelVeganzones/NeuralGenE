@@ -4,7 +4,7 @@
 
 int main()
 {
-    random::init();
+    random::seed();
 
     constexpr std::size_t M = 4;
     constexpr std::size_t N = 4;

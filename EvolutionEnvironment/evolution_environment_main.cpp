@@ -27,13 +27,13 @@ struct activity
     using output_data_container = std::array<agent_response_type, N>;
 
 private:
-    inline static fitness_score_type s_best_error =
-        std::numeric_limits<fitness_score_type>::max();
-    inline static std::size_t   s_iter    = 0;
-    inline static std::ofstream s_outfile = std::ofstream(
-        "./EvolutionEnvironment/Predictions/perf_data.csv",
-        std::ios_base::app
-    );
+    // inline static fitness_score_type s_best_error =
+    // std::numeric_limits<fitness_score_type>::max();
+    // inline static std::size_t   s_iter    = 0;
+    // inline static std::ofstream s_outfile = std::ofstream(
+    //"./EvolutionEnvironment/Predictions/perf_data.csv",
+    // std::ios_base::app
+    //);
 
 public:
     inline static constexpr auto f = [](stimulus_type v
@@ -79,24 +79,24 @@ public:
                     output_data[i], agent(input_data[i])
                 ));
         }
-        if (/* fitness_score < s_best_error && */ s_iter % 2100 == 0)
-        {
-            s_best_error = fitness_score;
-            s_outfile << s_best_error;
-            // s_outfile << s_iter << ',' << s_best_error << ',';
-            // output_data_container pred{};
-            // for (auto i = 0uz; i != N; ++i)
-            // {
-            //     pred[i] = agent(input_data[i]);
-            // }
-            // std::copy(
-            //     std::begin(pred),
-            //     std::end(pred),
-            //     std::ostream_iterator<agent_response_type>(s_outfile, ", ")
-            // );
-            s_outfile << '\n';
-        }
-        ++s_iter;
+        //        if (/* fitness_score < s_best_error && */ s_iter % 2100 == 0)
+        //{
+        // s_best_error = fitness_score;
+        // s_outfile << s_best_error;
+        //// s_outfile << s_iter << ',' << s_best_error << ',';
+        //// output_data_container pred{};
+        //// for (auto i = 0uz; i != N; ++i)
+        //// {
+        ////     pred[i] = agent(input_data[i]);
+        //// }
+        //// std::copy(
+        ////     std::begin(pred),
+        ////     std::end(pred),
+        ////     std::ostream_iterator<agent_response_type>(s_outfile, ", ")
+        //// );
+        // s_outfile << '\n';
+        //}
+        //++s_iter;
         return static_cast<fitness_score_type>(1 / fitness_score);
     }
 
@@ -125,7 +125,8 @@ public:
 int main()
 
 {
-    random::init();
+    using namespace random_;
+    random::s_seed();
 
     constexpr auto AF_relu = matrix_activation_functions::Identifiers::SiLU;
     constexpr auto AF_sigmoid =
@@ -155,8 +156,7 @@ int main()
 
     using agent_t = evolution_agent::agent<brain_t>;
 
-    constexpr int GEN_SIZE = 21;
-    activity      a;
+    activity a;
 
     [[maybe_unused]] evaluation_system::system<activity> system(a);
     using system_t = decltype(system);
@@ -164,26 +164,24 @@ int main()
     using mutation_policy_t =
         mutation_policy_::mutation_policy<typename NET::value_type, 6>;
 
-
     using reproduction_manager_t = reproduction_mngr::
-        reproduction_manager<GEN_SIZE, agent_t, float, mutation_policy_t>;
+        reproduction_manager<agent_t, float, mutation_policy_t>;
 
-    using evolution_environment_t = evolution_env::evolution_environment<
-        GEN_SIZE,
-        agent_t,
-        system_t,
-        reproduction_manager_t>;
+    using evolution_environment_t = evolution_env::
+        evolution_environment<agent_t, system_t, reproduction_manager_t>;
 
     auto make_agent = []() -> agent_t {
-        return agent_t(brain_t(random::randnormal, 0, 0.1));
+        return agent_t(brain_t(random_::random::s_randnormal, 0.f, 0.1f));
     };
 
-    reproduction_manager_t reproduction_manager(
-        reproduction_mngr::parent_categories(GEN_SIZE, 3, 4)
-    );
+    int deme_count = 4;
+    int deme_size  = 6;
+
+    const auto parent_categories =
+        reproduction_mngr::parent_categories(deme_size, 1, 1);
 
     [[maybe_unused]] evolution_environment_t eenv(
-        make_agent, system, reproduction_manager
+        deme_count, deme_size, make_agent, system, parent_categories
     );
 
     auto [agent, result] = eenv.train(20000);
@@ -193,8 +191,6 @@ int main()
 
     agent.print();
     std::cout << "Score: " << result << '\n';
-
-    // app.Run();
 
     return EXIT_SUCCESS;
 }

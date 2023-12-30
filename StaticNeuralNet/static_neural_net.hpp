@@ -877,7 +877,7 @@ inline auto to_target_layer_swap(
     const auto layers         = NNet::s_Layers;
     const auto net_parameters = NNet::parameter_count();
 
-    const auto a = random::randint(0, layers - 1);
+    const auto a = random_::random::s_randintegral<int>(0, layers - 1);
 
     const auto first_half_count  = NNet::parameter_count(0, a);
     const auto second_half_count = NNet::parameter_count(a + 1, layers - 1);
@@ -917,7 +917,7 @@ inline auto in_place_layer_swap(
 ) -> void
 {
     const auto layers = NNet::s_Layers;
-    const auto a      = random::randint(0, layers - 1);
+    const auto a      = random_::random::randintegral<int>(0, layers - 1);
 
     if (a == 0 || a == layers - 1)
         return;

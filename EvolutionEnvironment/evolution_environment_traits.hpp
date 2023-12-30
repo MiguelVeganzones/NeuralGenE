@@ -36,16 +36,11 @@ concept system_concept = requires(T t) {
 template <typename T>
 concept reproduction_manager_concept = requires(T t) {
     typename T::agent_type;
-    T::s_Generation_size;
     {
         t.yield_next_generation(
-            std::declval<
-                std::array<typename T::agent_type, T::s_Generation_size>&>(),
-            std ::declval<std::array<
-                typename T::fitness_score_type,
-                T::s_Generation_size>&>(),
-            std::declval<
-                std::array<typename T::agent_type, T::s_Generation_size>&>()
+            std::declval<typename T::generation_container_type&>(),
+            std::declval<typename T::generation_fitness_container_type&>(),
+            std::declval<typename T::generation_container_type&>()
         )
     } -> std::same_as<void>;
 };

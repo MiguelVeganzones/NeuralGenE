@@ -75,7 +75,7 @@ struct score_type
 
 int main()
 {
-    random::init();
+    random::seed();
 
     constexpr std::size_t M = 6;
     constexpr std::size_t N = 7;

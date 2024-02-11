@@ -2,8 +2,10 @@
 #define GENERICS_UTILITY
 
 #include <cassert>
+#include <concepts>
 #include <numeric>
 #include <ranges>
+#include <type_traits>
 #include <vector>
 
 namespace generics
@@ -76,7 +78,36 @@ private:
 
 namespace algorithms
 {
-auto top_n_indeces(std::ranges::input_range auto&& v, unsigned int n)
+template <std::ranges::input_range Input_Range, typename Comp>
+    requires std::is_invocable_r_v<
+        bool,
+        Comp,
+        typename Input_Range::value_type,
+        typename Input_Range::value_type>
+[[nodiscard]]
+auto argmax(Input_Range const& v, Comp&& comp)
+{
+    return std::distance(
+        std::cbegin(v), std::ranges::max_element(v, std ::forward<Comp>(comp))
+    );
+}
+
+template <std::ranges::input_range Input_Range, typename Comp>
+    requires std::is_invocable_r_v<
+        bool,
+        Comp,
+        typename Input_Range::value_type,
+        typename Input_Range::value_type>
+[[nodiscard]]
+auto argmin(Input_Range const& v, Comp&& comp)
+{
+    return std::distance(
+        std::cbegin(v), std::ranges::min_element(v, std ::forward<Comp>(comp))
+    );
+}
+
+[[nodiscard]]
+auto top_n_indeces(std::ranges::input_range auto const& v, unsigned int n)
     -> std::vector<int>
 {
     assert(v.size() >= n && n > 0);

@@ -1,10 +1,12 @@
-#include <iostream>
-
 #include "Log.hpp"
 #include "Precision_totalizer.hpp"
 #include "Random.hpp"
 #include "Stopwatch.hpp"
 #include "generics.hpp"
+#include "progressbar.hpp"
+#include <chrono>
+#include <iostream>
+#include <thread>
 
 auto rng()
 {
@@ -26,7 +28,47 @@ auto top_n_test() -> void
     std::cout << '\n';
 }
 
-int main()
+void progressbar_main()
+{
+    progressbar_::progressbar pbar;
+
+    for (int i = 1; i <= 100; i++)
+    {
+        pbar.print(
+            i,
+            "\0",
+            '\t',
+            random_::random::s_randfloat(),
+            '\t',
+            random_::random::s_randintegral<int>(0, 100),
+            '\t'
+        );
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+}
+
+void progressmatrix_main()
+{
+    random_::random::s_seed();
+    progressbar_::progress_matrix pmatrix(5);
+
+    for (int i = 1; i <= 100; i++)
+    {
+        pmatrix.print(
+            random_::random::s_randintegral<int>(0, 4),
+            i,
+            " ",
+            '\t',
+            random_::random::s_randfloat(),
+            '\t',
+            random_::random::s_randintegral<int>(0, 100),
+            '\t'
+        );
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
+
+int totoalizer_main()
 {
     top_n_test();
 
@@ -61,4 +103,10 @@ int main()
     log::flush_log();
 
     return EXIT_SUCCESS;
+}
+
+int main()
+{
+    progressmatrix_main();
+    progressbar_main();
 }

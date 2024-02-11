@@ -47,7 +47,7 @@ public:
     /// @tparam T Integral type
     /// @param min Inclusive lower bound
     /// @param max Inclusive upper bound
-    /// @return integral number of type T uniformly distributed in the raneg
+    /// @return integral number of type T uniformly distributed in the range
     /// [min, max]
     template <std::integral T>
     [[nodiscard]]
@@ -90,15 +90,15 @@ public:
     /// @tparam T Integral type
     /// @param min Inclusive lower bound
     /// @param max Inclusive upper bound
-    /// @return integral number of type T uniformly distributed in the raneg
+    /// @return integral number of type T uniformly distributed in the range
     /// [min, max]
     template <std::integral T>
     [[nodiscard]]
     auto randintegral(T min, T max) noexcept -> T
     {
         assert(min <= max);
-        std::uniform_int_distribution<int> u(min, max);
-        return u(random::m_Random_engine);
+        std::uniform_int_distribution<T> uniform_dist(min, max);
+        return uniform_dist(m_Random_engine);
     }
 
     [[nodiscard]]

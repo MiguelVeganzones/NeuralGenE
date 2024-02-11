@@ -20,7 +20,7 @@ namespace ga_snn
 
 struct Layer_Signature
 {
-    using size_type = unsigned int;
+    using size_type = int;
     size_type                                              Size;
     matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
@@ -29,8 +29,9 @@ struct Layer_Signature
 
 struct Layer_Structure
 {
-    std::size_t                                            Inputs;
-    std::size_t                                            Outputs;
+    using size_type = int;
+    size_type                                              Inputs;
+    size_type                                              Outputs;
     matrix_activation_functions::Identifiers::Identifiers_ Activation;
 
     constexpr bool operator==(const Layer_Structure&) const = default;
@@ -38,17 +39,14 @@ struct Layer_Structure
 
 //--------------------------------------------------------------------------------------//
 
-template <
-    std::floating_point T,
-    std::size_t         Batch_Size,
-    Layer_Structure     Structure>
+template <std::floating_point T, int Batch_Size, Layer_Structure Structure>
     requires(Batch_Size > 0)
 class layer
 {
 public:
-    static constexpr std::size_t s_Inputs     = Structure.Inputs;
-    static constexpr std::size_t s_Outputs    = Structure.Outputs;
-    static constexpr auto        s_Activation = Structure.Activation;
+    static constexpr int  s_Inputs     = Structure.Inputs;
+    static constexpr int  s_Outputs    = Structure.Outputs;
+    static constexpr auto s_Activation = Structure.Activation;
 
     using weights_shape       = ga_sm::static_matrix<T, s_Inputs, s_Outputs>;
     using output_vector_shape = ga_sm::static_matrix<T, Batch_Size, s_Outputs>;
@@ -757,7 +755,7 @@ public:
             input_value })(0, 0);
     }
 
-    template <size_t Other_Batch_Size>
+    template <std::size_t Other_Batch_Size>
     // TODO: add requires std is strivial and is standar layout
     auto init_from_ptr(
         const static_neural_net<T, Other_Batch_Size, Signatures...>* const

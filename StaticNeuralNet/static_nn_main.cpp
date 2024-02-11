@@ -7,7 +7,7 @@
 
 int flat_test()
 {
-    random::seed();
+    random_::random::s_seed();
     stopwatch s0;
     using namespace ga_snn;
     using namespace ga_sm;
@@ -45,7 +45,7 @@ int flat_test()
     auto ptr_net21 = std::make_unique<NET2>();
     auto ptr_net3  = std::make_unique<NET2>();
 
-    ptr_net->init(random::randnormal, 0, 1);
+    ptr_net->init(random_::random::s_randnormal, 0, 1);
 
     for (size_t i = 0; const auto& e : in)
     {
@@ -131,12 +131,12 @@ void abench(int n)
 
     static_matrix<T, N, 5> in{};
 
-    random::seed();
+    random_::random::s_seed();
 
-    in.fill(random::randfloat);
+    in.fill(random_::random::s_randfloat);
 
     const auto ptr_net =
-        static_neural_net_factory<NNet>(random::randnormal, 0, 1);
+        static_neural_net_factory<NNet>(random_::random::s_randnormal, 0, 1);
     // ptr_net->print_net();
 
     // stopwatch s;
@@ -168,23 +168,25 @@ void get_layer()
     using NNet = static_neural_net<T, N, ls5, ls5, ls5>;
 
     const auto ptr_net =
-        static_neural_net_factory<NNet>(random::randnormal, 0, 1);
+        static_neural_net_factory<NNet>(random_::random::s_randnormal, 0, 1);
 
 
     ptr_net->print_net();
 
     for (int i = 0; i < 10; ++i)
     {
-        int idx = random::randint(0, NNet::s_Layers - 1);
+        int idx = random_::random::s_randintegral<int>(0, NNet::s_Layers - 1);
         std::cout << idx << std::endl;
-        ptr_net->mutate_layer(idx, [](auto) { return random::randfloat(); });
+        ptr_net->mutate_layer(idx, [](auto) {
+            return random_::random::s_randfloat();
+        });
         ptr_net->print_net();
     }
 }
 
 void layer_swap_test()
 {
-    random::seed();
+    random_::random::s_seed();
 
     using namespace ga_sm;
     using namespace ga_snn;
@@ -208,8 +210,8 @@ void layer_swap_test()
     NNet net3{};
     NNet net4{};
 
-    net1.init(random::randfloat);
-    net2.init(random::randfloat);
+    net1.init(random_::random::s_randfloat);
+    net2.init(random_::random::s_randfloat);
     // net3.init(random::randfloat);
     // net4.init(random::randfloat);
 
@@ -267,7 +269,7 @@ int activation_functions_test()
 
     auto ptr_net = std::make_unique<NET>();
 
-    ptr_net->init(random::randnormal, 0, 1);
+    ptr_net->init(random_::random::s_randnormal, 0, 1);
 
     ptr_net->print_net();
 
@@ -286,7 +288,7 @@ int activation_functions_test()
 
 void matirx_crossover_test()
 {
-    random::seed();
+    random_::random::s_seed();
     constexpr auto M = 1;
     constexpr auto N = 7;
     using value_type = float;
@@ -296,10 +298,10 @@ void matirx_crossover_test()
     ga_sm::static_matrix<value_type, M, N> mat3;
     ga_sm::static_matrix<value_type, M, N> mat4;
 
-    mat1.fill(random::randnormal, 0, 1);
+    mat1.fill(random_::random::s_randnormal, 0, 1);
     // mat2.fill(random::randnormal, 0, 1);
-    mat3.fill(random::randnormal, 0, 1);
-    mat4.fill(random::randnormal, 0, 1);
+    mat3.fill(random_::random::s_randnormal, 0, 1);
+    mat4.fill(random_::random::s_randnormal, 0, 1);
 
     std::cout << mat1;
     std::cout << mat2;

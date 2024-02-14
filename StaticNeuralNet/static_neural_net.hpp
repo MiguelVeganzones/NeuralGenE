@@ -39,7 +39,10 @@ struct Layer_Structure
 
 //--------------------------------------------------------------------------------------//
 
-template <std::floating_point T, int Batch_Size, Layer_Structure Structure>
+template <
+    std::floating_point T,
+    std::size_t         Batch_Size,
+    Layer_Structure     Structure>
     requires(Batch_Size > 0)
 class layer
 {

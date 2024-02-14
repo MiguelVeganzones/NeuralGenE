@@ -4,6 +4,7 @@
 #include "error_handling.hpp"
 #include "evolution_environment_traits.hpp"
 #include "population.hpp"
+#include "progressbar.hpp"
 #include "reproduction_manager.hpp"
 #include <algorithm>
 #include <array>
@@ -96,7 +97,6 @@ template <
         //     System_Type::fitness_score_type>>;
     } && std::is_invocable_v<Agent_Type, typename System_Type::stimulus_type>
 class evolution_environment
-
 {
 public:
     inline static constexpr auto s_Population_generations = 2u;
@@ -113,6 +113,26 @@ public:
     using result_type = std::pair<agent_type, fitness_score_type>;
     using deme_type   = deme<agent_type, reproduction_manager_type>;
 
+private:
+    struct deme_data_t
+    {
+        int       idx;
+        deme_type deme;
+    };
+
+    struct internal_result_t
+    {
+        int                idx;
+        fitness_score_type fitness;
+    };
+
+    using deme_data_type       = deme_data_t;
+    using internal_result_type = internal_result_t;
+
+public:
+    using deme_container_type             = std::vector<deme_data_type>;
+    using internal_results_container_type = std::vector<internal_result_type>;
+
 public:
     template <environment_population::factory_of<agent_type> Factory>
     evolution_environment(
@@ -127,13 +147,20 @@ public:
         m_System(system),
         m_Demes(
             m_Deme_count,
-            deme_type(
-                deme_size,
-                std::forward<Factory>(agent_factory),
-                parent_categories
-            )
-        )
+            { -1,
+              deme_type(
+                  deme_size,
+                  std::forward<Factory>(agent_factory),
+                  parent_categories
+              ) }
+        ),
+        m_Internal_results(m_Deme_count, { -1, -1 }),
+        m_Progress_matrix(m_Deme_count)
     {
+        for (int i = 0; auto& deme_data_ : m_Demes)
+        {
+            deme_data_.idx = i++;
+        }
     }
 
     evolution_environment(evolution_environment const&) noexcept = default;
@@ -151,23 +178,40 @@ public:
             std::execution::par_unseq,
             std::begin(m_Demes),
             std::end(m_Demes),
-            [generations, this](auto& deme) {
-                std::cout << "Here\n";
-                auto generation_fitness =
+            [generations, this](auto& deme_data_) {
+                auto& deme = deme_data_.deme;
+                auto  generation_fitness =
                     m_System.evaluate(deme.get_current_generation());
                 for (auto iter = 0uz; iter != generations; ++iter)
                 {
                     deme.step(generation_fitness);
                     generation_fitness =
                         m_System.evaluate(deme.get_current_generation());
+                    if (iter % (int(generations / 100)) == 0)
+                    {
+                        m_Progress_matrix.tick(
+                            deme_data_.idx,
+                            "\0",
+                            std::ranges::max(generation_fitness)
+                        );
+                    }
                 }
-                /*const auto best_fitness_idx = std::distance(
-                    std::cbegin(generation_fitness),
-                    std::ranges::max_element(generation_fitness)
-                );*/
+                const auto best_fitness_ptr =
+                    std::ranges::max_element(generation_fitness);
+                const auto best_fitness_idx = std::distance(
+                    std::begin(generation_fitness), best_fitness_ptr
+                );
+                m_Internal_results[deme_data_.idx] = { (int)best_fitness_idx,
+                                                       *best_fitness_ptr };
             }
         );
-        return { m_Demes[0].get_current_generation()[0], 1.0f };
+        const auto best_idx = generics::algorithms::argmax(
+            m_Internal_results,
+            [](auto a, auto b) -> bool { return a.fitness < b.fitness; }
+        );
+        const auto result = m_Internal_results[best_idx];
+        return { m_Demes[best_idx].deme.get_current_generation()[result.idx],
+                 result.fitness };
     }
 
     auto print_population() const noexcept -> void
@@ -177,15 +221,17 @@ public:
             std::cout << "\nDeme #" << idx++
                       << "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
                          "@@@@@@@@@@@@@@@@@\n";
-            deme.print();
+            deme.deme.print();
         }
     }
 
 private:
-    int                    m_Deme_count;
-    int                    m_Deme_size;
-    system_type            m_System;
-    std::vector<deme_type> m_Demes;
+    int                             m_Deme_count;
+    int                             m_Deme_size;
+    system_type                     m_System;
+    deme_container_type             m_Demes;
+    internal_results_container_type m_Internal_results;
+    progressbar_::progress_matrix   m_Progress_matrix;
 };
 
 } // namespace evolution_env

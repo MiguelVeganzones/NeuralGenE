@@ -159,7 +159,7 @@ private:
         diversity_scores_container_type const&   diversity
     ) -> void
     {
-        if (m_Random_engine.randfloat() < 0.01f)
+        if (m_Random_engine.randfloat() < 0.0001f)
         {
             std::cout << "[\n";
             for (auto& v : diversity)

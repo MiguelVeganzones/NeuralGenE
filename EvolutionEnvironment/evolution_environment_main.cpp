@@ -36,10 +36,14 @@ private:
     //);
 
 public:
-    inline static constexpr auto f = [](stimulus_type v
-                                     ) -> agent_response_type {
+    inline static constexpr auto underlying_function =
+        [](stimulus_type v) -> agent_response_type {
         const auto x = static_cast<float>(v) / 50.f;
         return std::sin(x) * std::cos(std::sqrt(x));
+    };
+
+    inline static auto noise_generator = []() -> agent_response_type {
+        return agent_response_type{ random_::random::s_randnormal(0.f, 0.1f) };
     };
 
     inline static constexpr auto input_data = []() -> input_data_container {
@@ -48,19 +52,21 @@ public:
         return ret;
     }();
 
-    inline static const auto output_data = []() -> output_data_container {
+    inline static const auto ground_truth = []() -> output_data_container {
         output_data_container ret{};
         for (auto i = 0uz; i != N; ++i)
         {
-            ret[i] = f(input_data[i]);
+            ret[i] = underlying_function(input_data[i]);
         }
-        // s_outfile << -1 << ',' << -1 << ',';
-        // std::copy(
-        //     std::begin(ret),
-        //     std::end(ret),
-        //     std::ostream_iterator<agent_response_type>(s_outfile, ", ")
-        // );
-        // s_outfile << '\n';
+        return ret;
+    }();
+
+    inline static const auto data_samples = []() -> output_data_container {
+        output_data_container ret{};
+        for (auto i = 0uz; i != N; ++i)
+        {
+            ret[i] = ground_truth[i] + noise_generator();
+        }
         return ret;
     }();
 
@@ -76,7 +82,7 @@ public:
         {
             fitness_score +=
                 static_cast<fitness_score_type>(generics::algorithms::L2_norm(
-                    output_data[i], agent(input_data[i])
+                    data_samples[i], agent(input_data[i])
                 ));
         }
         //        if (/* fitness_score < s_best_error && */ s_iter % 2100 == 0)
@@ -107,7 +113,7 @@ public:
     {
         for (auto i = 0uz; i != N; ++i)
         {
-            std::cout << output_data[i] << " -> " << agent(input_data[i])
+            std::cout << ground_truth[i] << " -> " << agent(input_data[i])
                       << '\n';
         }
     }

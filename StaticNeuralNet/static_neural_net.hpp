@@ -21,9 +21,8 @@ namespace ga_snn
 struct Layer_Signature
 {
     using size_type = int;
-    size_type Size;
-    matrix_activation_functions::ActivationFunctionIdentifiers::Identifiers
-        Activation;
+    size_type                                                  Size;
+    matrix_activation_functions::ActivationFunctionIdentifiers Activation;
 
     constexpr bool operator==(const Layer_Signature&) const = default;
 };
@@ -31,10 +30,9 @@ struct Layer_Signature
 struct Layer_Structure
 {
     using size_type = int;
-    size_type Inputs;
-    size_type Outputs;
-    matrix_activation_functions::ActivationFunctionIdentifiers::Identifiers
-        Activation;
+    size_type                                                  Inputs;
+    size_type                                                  Outputs;
+    matrix_activation_functions::ActivationFunctionIdentifiers Activation;
 
     constexpr bool operator==(const Layer_Structure&) const = default;
 };

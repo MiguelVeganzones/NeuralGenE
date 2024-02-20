@@ -24,10 +24,10 @@ public:
     inline static constexpr double epsilon = 1e-5;
 
     inline static const matrix_activation_functions::
-        ActivationFunctionIdentifiers::Identifiers PReLU =
+        ActivationFunctionIdentifiers::PReLU =
             matrix_activation_functions::ActivationFunctionIdentifiers::PReLU;
     inline static const matrix_activation_functions::
-        ActivationFunctionIdentifiers::Identifiers UnsignedSigmoid =
+        ActivationFunctionIdentifiers::UnsignedSigmoid =
             matrix_activation_functions::ActivationFunctionIdentifiers::
                 UnsignedSigmoid;
 

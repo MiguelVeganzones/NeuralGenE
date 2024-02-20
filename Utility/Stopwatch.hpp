@@ -158,7 +158,7 @@ private:
     }
 
 private:
-    enum TimeUnits : TimeUnits_value_type
+    enum struct TimeUnits : TimeUnits_value_type
     {
         Nanoseconds,
         Microseconds,
@@ -169,25 +169,26 @@ private:
     };
 
     inline static std::map<TimeUnits, std::string> s_units_string_identifier{
-        { Nanoseconds, "ns" }, { Microseconds, "us" }, { Milliseconds, "ms" },
-        { Seconds, "s" },      { Minutes, "min" },     { Hours, "h" }
+        { TimeUnits::Nanoseconds, "ns" },  { TimeUnits::Microseconds, "us" },
+        { TimeUnits::Milliseconds, "ms" }, { TimeUnits::Seconds, "s" },
+        { TimeUnits::Minutes, "min" },     { TimeUnits::Hours, "h" }
     };
 
     static TimeUnits get_most_meaningful_units(const measurement_units value)
     {
         if (std::chrono::duration_cast<std::chrono::hours>(value).count() > 0)
-            return Hours;
+            return TimeUnits::Hours;
         if (std::chrono::duration_cast<std::chrono::minutes>(value).count() > 0)
-            return Minutes;
+            return TimeUnits::Minutes;
         if (std::chrono::duration_cast<std::chrono::seconds>(value).count() > 0)
-            return Seconds;
+            return TimeUnits::Seconds;
         if (std::chrono::duration_cast<std::chrono::milliseconds>(value).count(
             ) > 0)
-            return Milliseconds;
+            return TimeUnits::Milliseconds;
         if (std::chrono::duration_cast<std::chrono::microseconds>(value).count(
             ) > 0)
-            return Microseconds;
-        return Nanoseconds;
+            return TimeUnits::Microseconds;
+        return TimeUnits::Nanoseconds;
     }
 
     static constexpr std::size_t get_meaningful_ratio_values(TimeUnits units
@@ -198,17 +199,17 @@ private:
                       std::chrono::nanoseconds>);
         switch (units)
         {
-        case Hours:
+        case TimeUnits::Hours:
             return 3'600'000'000'000;
-        case Minutes:
+        case TimeUnits::Minutes:
             return 60'000'000'000;
-        case Seconds:
+        case TimeUnits::Seconds:
             return 1'000'000'000;
-        case Milliseconds:
+        case TimeUnits::Milliseconds:
             return 1'000'000;
-        case Microseconds:
+        case TimeUnits::Microseconds:
             return 1000;
-        case Nanoseconds:
+        case TimeUnits::Nanoseconds:
             return 1;
         }
         assert_unreachable();

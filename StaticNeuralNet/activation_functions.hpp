@@ -654,33 +654,30 @@ struct Abs
     static constexpr auto name = "Abs";
 };
 
-struct ActivationFunctionIdentifiers
+enum struct ActivationFunctionIdentifiers
 {
-    enum struct Identifiers
-    {
-        ReLU,
-        UnsignedSigmoid,
-        SignedSigmoid,
-        SoftPlus,
-        Tanh,
-        TanhCubic,
-        Identity,
-        GELU,
-        SiLU,
-        Softmax,
-        Swish,
-        PReLU,
-        UnsignedStep,
-        SignedStep,
-        UnsignedGaussian,
-        SignedGaussian,
-        Abs,
-    };
+    ReLU,
+    UnsignedSigmoid,
+    SignedSigmoid,
+    SoftPlus,
+    Tanh,
+    TanhCubic,
+    Identity,
+    GELU,
+    SiLU,
+    Softmax,
+    Swish,
+    PReLU,
+    UnsignedStep,
+    SignedStep,
+    UnsignedGaussian,
+    SignedGaussian,
+    Abs,
 };
 
 template <
     typename Mat,
-    matrix_activation_functions::ActivationFunctionIdentifiers::Identifiers
+    matrix_activation_functions::ActivationFunctionIdentifiers
         Function_Identifier>
 [[nodiscard]]
 constexpr auto choose_func() noexcept -> decltype(auto)
@@ -724,7 +721,7 @@ constexpr auto choose_func() noexcept -> decltype(auto)
 
 template <
     typename Mat,
-    matrix_activation_functions::ActivationFunctionIdentifiers::Identifiers
+    matrix_activation_functions::ActivationFunctionIdentifiers
         Function_Identifier>
 struct activation_function
 {
@@ -786,7 +783,7 @@ struct activation_function
 
 template <
     typename Mat,
-    matrix_activation_functions::ActivationFunctionIdentifiers::Identifiers
+    matrix_activation_functions::ActivationFunctionIdentifiers
         Function_Identifier>
 void activation_function_dummy(activation_function<Mat, Function_Identifier>)
 {

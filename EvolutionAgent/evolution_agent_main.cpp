@@ -17,11 +17,12 @@
 // using namespace ga_sm;
 
 // constexpr auto fn = score_functions::score_functions<double, std::uint16_t>::
-//     choose_function<score_functions::Identifiers::Weighted_normalized_score,
+//     choose_function<score_functions::ActivationFunctionIdentifiers::Weighted_normalized_score,
 //     3, 1, 0>();
 
-// constexpr auto AF   = matrix_activation_functions::Identifiers::GELU;
-// constexpr auto Tanh = matrix_activation_functions::Identifiers::Tanh;
+// constexpr auto AF   =
+// matrix_activation_functions::ActivationFunctionIdentifiers::GELU; constexpr
+// auto Tanh = matrix_activation_functions::ActivationFunctionIdentifiers::Tanh;
 // auto           SM =
 //     score_function_objects::score_function_object<decltype(fn),
 //     std::uint16_t, std::uint16_t, std::uint16_t>(fn);
@@ -65,10 +66,12 @@ void agent_construction()
     // using namespace ga_snn;
     // using namespace ga_sm;
 
-    constexpr auto AF_relu = matrix_activation_functions::Identifiers::GELU;
-    constexpr auto AF_sigmoid =
-        matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto AF_Tanh = matrix_activation_functions::Identifiers::Tanh;
+    constexpr auto AF_relu =
+        matrix_activation_functions::ActivationFunctionIdentifiers::GELU;
+    constexpr auto AF_sigmoid = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
+    constexpr auto AF_Tanh =
+        matrix_activation_functions::ActivationFunctionIdentifiers::Tanh;
 
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1,
@@ -152,13 +155,13 @@ void multi_agent_evolution_test()
     // using namespace ga_sm;
 
     [[maybe_unused]] constexpr auto AF_relu =
-        matrix_activation_functions::Identifiers::ReLU;
-    [[maybe_unused]] constexpr auto AF_thresh =
-        matrix_activation_functions::Identifiers::Threshold;
-    [[maybe_unused]] constexpr auto AF_sigmoid =
-        matrix_activation_functions::Identifiers::Sigmoid;
+        matrix_activation_functions::ActivationFunctionIdentifiers::ReLU;
+    [[maybe_unused]] constexpr auto AF_thresh = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedStep;
+    [[maybe_unused]] constexpr auto AF_sigmoid = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
     [[maybe_unused]] constexpr auto AF_Tanh =
-        matrix_activation_functions::Identifiers::Tanh;
+        matrix_activation_functions::ActivationFunctionIdentifiers::Tanh;
 
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1,

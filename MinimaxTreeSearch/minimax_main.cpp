@@ -89,9 +89,9 @@ int main()
     using namespace ga_sm;
 
     [[maybe_unused]] constexpr auto AF_relu =
-        matrix_activation_functions::Identifiers::GELU;
-    [[maybe_unused]] constexpr auto AF_tanh =
-        matrix_activation_functions::Identifiers::Sigmoid;
+        matrix_activation_functions::ActivationFunctionIdentifiers::GELU;
+    [[maybe_unused]] constexpr auto AF_tanh = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
 
     [[maybe_unused]] constexpr Layer_Signature a1{ 1, AF_relu };
     [[maybe_unused]] constexpr Layer_Signature a1_tanh{ 1, AF_tanh };

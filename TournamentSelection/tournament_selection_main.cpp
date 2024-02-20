@@ -14,10 +14,12 @@ int main()
 {
     random::seed();
 
-    constexpr auto AF_relu = matrix_activation_functions::Identifiers::GELU;
-    constexpr auto AF_sigmoid =
-        matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto AF_Tanh = matrix_activation_functions::Identifiers::Tanh;
+    constexpr auto AF_relu =
+        matrix_activation_functions::ActivationFunctionIdentifiers::GELU;
+    constexpr auto AF_sigmoid = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
+    constexpr auto AF_Tanh =
+        matrix_activation_functions::ActivationFunctionIdentifiers::Tanh;
 
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1,

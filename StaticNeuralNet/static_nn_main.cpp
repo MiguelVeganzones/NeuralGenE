@@ -21,20 +21,21 @@ int flat_test()
         e = i++;
 
     [[maybe_unused]] constexpr auto Identity =
-        matrix_activation_functions::Identifiers::Identity;
+        matrix_activation_functions::ActivationFunctionIdentifiers::Identity;
     [[maybe_unused]] constexpr auto ReLU =
-        matrix_activation_functions::Identifiers::ReLU;
+        matrix_activation_functions::ActivationFunctionIdentifiers::ReLU;
     [[maybe_unused]] constexpr auto PReLU =
-        matrix_activation_functions::Identifiers::PReLU;
-    [[maybe_unused]] constexpr auto Sigmoid =
-        matrix_activation_functions::Identifiers::Sigmoid;
+        matrix_activation_functions::ActivationFunctionIdentifiers::PReLU;
+    [[maybe_unused]] constexpr auto UnsignedSigmoid =
+        matrix_activation_functions::ActivationFunctionIdentifiers::
+            UnsignedSigmoid;
     [[maybe_unused]] constexpr auto Swish =
-        matrix_activation_functions::Identifiers::Swish;
+        matrix_activation_functions::ActivationFunctionIdentifiers::Swish;
 
     constexpr Layer_Signature a1{ 1, Identity };
     constexpr Layer_Signature a2{ 4, ReLU };
     constexpr Layer_Signature a3{ 9, PReLU };
-    constexpr Layer_Signature a4{ 16, Sigmoid };
+    constexpr Layer_Signature a4{ 16, UnsignedSigmoid };
     constexpr Layer_Signature a5{ 25, Swish };
 
     using NET  = static_neural_net<float, 1, a1, a2, a3, a4, a5, a1>;
@@ -119,7 +120,8 @@ void abench(int n)
 
     constexpr std::size_t N = 8;
 
-    constexpr auto AF = matrix_activation_functions::Identifiers::ReLU;
+    constexpr auto AF =
+        matrix_activation_functions::ActivationFunctionIdentifiers::ReLU;
 
     constexpr auto ls5  = Layer_Signature{ 5, AF };
     constexpr auto ls10 = Layer_Signature{ 10, AF };
@@ -158,7 +160,8 @@ void get_layer()
 
     constexpr std::size_t N = 8;
 
-    constexpr auto AF = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto AF = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
 
     constexpr auto ls5 = Layer_Signature{ 5, AF };
     // constexpr auto ls10 = Layer_Signature{ 10, AF };
@@ -194,8 +197,10 @@ void layer_swap_test()
 
     constexpr std::size_t N = 8;
 
-    constexpr auto AF    = matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto Swish = matrix_activation_functions::Identifiers::Swish;
+    constexpr auto AF = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
+    constexpr auto Swish =
+        matrix_activation_functions::ActivationFunctionIdentifiers::Swish;
 
     constexpr auto ls1 = Layer_Signature{ 1, AF };
     constexpr auto ls5 = Layer_Signature{ 5, Swish };
@@ -246,16 +251,20 @@ int activation_functions_test()
         e = i++;
 
     constexpr auto Identity =
-        matrix_activation_functions::Identifiers::Identity;
-    constexpr auto ReLU    = matrix_activation_functions::Identifiers::ReLU;
-    constexpr auto PReLU   = matrix_activation_functions::Identifiers::PReLU;
-    constexpr auto Sigmoid = matrix_activation_functions::Identifiers::Sigmoid;
-    constexpr auto Swish   = matrix_activation_functions::Identifiers::Swish;
+        matrix_activation_functions::ActivationFunctionIdentifiers::Identity;
+    constexpr auto ReLU =
+        matrix_activation_functions::ActivationFunctionIdentifiers::ReLU;
+    constexpr auto PReLU =
+        matrix_activation_functions::ActivationFunctionIdentifiers::PReLU;
+    constexpr auto UnsignedSigmoid = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
+    constexpr auto Swish =
+        matrix_activation_functions::ActivationFunctionIdentifiers::Swish;
 
     constexpr Layer_Signature identity_layer{ 1, Identity };
     constexpr Layer_Signature relu_layer{ 4, ReLU };
     constexpr Layer_Signature prelu_layer{ 5, PReLU };
-    constexpr Layer_Signature sigmoid_layer{ 4, Sigmoid };
+    constexpr Layer_Signature sigmoid_layer{ 4, UnsignedSigmoid };
     constexpr Layer_Signature swish_layer{ 2, Swish };
 
     using NET = static_neural_net<

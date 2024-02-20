@@ -18,17 +18,21 @@ namespace NativeUnitTesting
 TEST_CLASS(unittesting_static_neural_net)
 {
 public:
-    inline static const std::filesystem::path output_file = "../../Unit Testing/buffer.txt";
+    inline static const std::filesystem::path output_file =
+        "../../Unit Testing/buffer.txt";
 
     inline static constexpr double epsilon = 1e-5;
 
-    inline static const matrix_activation_functions::Identifiers::Identifiers_ PReLU =
-        matrix_activation_functions::Identifiers::PReLU;
-    inline static const matrix_activation_functions::Identifiers::Identifiers_ Sigmoid =
-        matrix_activation_functions::Identifiers::Sigmoid;
+    inline static const matrix_activation_functions::
+        ActivationFunctionIdentifiers::Identifiers PReLU =
+            matrix_activation_functions::ActivationFunctionIdentifiers::PReLU;
+    inline static const matrix_activation_functions::
+        ActivationFunctionIdentifiers::Identifiers UnsignedSigmoid =
+            matrix_activation_functions::ActivationFunctionIdentifiers::
+                UnsignedSigmoid;
 
     inline static constexpr ga_snn::Layer_Signature a3{ 9, PReLU };
-    inline static constexpr ga_snn::Layer_Signature a4{ 16, Sigmoid };
+    inline static constexpr ga_snn::Layer_Signature a4{ 16, UnsignedSigmoid };
 
     using T  = float;
     using N  = ga_snn::static_neural_net<T, 1, a3, a3, a3, a4>;
@@ -39,35 +43,45 @@ public:
     {
         random::init();
 
-        auto uptr1 = ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
+        auto uptr1 =
+            ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
         auto uptr2 = std::make_unique<N>();
 
         uptr2->init_from_ptr(uptr1.get());
 
-        Assert::IsTrue(ga_snn::L1_net_distance<double>(*uptr1.get(), *uptr2.get()) == 0.0);
+        Assert::IsTrue(
+            ga_snn::L1_net_distance<double>(*uptr1.get(), *uptr2.get()) == 0.0
+        );
     }
 
     TEST_METHOD(assert_store_and_load)
     {
-        auto uptr1 = ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
+        auto uptr1 =
+            ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
         uptr1->store(output_file);
 
         auto uptr2 = std::make_unique<N>();
         uptr2->load(output_file);
 
-        Assert::IsTrue(ga_snn::L1_net_distance<double>(*uptr1.get(), *uptr2.get()) < epsilon);
+        Assert::IsTrue(
+            ga_snn::L1_net_distance<double>(*uptr1.get(), *uptr2.get()) <
+            epsilon
+        );
     }
 
     TEST_METHOD(assert_population_variability_same_net)
     {
-        const auto uptr1 = ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
+        const auto uptr1 =
+            ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
         const auto uptr2 = std::make_unique<N>(*uptr1);
         const auto uptr3 = std::make_unique<N>(*uptr1);
         const auto uptr4 = std::make_unique<N>(*uptr1);
 
-        const auto ret = ga_snn::population_variability<double, 4, N>(
-            { std::cref(*uptr1), std::cref(*uptr2), std::cref(*uptr3), std::cref(*uptr4) }
-        );
+        const auto ret =
+            ga_snn::population_variability<double, 4, N>({ std::cref(*uptr1),
+                                                           std::cref(*uptr2),
+                                                           std::cref(*uptr3),
+                                                           std::cref(*uptr4) });
 
         for (int j = 0; j != 4; ++j)
         {
@@ -80,14 +94,20 @@ public:
 
     TEST_METHOD(assert_population_variability_different_net)
     {
-        auto uptr1 = ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
-        auto uptr2 = ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
-        auto uptr3 = ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
-        auto uptr4 = ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
+        auto uptr1 =
+            ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
+        auto uptr2 =
+            ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
+        auto uptr3 =
+            ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
+        auto uptr4 =
+            ga_snn::static_neural_net_factory<N>(random::randnormal, 0, 1);
 
-        const auto ret = ga_snn::population_variability<double, 4, N>(
-            { std::cref(*uptr1), std::cref(*uptr2), std::cref(*uptr3), std::cref(*uptr4) }
-        );
+        const auto ret =
+            ga_snn::population_variability<double, 4, N>({ std::cref(*uptr1),
+                                                           std::cref(*uptr2),
+                                                           std::cref(*uptr3),
+                                                           std::cref(*uptr4) });
 
         for (int j = 0; j != 4; ++j)
         {

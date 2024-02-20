@@ -371,7 +371,7 @@ public:
 
     constexpr void fill(const T& val)
     {
-        fill_n(iterator(m_Elems), M * N, val);
+        std::ranges::generate(this, [val] { return val; });
     }
 
     template <class Fn, class... Args>
@@ -381,31 +381,8 @@ public:
     )
     {
         for (iterator it = begin(); it != end(); ++it)
-            *it = static_cast<T>(std::invoke(fn, std::forward<Args>(args)...));
-    }
-
-    constexpr void fill_n(
-        iterator        dest,
-        const ptrdiff_t count,
-        const T         val
-    ) noexcept
-    {
-#ifdef _CHECKBOUNDS_
-        const bool indexing_b = *dest < *m_Elems; // pointer before array
-        const bool indexing_p =
-            *dest + count > *m_Elems + M * N; // write past array limits
-        if (indexing_b || indexing_p)
         {
-            std::cout << "Indexing before array: " << indexing_b
-                      << "Indexing past array: " << indexing_p << std::endl;
-            std::cout << "fill_n subscript out of bounds\n";
-            std::exit(EXIT_FAILURE);
-        }
-#endif
-
-        for (ptrdiff_t i = 0; i != count; ++i, ++dest)
-        {
-            *dest = val;
+            *it = std::invoke_r<T>(fn, std::forward<Args>(args)...);
         }
     }
 
@@ -421,8 +398,7 @@ public:
         requires std::is_invocable_r_v<T, Fn, T>
     constexpr void transform(Fn&& fn)
     {
-        for (auto& e : *this)
-            e = fn(e);
+        std::transform(cbegin(), cend(), begin(), std::forward<Fn>(fn));
     }
 
     template <typename Fn>

@@ -21,8 +21,9 @@ namespace ga_snn
 struct Layer_Signature
 {
     using size_type = int;
-    size_type                                              Size;
-    matrix_activation_functions::Identifiers::Identifiers_ Activation;
+    size_type Size;
+    matrix_activation_functions::ActivationFunctionIdentifiers::Identifiers
+        Activation;
 
     constexpr bool operator==(const Layer_Signature&) const = default;
 };
@@ -30,9 +31,10 @@ struct Layer_Signature
 struct Layer_Structure
 {
     using size_type = int;
-    size_type                                              Inputs;
-    size_type                                              Outputs;
-    matrix_activation_functions::Identifiers::Identifiers_ Activation;
+    size_type Inputs;
+    size_type Outputs;
+    matrix_activation_functions::ActivationFunctionIdentifiers::Identifiers
+        Activation;
 
     constexpr bool operator==(const Layer_Structure&) const = default;
 };
@@ -918,7 +920,7 @@ inline auto in_place_layer_swap(
 ) -> void
 {
     const auto layers = NNet::s_Layers;
-    const auto a      = random_::random::randintegral<int>(0, layers - 1);
+    const auto a      = random_::random::s_randintegral<int>(0, layers - 1);
 
     if (a == 0 || a == layers - 1)
         return;

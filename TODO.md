@@ -17,6 +17,7 @@ The reproduction guide will contain a metric for the distamce between memebrs.
 
 ## Unit tests
 ## create a nullable type
+## Add a stateless activation function version of layer to exploit [[pure]] and [[const]] functions.
 ## Issues
 Define all functions outside class
 ## Conventions

@@ -13,13 +13,13 @@ void multi_agent_evolution_test()
     random::seed();
 
     [[maybe_unused]] constexpr auto AF_relu =
-        matrix_activation_functions::Identifiers::ReLU;
-    [[maybe_unused]] constexpr auto AF_thresh =
-        matrix_activation_functions::Identifiers::Threshold;
-    [[maybe_unused]] constexpr auto AF_sigmoid =
-        matrix_activation_functions::Identifiers::Sigmoid;
+        matrix_activation_functions::ActivationFunctionIdentifiers::ReLU;
+    [[maybe_unused]] constexpr auto AF_thresh = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedStep;
+    [[maybe_unused]] constexpr auto AF_sigmoid = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
     [[maybe_unused]] constexpr auto AF_Tanh =
-        matrix_activation_functions::Identifiers::Tanh;
+        matrix_activation_functions::ActivationFunctionIdentifiers::Tanh;
 
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1{ 1, AF_relu };
     [[maybe_unused]] constexpr ga_snn::Layer_Signature a1_Sigmoid{ 1,

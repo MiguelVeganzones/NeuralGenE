@@ -62,7 +62,7 @@ void training_test()
 
     // constexpr auto AF_relu = matrix_activation_functions::Identifiers::GELU;
     // constexpr auto AF_tanh =
-    // matrix_activation_functions::Identifiers::Sigmoid; auto           SM =
+    // matrix_activation_functions::Identifiers::UnsignedSigmoid; auto SM =
     //     score_function_objects::score_function_object<decltype(fn),
     //     std::uint16_t, std::uint16_t, std::uint16_t>(fn);
 
@@ -213,8 +213,10 @@ void new_brain_test()
     using namespace ga_snn;
     using namespace ga_sm;
 
-    constexpr auto AF_relu = matrix_activation_functions::Identifiers::GELU;
-    constexpr auto AF_tanh = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto AF_relu =
+        matrix_activation_functions::ActivationFunctionIdentifiers::GELU;
+    constexpr auto AF_tanh = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
 
     [[maybe_unused]] constexpr Layer_Signature a1{ 1, AF_relu };
     [[maybe_unused]] constexpr Layer_Signature a1_tanh{ 1, AF_tanh };

@@ -57,8 +57,10 @@ void training_test()
     using namespace ga_snn;
     using namespace ga_sm;
 
-    constexpr auto AF_relu = matrix_activation_functions::Identifiers::GELU;
-    constexpr auto AF_tanh = matrix_activation_functions::Identifiers::Sigmoid;
+    constexpr auto AF_relu =
+        matrix_activation_functions::ActivationFunctionIdentifiers::GELU;
+    constexpr auto AF_tanh = matrix_activation_functions::
+        ActivationFunctionIdentifiers::UnsignedSigmoid;
 
     [[maybe_unused]] constexpr Layer_Signature a1{ 1, AF_relu };
     [[maybe_unused]] constexpr Layer_Signature a1_tanh{ 1, AF_tanh };

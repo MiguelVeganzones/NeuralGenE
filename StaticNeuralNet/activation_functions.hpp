@@ -287,7 +287,9 @@ struct ReLU
 
     inline static void ReLU_impl(Mat& mat)
     {
-        mat.transform([](T x) [[gnu::const]] -> T { return std::max(T(), x); });
+        mat.transform([](T x) [[gnu::const]] -> T {
+            return std::max(T(0), x);
+        });
     }
 
     static constexpr auto name = "ReLU";
@@ -486,7 +488,7 @@ struct Softmax
             matrix_iterator start   = mat.begin() + j * N;
             matrix_iterator end     = start + N;
             const auto      row_max = std::ranges::max(start, end);
-            auto            row_sum = T();
+            auto            row_sum = T(0);
 
             for (auto p = start; p != end; ++p)
             {
@@ -543,7 +545,7 @@ struct PReLU
     {
         mat.transform([_alpha = alpha](T x) [[gnu::const]] -> T {
             return static_cast<T>(
-                std::max<T>(T(), x) + _alpha * std::min<T>(T(), x)
+                std::max<T>(T(0), x) + _alpha * std::min<T>(T(0), x)
             );
         });
     }
@@ -565,7 +567,7 @@ struct UnsignedStep
     inline static void Unsigned_Threshold_impl(Mat& mat, T threshold)
     {
         mat.transform([_threshold = threshold](T x) [[gnu::const]] -> T {
-            return x > _threshold ? T(1) : T();
+            return x > _threshold ? T(1) : T(0);
         });
     }
 
@@ -648,7 +650,9 @@ struct Abs
 
     inline static void Abs_impl(Mat& mat)
     {
-        mat.transform([](T x) [[gnu::const]] -> T { return x > T() ? x : -x; });
+        mat.transform([](T x) [[gnu::const]] -> T {
+            return x > T(0) ? x : -x;
+        });
     }
 
     static constexpr auto name = "Abs";

@@ -304,6 +304,7 @@ struct UnsignedSigmoid
 
     inline void operator()(Mat& mat, const parameters_type&) const
     {
+        auto copy = mat;
         Unsigned_Sigmoid_impl(mat);
     }
 

@@ -56,6 +56,7 @@ public:
         },
         survivors_n(gen_size - elites_n - 2 * progenitors_n)
     {
+        assert(gen_size == elites_n + survivors_n + progenitors_n * 2);
     }
 
     [[nodiscard]]
@@ -363,8 +364,8 @@ private:
         // {
         //     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
         // }
-        // std::cout << m_Base_probability << '\n';
-        // std::cout << top_score << '\n';
+        std::cout << m_Base_probability << '\n';
+        std::cout << top_score << '\n';
     }
 
     auto roulette_select_parent() const -> int

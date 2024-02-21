@@ -43,7 +43,7 @@ public:
     };
 
     inline static auto noise_generator = []() -> agent_response_type {
-        return agent_response_type{ random_::random::s_randnormal(0.f, 0.1f) };
+        return agent_response_type{ random_::random::s_randnormal(0.f, 0.01f) };
     };
 
     inline static constexpr auto input_data = []() -> input_data_container {
@@ -113,8 +113,8 @@ public:
     {
         for (auto i = 0uz; i != N; ++i)
         {
-            std::cout << ground_truth[i] << " -> " << agent(input_data[i])
-                      << '\n';
+            std::cout << ground_truth[i] << ", " << data_samples[i] << ", "
+                      << agent(input_data[i]) << '\n';
         }
     }
 
@@ -137,7 +137,7 @@ int main()
     constexpr auto AF_relu =
         matrix_activation_functions::ActivationFunctionIdentifiers::SiLU;
     constexpr auto AF_sigmoid = matrix_activation_functions::
-        ActivationFunctionIdentifiers::UnsignedSigmoid;
+        ActivationFunctionIdentifiers::SignedSigmoid;
     constexpr auto AF_Tanh =
         matrix_activation_functions::ActivationFunctionIdentifiers::Tanh;
 
@@ -182,11 +182,11 @@ int main()
         return agent_t(brain_t(random_::random::s_randnormal, 0.f, 0.1f));
     };
 
-    int deme_count = 4;
-    int deme_size  = 6;
+    int deme_count = 1;
+    int deme_size  = 21;
 
     const auto parent_categories =
-        reproduction_mngr::parent_categories(deme_size, 1, 1);
+        reproduction_mngr::parent_categories(deme_size, 3, 4);
 
     [[maybe_unused]] evolution_environment_t eenv(
         deme_count, deme_size, make_agent, system, parent_categories

@@ -107,6 +107,7 @@ int totoalizer_main()
 
 int main()
 {
+    top_n_test();
     progressmatrix_main();
     progressbar_main();
 }

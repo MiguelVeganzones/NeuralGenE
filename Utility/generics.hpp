@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <concepts>
+#include <iterator>
 #include <numeric>
 #include <ranges>
 #include <type_traits>
@@ -111,25 +112,16 @@ auto top_n_indeces(std::ranges::input_range auto const& v, unsigned int n)
     -> std::vector<int>
 {
     assert(v.size() >= n && n > 0);
-    std::vector<int> ret(n);
-    // initialize top_n to first n elements
-    std::iota(ret.begin(), ret.end(), 0);
-    auto sort = [&v](auto&& vec) {
-        std::ranges::sort(vec, [&v](auto&& a, auto&& b) {
-            return v[a] < v[b];
-        });
-    };
-    sort(ret);
-
-    for (auto i = n; i != v.size(); ++i)
-    {
-        // TODO template operation
-        if (v[ret[0]] < v[i])
-        {
-            ret[0] = i;
-            sort(ret);
-        }
-    }
+    auto cmp = [&v](auto a, auto b) { return v[a] > v[b]; };
+    auto ret = std::vector<int>(v.size());
+    std::ranges::iota(ret, 0);
+    const auto sorted_end = [&]() {
+        auto begin = std::begin(ret);
+        std::advance(begin, n);
+        return begin;
+    }();
+    std::ranges::partial_sort(ret, sorted_end, cmp);
+    ret.resize(n);
     return ret;
 }
 

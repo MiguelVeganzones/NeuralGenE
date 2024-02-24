@@ -1,6 +1,7 @@
 #ifndef GENERICS_UTILITY
 #define GENERICS_UTILITY
 
+#include <algorithm>
 #include <cassert>
 #include <concepts>
 #include <iterator>
@@ -115,12 +116,8 @@ auto top_n_indeces(std::ranges::input_range auto const& v, unsigned int n)
     auto cmp = [&v](auto a, auto b) { return v[a] > v[b]; };
     auto ret = std::vector<int>(v.size());
     std::ranges::iota(ret, 0);
-    const auto sorted_end = [&]() {
-        auto begin = std::begin(ret);
-        std::advance(begin, n);
-        return begin;
-    }();
-    std::ranges::partial_sort(ret, sorted_end, cmp);
+    // TODO: Compare performance of nth element. 99% not worth it, but who knows
+    std::ranges::partial_sort(ret, std::begin(ret) + n, cmp);
     ret.resize(n);
     return ret;
 }

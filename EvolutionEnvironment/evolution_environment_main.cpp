@@ -56,9 +56,9 @@ public:
         }
         // s_outfile << -1 << ',' << -1 << ',';
         // std::copy(
-        //     std::begin(ret),
-        //     std::end(ret),
-        //     std::ostream_iterator<agent_response_type>(s_outfile, ", ")
+        // std::begin(ret),
+        // std::end(ret),
+        // std::ostream_iterator<agent_response_type>(s_outfile, ", ")
         // );
         // s_outfile << '\n';
         return ret;
@@ -82,19 +82,19 @@ public:
         if (/* fitness_score < s_best_error && */ s_iter % 2100 == 0)
         {
             s_best_error = fitness_score;
-            s_outfile << s_best_error;
+            // s_outfile << s_best_error << ',';
             // s_outfile << s_iter << ',' << s_best_error << ',';
             // output_data_container pred{};
             // for (auto i = 0uz; i != N; ++i)
-            // {
-            //     pred[i] = agent(input_data[i]);
-            // }
+            //{
+            // pred[i] = agent(input_data[i]);
+            //}
             // std::copy(
-            //     std::begin(pred),
-            //     std::end(pred),
-            //     std::ostream_iterator<agent_response_type>(s_outfile, ", ")
-            // );
-            s_outfile << '\n';
+            // std::begin(pred),
+            // std::end(pred),
+            // std::ostream_iterator<agent_response_type>(s_outfile, ", ")
+            //);
+            // s_outfile << '\n';
         }
         ++s_iter;
         return static_cast<fitness_score_type>(1 / fitness_score);
@@ -107,8 +107,8 @@ public:
     {
         for (auto i = 0uz; i != N; ++i)
         {
-            std::cout << output_data[i] << " -> " << agent(input_data[i])
-                      << '\n';
+            std::cout << input_data[i] << ' ' << output_data[i] << ' '
+                      << agent(input_data[i]) << '\n';
         }
     }
 

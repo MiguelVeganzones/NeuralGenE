@@ -19,7 +19,7 @@ The final prediction obtained in one execution of this demo is shown below. This
 
 <div align="center">
     <a href="./">
-        <img src="./Demos/Proof-of-concept/prediction.png" width="5%"/>
+        <img src="./Demos/Proof-of-concept/prediction.png" width="55%"/>
     </a>
 </div>
 
